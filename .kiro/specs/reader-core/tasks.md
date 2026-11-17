@@ -56,21 +56,21 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Multiple consecutive blank lines between blocks still produce exactly two paragraphs
     - _Requirements: 3.1, 3.3, 3.5_
 
-- [ ] 3. Implement the `.txt` parser
-  - [ ] 3.0 Implement `src/reader/fileIO.ts`
+- [x] 3. Implement the `.txt` parser
+  - [x] 3.0 Implement `src/reader/fileIO.ts`
     - Implement `readAsText(file: File): Promise<string>` using `FileReader.readAsText`; enforce the 50 MB size cap; reject with a descriptive message on failure
     - Implement `readAsArrayBuffer(file: File): Promise<ArrayBuffer>` using `FileReader.readAsArrayBuffer`; reject with a descriptive message on failure
     - `buildTxtBook` and `buildEpubBook` must NOT import FileReader; they receive plain `string` / `ArrayBuffer` inputs
     - Add a small unit test file `src/reader/__tests__/fileIO.unit.test.ts` to verify the 50 MB rejection and the error message format
     - _Requirements: 1.1, 1.5, 2.2_
 
-  - [ ] 3.1 Implement `isChapterHeading`, `buildTxtBook`, and the `loadBook` dispatcher in `src/reader/parser.ts`
+  - [x] 3.1 Implement `isChapterHeading`, `buildTxtBook`, and the `loadBook` dispatcher in `src/reader/parser.ts`
     - `isChapterHeading`: allows optional leading whitespace and optional trailing punctuation (`.`, `:`, `-`). Number words are an explicit list (one to ninety-nine), not `\w+`, so ordinary sentences do not match. Pattern: `/^\s*chapter\s+(\d+|[ivxlcdm]+|one|two|...|ninety-nine)\s*[.:-]?(\s|$)/i`
     - `buildTxtBook`: split on heading lines; text before first heading forms its own chapter; return `{ ok: false }` on empty content
     - `loadBook`: read via `fileIO.readAsArrayBuffer` for `.epub`, `fileIO.readAsText` for `.txt`; dispatch to `buildTxtBook` or `buildEpubBook`; map errors to human-readable messages ≤200 chars with no stack traces or file paths
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
 
-  - [ ] 3.2 Write property tests for the `.txt` parser (`src/reader/__tests__/parser.prop.test.ts`)
+  - [x] 3.2 Write property tests for the `.txt` parser (`src/reader/__tests__/parser.prop.test.ts`)
     - **Property 4: Chapter splitting completeness** — every non-whitespace char in input appears in exactly one chapter (`fc.string()`)
     - **Property 5: No headings → exactly one chapter** — filtered to strings with no chapter heading lines
     - _Requirements: 1.2, 1.3, 1.4_

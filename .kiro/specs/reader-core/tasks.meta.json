@@ -113,6 +113,49 @@
         "chatSessionId": "sess_2fa9dd01-67f4-4bef-be57-e2bf59de1449",
         "timestamp": 1794939738601
       }
+    ],
+    "3.0 Implement `src/reader/fileIO.ts`": [
+      {
+        "executionId": "a206a4cb-83d7-4ac0-beb1-e16d56fef1f6",
+        "chatSessionId": "sess_377cb3d8-58a5-463e-b38c-6f496901e880",
+        "timestamp": 1794941388164
+      },
+      {
+        "executionId": "a206a4cb-83d7-4ac0-beb1-e16d56fef1f6",
+        "chatSessionId": "sess_377cb3d8-58a5-463e-b38c-6f496901e880",
+        "timestamp": 1794941581652
+      }
+    ],
+    "3.1 Implement `isChapterHeading`, `buildTxtBook`, and the `loadBook` dispatcher in `src/reader/parser.ts`": [
+      {
+        "executionId": "c65ff14d-ef27-481a-8d0d-f776d8c448a8",
+        "chatSessionId": "sess_8ad06a80-e75a-41a9-b6bf-ad8ee6f022ba",
+        "timestamp": 1794941610983
+      },
+      {
+        "executionId": "c65ff14d-ef27-481a-8d0d-f776d8c448a8",
+        "chatSessionId": "sess_8ad06a80-e75a-41a9-b6bf-ad8ee6f022ba",
+        "timestamp": 1794941794264
+      }
+    ],
+    "3.2 Write property tests for the `.txt` parser (`src/reader/__tests__/parser.prop.test.ts`)": [
+      {
+        "executionId": "c65ff14d-ef27-481a-8d0d-f776d8c448a8",
+        "chatSessionId": "sess_8ad06a80-e75a-41a9-b6bf-ad8ee6f022ba",
+        "timestamp": 1794941797802
+      },
+      {
+        "executionId": "c65ff14d-ef27-481a-8d0d-f776d8c448a8",
+        "chatSessionId": "sess_8ad06a80-e75a-41a9-b6bf-ad8ee6f022ba",
+        "timestamp": 1794941850215
+      }
+    ],
+    "3. Implement the `.txt` parser": [
+      {
+        "executionId": "c65ff14d-ef27-481a-8d0d-f776d8c448a8",
+        "chatSessionId": "sess_8ad06a80-e75a-41a9-b6bf-ad8ee6f022ba",
+        "timestamp": 1794941850242
+      }
     ]
   }
 }
