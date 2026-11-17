@@ -1,0 +1,70 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "0.1 Create the Vite + React + TypeScript app in the repo root": [
+      {
+        "executionId": "5efe9240-2846-4f10-9728-153ea1a21ed3",
+        "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
+        "timestamp": 1794884174982
+      },
+      {
+        "executionId": "5efe9240-2846-4f10-9728-153ea1a21ed3",
+        "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
+        "timestamp": 1794885010317
+      },
+      {
+        "executionId": "2d1d671e-8f9b-4684-84ae-57ebf7bf47cb",
+        "chatSessionId": "sess_c1cfc0ee-df87-4da5-a16d-bf522469b934",
+        "timestamp": 1794885746834
+      },
+      {
+        "executionId": "2d1d671e-8f9b-4684-84ae-57ebf7bf47cb",
+        "chatSessionId": "sess_c1cfc0ee-df87-4da5-a16d-bf522469b934",
+        "timestamp": 1794885763029
+      }
+    ],
+    "0.2 Install dependencies": [
+      {
+        "executionId": "5efe9240-2846-4f10-9728-153ea1a21ed3",
+        "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
+        "timestamp": 1794885014041
+      },
+      {
+        "executionId": "5efe9240-2846-4f10-9728-153ea1a21ed3",
+        "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
+        "timestamp": 1794885282319
+      }
+    ],
+    "0.3 Configure Vitest with the jsdom environment": [
+      {
+        "executionId": "5efe9240-2846-4f10-9728-153ea1a21ed3",
+        "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
+        "timestamp": 1794885285871
+      },
+      {
+        "executionId": "5efe9240-2846-4f10-9728-153ea1a21ed3",
+        "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
+        "timestamp": 1794885730302
+      }
+    ],
+    "0.4 Add \"test\" and \"build\" scripts and confirm both succeed": [
+      {
+        "executionId": "5efe9240-2846-4f10-9728-153ea1a21ed3",
+        "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
+        "timestamp": 1794885289004
+      },
+      {
+        "executionId": "5efe9240-2846-4f10-9728-153ea1a21ed3",
+        "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
+        "timestamp": 1794885733646
+      }
+    ],
+    "0. Scaffold the project": [
+      {
+        "executionId": "5efe9240-2846-4f10-9728-153ea1a21ed3",
+        "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
+        "timestamp": 1794885733670
+      }
+    ]
+  }
+}

@@ -6,24 +6,24 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
 
 ## Tasks
 
-- [ ] 0. Scaffold the project
-  - [ ] 0.1 Create the Vite + React + TypeScript app in the repo root
+- [x] 0. Scaffold the project
+  - [x] 0.1 Create the Vite + React + TypeScript app in the repo root
     - Run `npm create vite@latest . -- --template react-ts` to scaffold into the workspace root
     - The folder is not empty. If asked, choose "Ignore files and continue". NEVER choose "Remove existing files": `.kiro/`, `LICENSE`, `PLAN.md`, and `docs/` must survive
     - Confirm that `index.html`, `vite.config.ts`, `src/main.tsx`, and `tsconfig.json` are created, and that `.kiro/`, `LICENSE`, `PLAN.md`, and `docs/` still exist
     - Confirm `.kiro` is not listed in `.gitignore`
     - Fetch current Vite docs before running any commands; do not rely on remembered CLI flags
     - _Requirements: none — project infrastructure_
-  - [ ] 0.2 Install dependencies
+  - [x] 0.2 Install dependencies
     - Install production deps: `epubjs`
     - Install dev deps: `vitest`, `@vitest/coverage-v8`, `jsdom`, `@testing-library/react`, `@testing-library/jest-dom`, `fast-check`, `fake-indexeddb`
     - Check each package's license in its own package.json after install and list them in `README.md`
     - _Requirements: none — project infrastructure_
-  - [ ] 0.3 Configure Vitest with the jsdom environment
+  - [x] 0.3 Configure Vitest with the jsdom environment
     - In `vite.config.ts`, add a `test` block with `environment: 'jsdom'`, `globals: true`, and a `setupFiles` pointing to a `src/test/setup.ts` that imports `@testing-library/jest-dom`
     - Fetch current Vitest configuration docs before writing the config
     - _Requirements: none — project infrastructure_
-  - [ ] 0.4 Add "test" and "build" scripts and confirm both succeed
+  - [x] 0.4 Add "test" and "build" scripts and confirm both succeed
     - Ensure `package.json` has `"test": "vitest --run"` and `"build": "vite build"`
     - Run `npm run build` and confirm it exits 0
     - Run `npm test` with the placeholder `src/test/setup.ts` and confirm it exits 0
