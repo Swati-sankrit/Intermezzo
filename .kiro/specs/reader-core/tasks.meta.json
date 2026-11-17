@@ -1,5 +1,10 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "2.2 Write property tests for the splitter (`src/reader/__tests__/splitter.prop.test.ts`)": {
+      "status": "passed",
+      "lastRunTimestamp": 1794939721181
+    }
+  },
   "executionHistory": {
     "0.1 Create the Vite + React + TypeScript app in the repo root": [
       {
@@ -83,6 +88,30 @@
         "executionId": "0f492dbf-294a-4dfa-8969-e7f6e3c4f60a",
         "chatSessionId": "sess_2fa9dd01-67f4-4bef-be57-e2bf59de1449",
         "timestamp": 1794938066745
+      },
+      {
+        "executionId": "0f492dbf-294a-4dfa-8969-e7f6e3c4f60a",
+        "chatSessionId": "sess_2fa9dd01-67f4-4bef-be57-e2bf59de1449",
+        "timestamp": 1794939635198
+      }
+    ],
+    "2.2 Write property tests for the splitter (`src/reader/__tests__/splitter.prop.test.ts`)": [
+      {
+        "executionId": "0f492dbf-294a-4dfa-8969-e7f6e3c4f60a",
+        "chatSessionId": "sess_2fa9dd01-67f4-4bef-be57-e2bf59de1449",
+        "timestamp": 1794939641490
+      },
+      {
+        "executionId": "0f492dbf-294a-4dfa-8969-e7f6e3c4f60a",
+        "chatSessionId": "sess_2fa9dd01-67f4-4bef-be57-e2bf59de1449",
+        "timestamp": 1794939738554
+      }
+    ],
+    "2. Implement the paragraph splitter": [
+      {
+        "executionId": "0f492dbf-294a-4dfa-8969-e7f6e3c4f60a",
+        "chatSessionId": "sess_2fa9dd01-67f4-4bef-be57-e2bf59de1449",
+        "timestamp": 1794939738601
       }
     ]
   }
