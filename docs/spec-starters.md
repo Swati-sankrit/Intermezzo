@@ -119,9 +119,29 @@ talk with them. This is the reward for finishing, never shown mid-chapter.
 10. THE SYSTEM SHALL call the AI service only through a server function that
     holds the key. The key SHALL never appear in browser code.
 
+Voice (add after the text chat works):
+
+11. WHERE the browser supports speech recognition THE SYSTEM SHALL offer a
+    push-to-talk button (and a held key) that turns the reader's spoken
+    question into a message to the visitor.
+12. BEFORE the first use of the microphone THE SYSTEM SHALL explain that the
+    browser may send the audio to its speech service to transcribe it, and
+    let the reader decline. Typing SHALL always remain available.
+13. WHERE voice replies are on THE SYSTEM SHALL read each visitor reply aloud
+    with the browser's speech synthesis, using a voice chosen per character,
+    and SHALL show the same text on screen.
+14. THE SYSTEM SHALL let the reader stop speech at any time, and SHALL stop it
+    when the visit ends.
+15. IF speech recognition or synthesis is unavailable or fails THEN THE SYSTEM
+    SHALL fall back to typed messages and on-screen text without an error
+    blocking the visit.
+16. Voice SHALL be off by default and SHALL only be available after a chapter
+    is finished, never during reading.
+
 Property tests: for any reading position, the context sent contains no text
 beyond that position; the message count never exceeds the limit; the fallback
-always triggers on a failed call.
+always triggers on a failed call; for any sequence of voice events (start,
+result, error, end), the visit never gets stuck in a "listening" state.
 
 ---
 
@@ -169,7 +189,14 @@ the limits are exceeded by more than one paragraph.
   joyful from its words (a word list, no AI); the page's light and ambience
   follow it with slow transitions. This is rough by nature; say so.
 - word-help: tap a word for a simple meaning; if a paragraph takes much longer
-  than the reader's pace, offer meanings for its rarest words.
+  than the reader's pace, offer meanings for its rarest words. The meaning
+  card has a speaker button that reads the word and its meaning aloud with the
+  browser's speech synthesis, at a volume under the haunt-safety cap. Optional
+  push-to-talk: hold a key and ask "what does ___ mean?"; the app finds the
+  word in the current paragraph and shows its card. Meanings come from a
+  bundled word list or a free dictionary API (check its license and limits
+  first); if offline or not found, say so plainly. Word help never pauses the
+  attention signal and never counts as looking away.
 - chapter-check: one fill-in-the-blank made from the chapter text, plus
   session stats (paragraphs read, look-aways, time).
 - highlights: a button (and the H key) marks the current paragraph; highlights

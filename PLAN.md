@@ -56,6 +56,8 @@ Rule for every day: the app stays deployed and working. Commit daily.
 
 **Wed Nov 25**
 - [ ] Tap a word for its meaning. Slow-paragraph rare-word offer.
+- [ ] Read-aloud button on the meaning card (browser speech synthesis, free).
+      Push-to-talk "what does ___ mean?" only if the rest of the day is done.
 - [ ] Mood lighting: the page's light and ambience follow the scene's mood.
 - [ ] Highlights: button and H key mark the current paragraph; list at
       chapter end.
@@ -74,6 +76,11 @@ Rule for every day: the app stays deployed and working. Commit daily.
 - [ ] Visitor appears after a chapter is finished, speaks in the character's
       voice, and knows only the text read so far.
 - [ ] If the AI call fails, fall back to the fill-in-the-blank check.
+- [ ] Voice for the visitor, once text chat works: push-to-talk questions,
+      replies read aloud in a per-character voice, microphone consent screen,
+      typing always available, voice off by default.
+- [ ] Test voice in Chrome and Safari. Note that Firefox has no speech
+      recognition, so typing must be enough there.
 - [ ] Kiro Crew experiment (for example, one agent drafts a new haunt and
       another reviews it against the safety rules). Note what worked.
 - [ ] Try one MCP server for library docs. Note what it changed.
@@ -100,7 +107,8 @@ Rule for every day: the app stays deployed and working. Commit daily.
 **Wed Dec 2**
 - [ ] Demo video under 3 minutes, public on YouTube, no copyrighted music:
       problem (15s), upload and read with mood lighting (35s),
-      look away and haunt (35s), chapter visitor (30s),
+      look away and haunt (35s), chapter visitor with a spoken question and
+      a spoken reply (30s),
       new haunt via hook (25s), user-test numbers and who it is for (25s).
 - [ ] Blog post on dev.to that says it was written for Kiroween 2026.
 - [ ] Social post starting with #KiroweenHackathon26.

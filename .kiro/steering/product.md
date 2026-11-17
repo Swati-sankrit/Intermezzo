@@ -39,6 +39,11 @@ and rewarding when they finish a chapter.
 - The camera feed never leaves the device. No accounts.
 - Book text stays on the device, with one exception the reader must agree to:
   the chapter visitor sends the text read so far to an AI service.
+- Voice is optional and off by default. Before the microphone is first used,
+  we say that the browser may send the audio to its speech service to
+  transcribe it. Typing always works instead.
+- Voice is for word help and for the chapter visitor after a chapter is
+  finished. There is no conversation with the book during reading.
 - The app is fully usable with the camera off and with the visitor declined.
 - Nothing interrupts the reader mid-chapter except a haunt for looking away.
 

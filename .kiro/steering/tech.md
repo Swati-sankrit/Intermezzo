@@ -15,6 +15,9 @@ requests, and stores nothing.
 - MediaPipe Face Landmarker (tasks-vision) for "is the reader facing the screen"
 - epub.js (or similar) to read EPUB files; plain .txt read directly
 - Web Audio API for ambience and haunt sounds
+- Web Speech API for voice: SpeechRecognition for push-to-talk (Chrome, Edge,
+  Safari; not Firefox) and speechSynthesis for reading replies and meanings
+  aloud. Always feature-detect both and fall back to typing and on-screen text.
 - localStorage / IndexedDB for progress and settings
 - Deployed on Vercel
 

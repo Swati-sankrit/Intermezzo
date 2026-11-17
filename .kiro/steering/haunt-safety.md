@@ -11,7 +11,10 @@ These rules apply to every haunt, sound, and animation.
 - No sudden full-volume sound. Every sound fades in over at least 300 ms.
 - A user volume cap exists in settings and is enforced in one place in the
   audio code. Default cap is moderate; haunts cannot override it.
-- Ambience is instrumental only. No lyrics or speech while reading.
+- Ambience is instrumental only. No lyrics or speech while reading, except a
+  word meaning read aloud because the reader asked for it.
+- Speech (word meanings, visitor replies) obeys the same volume cap and can
+  be stopped at any time.
 - Sound is off until the user's first click (browser autoplay rules).
 
 ## Visuals
