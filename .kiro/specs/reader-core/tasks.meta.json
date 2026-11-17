@@ -65,6 +65,25 @@
         "chatSessionId": "sess_f4aac4a7-8aff-4029-81ee-356705d619fb",
         "timestamp": 1794885733670
       }
+    ],
+    "1. Create shared types and project structure": [
+      {
+        "executionId": "1f8143fd-8aa0-45be-9c9b-88beee989f97",
+        "chatSessionId": "sess_72f4e0a2-06bb-40a5-9e5b-e31055f3aeb9",
+        "timestamp": 1794937903120
+      },
+      {
+        "executionId": "1f8143fd-8aa0-45be-9c9b-88beee989f97",
+        "chatSessionId": "sess_72f4e0a2-06bb-40a5-9e5b-e31055f3aeb9",
+        "timestamp": 1794938030166
+      }
+    ],
+    "2.1 Implement `splitIntoParagraphs` and `joinParagraphs` in `src/reader/splitter.ts`": [
+      {
+        "executionId": "0f492dbf-294a-4dfa-8969-e7f6e3c4f60a",
+        "chatSessionId": "sess_2fa9dd01-67f4-4bef-be57-e2bf59de1449",
+        "timestamp": 1794938066745
+      }
     ]
   }
 }

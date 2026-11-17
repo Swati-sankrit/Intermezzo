@@ -1,0 +1,37 @@
+export interface Book {
+  fileName: string;
+  chapters: Chapter[];
+}
+
+export interface Chapter {
+  title: string;      // empty string when no heading was found
+  text: string;       // plain text; paragraph boundaries are blank lines
+}
+
+export interface Paragraph {
+  text: string;       // trimmed, guaranteed non-empty
+}
+
+export interface Position {
+  chapterIndex: number;    // 0-based
+  paragraphIndex: number;  // 0-based within the chapter
+  savedAt: number;         // Date.now() timestamp
+}
+
+export interface StoredState {
+  fileName: string;
+  position: Position;
+  averagePace: number;     // words per minute; always in [50, 1000]
+}
+
+export type LoadResult =
+  | { ok: true; book: Book }
+  | { ok: false; error: string };   // ≤200 chars, no stack trace, no file path
+
+export type ParseErrorCode =
+  | 'too_large'
+  | 'bad_encoding'
+  | 'empty_content'
+  | 'access_denied'
+  | 'corrupt_epub'
+  | 'missing_spine';

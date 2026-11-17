@@ -29,20 +29,20 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Run `npm test` with the placeholder `src/test/setup.ts` and confirm it exits 0
     - _Requirements: none — project infrastructure_
 
-- [ ] 1. Create shared types and project structure
+- [x] 1. Create shared types and project structure
   - Create `src/reader/types.ts` with `Book`, `Chapter`, `Paragraph`, `Position`, `StoredState`, `LoadResult`, and `ParseErrorCode` types exactly as defined in the design
   - Create empty barrel files (`src/reader/index.ts`) to establish the module boundary
   - Set up `src/reader/__tests__/` and `src/ui/__tests__/` directories
   - _Requirements: 1.1, 2.1, 3.1, 5.1, 6.1, 7.1_
 
-- [ ] 2. Implement the paragraph splitter
-  - [ ] 2.1 Implement `splitIntoParagraphs` and `joinParagraphs` in `src/reader/splitter.ts`
+- [~] 2. Implement the paragraph splitter
+  - [-] 2.1 Implement `splitIntoParagraphs` and `joinParagraphs` in `src/reader/splitter.ts`
     - Split on one or more consecutive blank lines (lines containing only whitespace)
     - Trim each segment; exclude any segment that is all whitespace
     - `joinParagraphs` rejoins with blank-line separators for round-trip tests
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 2.2 Write property tests for the splitter (`src/reader/__tests__/splitter.prop.test.ts`)
+  - [~] 2.2 Write property tests for the splitter (`src/reader/__tests__/splitter.prop.test.ts`)
     - **Property 1: Round-trip completeness** — joining all paragraphs loses no non-whitespace characters (`fc.string()`)
     - **Property 2: No whitespace-only paragraphs** — every paragraph in output has ≥1 non-whitespace character (`fc.string()`)
     - **Property 3: Non-empty input produces ≥1 paragraph** — filtered to strings with ≥1 non-whitespace char
