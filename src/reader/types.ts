@@ -22,6 +22,7 @@ export interface StoredState {
   fileName: string;
   position: Position;
   averagePace: number;     // words per minute; always in [50, 1000]
+  paceGuideEnabled: boolean;
 }
 
 export type LoadResult =

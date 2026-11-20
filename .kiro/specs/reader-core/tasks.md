@@ -151,15 +151,15 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - `ewmaUpdate` returns correct value for a known input pair
     - _Requirements: 7.3, 7.4, 7.7_
 
-- [ ] 8. Implement storage
-  - [ ] 8.1 Implement `saveState`, `loadState`, and `clearState` in `src/reader/storage.ts`
+- [x] 8. Implement storage
+  - [x] 8.1 Implement `saveState`, `loadState`, and `clearState` in `src/reader/storage.ts`
     - `StoredState` holds: file name, chapter index, paragraph index, averagePace, and the pace-guide on/off setting
     - `saveState`: serialize and write to `localStorage` under key `rod_state`; swallow errors silently
     - `loadState`: read and validate; return `null` on unavailable storage, absent key, malformed JSON, non-integer or negative indices, or `averagePace` outside `[50, 1000]`
     - `clearState`: remove `rod_state` from `localStorage`
     - _Requirements: 6.2, 6.4, 6.5, 6.7, 6.8_
 
-  - [ ] 8.2 Write property tests for storage (`src/reader/__tests__/storage.prop.test.ts`)
+  - [x] 8.2 Write property tests for storage (`src/reader/__tests__/storage.prop.test.ts`)
     - **Property 10: Position storage round-trip** — `fc.record(...)` generating valid `StoredState` shapes; save then load returns structurally equal value
     - **Property 11: Invalid position falls back to null** — `fc.string()` for malformed JSON; `fc.record` with out-of-range indices; `loadState` returns `null`
     - _Requirements: 6.2, 6.4, 6.5_
@@ -170,6 +170,14 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - `loadState` returns `null` when `paragraphIndex` is a float
     - `loadState` returns `null` when `averagePace` is out of `[50, 1000]`
     - `clearState` removes the stored entry
+    - _Requirements: 6.4, 6.5_
+
+  - [x] 8.4 Implement `resolvePosition(state, book)` in `src/reader/position.ts` with property tests (`src/reader/__tests__/position.prop.test.ts`)
+    - Pure function, no React or DOM: returns the saved `chapterIndex` and `paragraphIndex` if both exist in the book (count paragraphs with `splitIntoParagraphs`); otherwise returns chapter 0, paragraph 0
+    - Treat negative or non-integer indices as out of range
+    - **Property: In-range position is unchanged** — for any generated book and any valid chapter and paragraph index, `resolvePosition` returns them unchanged
+    - **Property: Out-of-range position resets** — for any chapter index past the last chapter, or paragraph index past the chapter's paragraph count, `resolvePosition` returns 0, 0
+    - `useReader` (task 12.1) calls this after restoring a book
     - _Requirements: 6.4, 6.5_
 
 - [ ] 9. Implement book storage (IndexedDB)
@@ -219,6 +227,7 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - On `selectBook` / `selectLibraryBook`: read via `fileIO` (or fetch the library file from the app's own origin), then call the pure parser; on success call `saveBook`, reset position to 0,0, and `saveState`; on failure retain the previous book and set the error
     - On `advance`: increment paragraph index; at chapter end set the chapter-completion state; call `updateAveragePace` and `saveState`
     - On mount: call `loadState`; if valid, call `loadSavedBook` to restore the book; if the position is invalid start at 0,0; if the book cannot be read show the empty state
+    - After restoring a book (on mount), `useReader` must call `resolvePosition(state, book)` from `src/reader/position.ts` and use the result as the starting chapter and paragraph, so a saved position outside the book falls back to 0,0
     - Derive and return `paragraphs`, `progress`, `suggestedSecs` from the pure functions
     - Library books must go through `stripGutenbergBoilerplate` before `buildTxtBook`.
     - _Requirements: 1.7, 2.5, 2.6, 4.4, 5.2, 6.1–6.7, 7.6–7.10, 8.3–8.5_
@@ -286,7 +295,7 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     { "id": 0, "tasks": ["0.1", "0.2", "0.3", "0.4"] },
     { "id": 1, "tasks": ["1"] },
     { "id": 2, "tasks": ["2.1", "3.0", "3.1", "6.1", "7.1", "8.1", "9.1", "11.1", "11.2"] },
-    { "id": 3, "tasks": ["2.2", "2.3", "3.2", "3.3", "6.2", "6.3", "7.2", "7.3", "8.2", "8.3", "9.2", "9.3"] },
+    { "id": 3, "tasks": ["2.2", "2.3", "3.2", "3.3", "6.2", "6.3", "7.2", "7.3", "8.2", "8.3", "8.4", "9.2", "9.3"] },
     { "id": 4, "tasks": ["4.1"] },
     { "id": 5, "tasks": ["4.2", "4.3"] },
     { "id": 6, "tasks": ["12.1", "12.2", "12.3", "12.4"] },
