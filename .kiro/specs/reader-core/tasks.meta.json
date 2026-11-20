@@ -383,6 +383,69 @@
         "chatSessionId": "sess_e76f4786-1117-4517-bfae-e5a9c67d0f53",
         "timestamp": 1795213872038
       }
+    ],
+    "10. Checkpoint — Ensure all pure-function tests pass": [
+      {
+        "executionId": "4d84312d-a357-49f6-9a78-5ad0a96cdb2c",
+        "chatSessionId": "sess_90ec6d5d-e8a2-49c2-9ece-d80418d0afc0",
+        "timestamp": 1795214094614
+      },
+      {
+        "executionId": "4d84312d-a357-49f6-9a78-5ad0a96cdb2c",
+        "chatSessionId": "sess_90ec6d5d-e8a2-49c2-9ece-d80418d0afc0",
+        "timestamp": 1795214246499
+      }
+    ],
+    "11.1 Create `public/books/` folder and add a placeholder file": [
+      {
+        "executionId": "1903d0c4-a76c-4884-bb9e-417c32b51cde",
+        "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
+        "timestamp": 1795214288816
+      },
+      {
+        "executionId": "1903d0c4-a76c-4884-bb9e-417c32b51cde",
+        "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
+        "timestamp": 1795214508658
+      }
+    ],
+    "11.2 Implement `src/reader/library.ts`": [
+      {
+        "executionId": "1903d0c4-a76c-4884-bb9e-417c32b51cde",
+        "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
+        "timestamp": 1795214289374
+      },
+      {
+        "executionId": "1903d0c4-a76c-4884-bb9e-417c32b51cde",
+        "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
+        "timestamp": 1795214509045
+      },
+      {
+        "executionId": "128d4c61-a4aa-41bd-b8f7-11c88c8137b4",
+        "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
+        "timestamp": 1795215552225
+      },
+      {
+        "executionId": "128d4c61-a4aa-41bd-b8f7-11c88c8137b4",
+        "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
+        "timestamp": 1795215600821
+      },
+      {
+        "executionId": "92404edc-4785-491e-9bc5-b61ff3060247",
+        "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
+        "timestamp": 1795215662236
+      },
+      {
+        "executionId": "92404edc-4785-491e-9bc5-b61ff3060247",
+        "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
+        "timestamp": 1795215695028
+      }
+    ],
+    "11. Set up the book library": [
+      {
+        "executionId": "1903d0c4-a76c-4884-bb9e-417c32b51cde",
+        "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
+        "timestamp": 1795214509088
+      }
     ]
   }
 }

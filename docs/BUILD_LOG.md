@@ -80,3 +80,8 @@ section therefore stripped to empty text and was skipped, so no EPUB could load.
 `buildEpubBook` now uses `section.document ?? root.ownerDocument` and reads that
 Document's body. The test assertions were not changed. `stripHtml` and the
 chapter heading regex were not touched.
+
+## Task 10: Checkpoint, pure-function tests
+`npx vitest --run src/reader/__tests__/`: 10 files, 44 tests, all passed. `tsc -p tsconfig.app.json --noEmit` reported no errors.
+Every property ran 100 cases (`numRuns: 100`). No new counterexamples. No code or tests changed.
+Property files: splitter (P1-P4), parser (P4, P4b, P5, P6, P6 example), gutenberg (P7, P8, P8b), progress (formula, monotonic), paceCalc (4), storage (P10, P11a, P11b), position (2), bookStore (P16, two variants).

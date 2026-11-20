@@ -200,16 +200,16 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - All three functions return false/null (never throw) when the database operation fails
     - _Requirements: 6.1, 6.6_
 
-- [ ] 10. Checkpoint — Ensure all pure-function tests pass
+- [x] 10. Checkpoint — Ensure all pure-function tests pass
   - Run `vitest --run src/reader/__tests__/`; fix any failures before proceeding to the UI layer.
 
-- [ ] 11. Set up the book library
-  - [ ] 11.1 Create `public/books/` folder and add a placeholder file
+- [x] 11. Set up the book library
+  - [x] 11.1 Create `public/books/` folder and add a placeholder file
     - Create the `public/books/` directory
     - Create `public/books/the-yellow-wallpaper.txt` as a short placeholder (e.g. a single line: `# Placeholder — replace with the full text from Project Gutenberg`) so the directory and file exist and the library screen can be tested without crashing
     - Do not write the actual book text; the user will download and place the real file manually
     - _Requirements: none — content_
-  - [ ] 11.2 Implement `src/reader/library.ts`
+  - [x] 11.2 Implement `src/reader/library.ts`
     - Implement the `LibraryEntry` interface (title, author, filePath, format) and the `LIBRARY` constant
     - Vite serves `public/` from the site root, so `filePath` values are like `"/books/the-yellow-wallpaper.txt"`, never `"public/books/..."`
     - Ship with one entry: The Yellow Wallpaper by Charlotte Perkins Gilman, with `filePath: "/books/the-yellow-wallpaper.txt"` and `format: "txt"`
@@ -229,7 +229,7 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - On mount: call `loadState`; if valid, call `loadSavedBook` to restore the book; if the position is invalid start at 0,0; if the book cannot be read show the empty state
     - After restoring a book (on mount), `useReader` must call `resolvePosition(state, book)` from `src/reader/position.ts` and use the result as the starting chapter and paragraph, so a saved position outside the book falls back to 0,0
     - Derive and return `paragraphs`, `progress`, `suggestedSecs` from the pure functions
-    - Library books must go through `stripGutenbergBoilerplate` before `buildTxtBook`.
+    - Library books are loaded by `entry.format`: "txt" entries are fetched as text, passed through `stripGutenbergBoilerplate`, then `buildTxtBook`; "epub" entries are fetched as an `ArrayBuffer` and passed to `buildEpubBook`.
     - _Requirements: 1.7, 2.5, 2.6, 4.4, 5.2, 6.1–6.7, 7.6–7.10, 8.3–8.5_
 
   - [ ] 12.2 Implement `src/ui/LibraryScreen.tsx`
