@@ -446,6 +446,73 @@
         "chatSessionId": "sess_176c6c12-11fc-4e30-9475-5cd97e8a44fa",
         "timestamp": 1795214509088
       }
+    ],
+    "12.1 Implement the `src/ui/useReader.ts` hook": [
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795216054773
+      },
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795216884499
+      }
+    ],
+    "12.2 Implement `src/ui/LibraryScreen.tsx`": [
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795216054824
+      },
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795216884591
+      }
+    ],
+    "12.3 Implement `src/ui/ParagraphList.tsx`": [
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795216055031
+      },
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795216884738
+      }
+    ],
+    "12.4 Implement `src/ui/ProgressBar.tsx`, `src/ui/PaceTimer.tsx`, `src/ui/ErrorBanner.tsx`": [
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795216055609
+      },
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795216885403
+      }
+    ],
+    "12.5 Implement `src/ui/ReaderView.tsx` — compose all components": [
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795216888441
+      },
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795217332522
+      }
+    ],
+    "12. Implement the UI layer": [
+      {
+        "executionId": "bea0cb90-d3d5-4390-ba7b-f286a12a1df3",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795217332565
+      }
     ]
   }
 }

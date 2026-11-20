@@ -217,8 +217,8 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Library books must go through `stripGutenbergBoilerplate` before `buildTxtBook`.
     - _Requirements: 8.2, 8.4_
 
-- [ ] 12. Implement the UI layer
-  - [ ] 12.1 Implement the `src/ui/useReader.ts` hook
+- [x] 12. Implement the UI layer
+  - [x] 12.1 Implement the `src/ui/useReader.ts` hook
     - Lives in `src/ui/`, not `src/reader/`: `src/reader/` has no React imports
     - Hold all reading state: current book, chapter index, paragraph index (the last revealed), error, averagePace, and the pace-guide setting
     - Expose callbacks: `selectBook(file: File)`, `selectLibraryBook(entry: LibraryEntry)`, `advance()`, `nextChapter()`, `closeBook()`, `togglePaceGuide()`
@@ -232,26 +232,26 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Library books are loaded by `entry.format`: "txt" entries are fetched as text, passed through `stripGutenbergBoilerplate`, then `buildTxtBook`; "epub" entries are fetched as an `ArrayBuffer` and passed to `buildEpubBook`.
     - _Requirements: 1.7, 2.5, 2.6, 4.4, 5.2, 6.1–6.7, 7.6–7.10, 8.3–8.5_
 
-  - [ ] 12.2 Implement `src/ui/LibraryScreen.tsx`
+  - [x] 12.2 Implement `src/ui/LibraryScreen.tsx`
     - Renders when no book is loaded
     - Shows a file-picker `<input type="file" accept=".txt,.epub">` and the `LIBRARY` list (title and author) from `library.ts`
     - Calls `onSelectFile(file)` or `onSelectLibraryBook(entry)` passed from `useReader`
     - _Requirements: 1.1, 2.1, 8.1, 8.2, 8.3_
 
-  - [ ] 12.3 Implement `src/ui/ParagraphList.tsx`
+  - [x] 12.3 Implement `src/ui/ParagraphList.tsx`
     - Receives `paragraphs: Paragraph[]`, `activeIndex: number`, `onAdvance: () => void`
     - Paragraphs 0 to activeIndex-1 render at reduced opacity (dimmed); activeIndex renders as active; beyond activeIndex are hidden
     - Clicking the active paragraph or pressing Space/Enter calls `onAdvance`; Space also prevents default scroll
     - Provides a persistent scroll-back affordance (button or indicator) when the viewport is scrolled above the active paragraph
     - _Requirements: 4.1, 4.2, 4.3, 4.6, 4.7_
 
-  - [ ] 12.4 Implement `src/ui/ProgressBar.tsx`, `src/ui/PaceTimer.tsx`, `src/ui/ErrorBanner.tsx`
+  - [x] 12.4 Implement `src/ui/ProgressBar.tsx`, `src/ui/PaceTimer.tsx`, `src/ui/ErrorBanner.tsx`
     - `ProgressBar`: receives `progress: number`; renders integer percentage
     - `PaceTimer`: receives `enabled: boolean`, `suggestedSeconds: number`; renders timer icon when enabled; does not block advance when time expires
     - `ErrorBanner`: receives `error: string | null`; renders banner when non-null; hides when null
     - _Requirements: 5.1, 7.1, 7.5, 7.9, 1.5, 1.6, 2.4, 8.5_
 
-  - [ ] 12.5 Implement `src/ui/ReaderView.tsx` — compose all components
+  - [x] 12.5 Implement `src/ui/ReaderView.tsx` — compose all components
     - Call `useReader()` to get state and callbacks
     - Render `LibraryScreen` when no book is loaded; otherwise render `ParagraphList`, `ProgressBar`, `PaceTimer`, `ErrorBanner`
     - Display the chapter-completion indicator after the last paragraph and suppress further advance in that chapter

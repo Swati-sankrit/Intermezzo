@@ -1,0 +1,12 @@
+.pace-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}
+
+.pace-timer__icon {
+  flex-shrink: 0;
+}

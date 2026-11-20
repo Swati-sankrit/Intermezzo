@@ -1,0 +1,83 @@
+.paragraph-list {
+  max-width: 65ch;
+  margin: 0 auto;
+  padding: 40vh 1rem 40vh;
+  text-align: left;
+  font-family: 'Literata', Georgia, serif;
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+
+@media (min-width: 640px) {
+  .paragraph-list {
+    font-size: 1.25rem;
+  }
+}
+
+.paragraph-list__item {
+  margin: 0 0 1.5em;
+  color: var(--text-dim);
+  transition: color 600ms ease;
+  overflow-wrap: anywhere;
+}
+
+.paragraph-list__item--active {
+  color: var(--text);
+  animation: paragraph-reveal 400ms ease-out both;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.paragraph-list__item--active[aria-disabled='true'] {
+  cursor: default;
+}
+
+.paragraph-list__item--active:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+}
+
+.paragraph-list__scroll-back {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  padding: 0.5rem 1rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9rem;
+  color: var(--bg);
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.paragraph-list__scroll-back:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+@keyframes paragraph-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paragraph-list__item--active {
+    animation: paragraph-fade 400ms ease-out both;
+  }
+
+  @keyframes paragraph-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
