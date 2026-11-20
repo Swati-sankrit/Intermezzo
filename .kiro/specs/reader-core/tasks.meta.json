@@ -20,6 +20,10 @@
     "8.2 Write property tests for storage (`src/reader/__tests__/storage.prop.test.ts`)": {
       "status": "passed",
       "lastRunTimestamp": 1795211011232
+    },
+    "9.2 Write property tests for bookStore (`src/reader/__tests__/bookStore.prop.test.ts`)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795213693141
     }
   },
   "executionHistory": {
@@ -347,6 +351,37 @@
         "executionId": "1be6fe69-102d-44f7-8eb5-8902ff1fed47",
         "chatSessionId": "sess_4e02b077-db9c-4e2c-afbb-80dcc32b075f",
         "timestamp": 1795212421571
+      }
+    ],
+    "9.1 Implement `saveBook`, `loadSavedBook`, and `clearSavedBook` in `src/reader/bookStore.ts`": [
+      {
+        "executionId": "a23dfc91-385e-4c67-acc2-52784548f83a",
+        "chatSessionId": "sess_e76f4786-1117-4517-bfae-e5a9c67d0f53",
+        "timestamp": 1795212657393
+      },
+      {
+        "executionId": "a23dfc91-385e-4c67-acc2-52784548f83a",
+        "chatSessionId": "sess_e76f4786-1117-4517-bfae-e5a9c67d0f53",
+        "timestamp": 1795213068471
+      }
+    ],
+    "9.2 Write property tests for bookStore (`src/reader/__tests__/bookStore.prop.test.ts`)": [
+      {
+        "executionId": "a23dfc91-385e-4c67-acc2-52784548f83a",
+        "chatSessionId": "sess_e76f4786-1117-4517-bfae-e5a9c67d0f53",
+        "timestamp": 1795213069082
+      },
+      {
+        "executionId": "a23dfc91-385e-4c67-acc2-52784548f83a",
+        "chatSessionId": "sess_e76f4786-1117-4517-bfae-e5a9c67d0f53",
+        "timestamp": 1795213871977
+      }
+    ],
+    "9. Implement book storage (IndexedDB)": [
+      {
+        "executionId": "a23dfc91-385e-4c67-acc2-52784548f83a",
+        "chatSessionId": "sess_e76f4786-1117-4517-bfae-e5a9c67d0f53",
+        "timestamp": 1795213872038
       }
     ]
   }

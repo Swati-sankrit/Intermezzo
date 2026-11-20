@@ -36,3 +36,8 @@ export type ParseErrorCode =
   | 'access_denied'
   | 'corrupt_epub'
   | 'missing_spine';
+
+export interface SavedBook {
+  fileName: string;
+  text: string;
+}

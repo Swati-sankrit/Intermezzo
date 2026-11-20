@@ -180,15 +180,15 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - `useReader` (task 12.1) calls this after restoring a book
     - _Requirements: 6.4, 6.5_
 
-- [ ] 9. Implement book storage (IndexedDB)
-  - [ ] 9.1 Implement `saveBook`, `loadSavedBook`, and `clearSavedBook` in `src/reader/bookStore.ts`
+- [x] 9. Implement book storage (IndexedDB)
+  - [x] 9.1 Implement `saveBook`, `loadSavedBook`, and `clearSavedBook` in `src/reader/bookStore.ts`
     - Use IndexedDB (the browser's native API) to store the most recently loaded book's `fileName` and `text`
     - Only one book is kept at a time: `saveBook` replaces any earlier entry
     - `saveBook`, `loadSavedBook`, and `clearSavedBook` must never throw; return `false` / `null` on any IndexedDB error
     - Fetch current IndexedDB API docs before implementing; do not assume method signatures
     - _Requirements: 6.1, 6.3, 6.6_
 
-  - [ ] 9.2 Write property tests for bookStore (`src/reader/__tests__/bookStore.prop.test.ts`)
+  - [x] 9.2 Write property tests for bookStore (`src/reader/__tests__/bookStore.prop.test.ts`)
     - Use `fake-indexeddb` to provide an in-memory IndexedDB in Vitest
     - **Property 16: Book storage round-trip** — for any `fc.string()` fileName and `fc.string()` text, `saveBook(fileName, text)` then `loadSavedBook()` returns `{ fileName, text }`
     - _Requirements: 6.1_
