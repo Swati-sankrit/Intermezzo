@@ -126,8 +126,8 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Midpoint example returns expected floor value
     - _Requirements: 5.4, 5.5, 5.6_
 
-- [ ] 7. Implement pace calculation
-  - [ ] 7.1 Implement `suggestedSeconds`, `countWords`, `ewmaUpdate`, and `updateAveragePace` in `src/reader/paceCalc.ts`
+- [x] 7. Implement pace calculation
+  - [x] 7.1 Implement `suggestedSeconds`, `countWords`, `ewmaUpdate`, and `updateAveragePace` in `src/reader/paceCalc.ts`
     - `suggestedSeconds(wordCount, averagePaceWpm?)`: `ceil((wordCount / (averagePaceWpm ?? DEFAULT_WPM)) * 60)`, minimum 1; return 1 when `wordCount === 0`
     - `countWords(text)`: split on whitespace runs
     - `ewmaUpdate(previousWpm, actualWpm)`: `0.8 * previousWpm + 0.2 * actualWpm` (no clamping)
@@ -135,7 +135,7 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Export constants `DEFAULT_WPM = 200`, `MIN_WPM = 50`, `MAX_WPM = 1000`, `MIN_TIME_SECONDS = 1`, `MAX_TIME_SECONDS = 600`
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8_
 
-  - [ ] 7.2 Write property tests for pace (`src/reader/__tests__/paceCalc.prop.test.ts`)
+  - [x] 7.2 Write property tests for pace (`src/reader/__tests__/paceCalc.prop.test.ts`)
     - **Property 12: Suggested time is a positive integer** — `fc.nat()` for wordCount, `fc.integer({ min: 1, max: 2000 })` for pace
     - **Property 13: Suggested time grows with word count** — `fc.tuple(fc.nat(...), fc.nat(...))` with W1 > W2 ≥ 1
     - **Property 14: EWMA formula correctness** — `fc.float({ min: 1, max: 2000 })` for both inputs; result within floating-point tolerance of `0.8*prev + 0.2*actual`

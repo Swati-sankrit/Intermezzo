@@ -12,6 +12,10 @@
     "6.2 Write property tests for progress (`src/reader/__tests__/progress.prop.test.ts`)": {
       "status": "passed",
       "lastRunTimestamp": 1795209952420
+    },
+    "7.2 Write property tests for pace (`src/reader/__tests__/paceCalc.prop.test.ts`)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795210570974
     }
   },
   "executionHistory": {
@@ -265,6 +269,37 @@
         "executionId": "4ec95c04-79b4-4624-bb45-d482954ec4ad",
         "chatSessionId": "sess_12022016-51a2-4587-ab01-4f599cd77ff2",
         "timestamp": 1795209964476
+      }
+    ],
+    "7.1 Implement `suggestedSeconds`, `countWords`, `ewmaUpdate`, and `updateAveragePace` in `src/reader/paceCalc.ts`": [
+      {
+        "executionId": "724736f2-2d1a-4c9f-b23f-b4f71d1cf56b",
+        "chatSessionId": "sess_8d8f0420-063a-47fd-9435-ce8f4f397fc7",
+        "timestamp": 1795210195413
+      },
+      {
+        "executionId": "724736f2-2d1a-4c9f-b23f-b4f71d1cf56b",
+        "chatSessionId": "sess_8d8f0420-063a-47fd-9435-ce8f4f397fc7",
+        "timestamp": 1795210342840
+      }
+    ],
+    "7.2 Write property tests for pace (`src/reader/__tests__/paceCalc.prop.test.ts`)": [
+      {
+        "executionId": "724736f2-2d1a-4c9f-b23f-b4f71d1cf56b",
+        "chatSessionId": "sess_8d8f0420-063a-47fd-9435-ce8f4f397fc7",
+        "timestamp": 1795210343334
+      },
+      {
+        "executionId": "724736f2-2d1a-4c9f-b23f-b4f71d1cf56b",
+        "chatSessionId": "sess_8d8f0420-063a-47fd-9435-ce8f4f397fc7",
+        "timestamp": 1795210582389
+      }
+    ],
+    "7. Implement pace calculation": [
+      {
+        "executionId": "724736f2-2d1a-4c9f-b23f-b4f71d1cf56b",
+        "chatSessionId": "sess_8d8f0420-063a-47fd-9435-ce8f4f397fc7",
+        "timestamp": 1795210582428
       }
     ]
   }
