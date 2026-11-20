@@ -104,17 +104,17 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Empty-text chapters are excluded from output
     - _Requirements: 2.1, 2.3, 2.4_
 
-- [ ] 5. Checkpoint — Ensure all tests pass
+- [x] 5. Checkpoint — Ensure all tests pass
   - Run `vitest --run src/reader/__tests__/splitter.*` and `src/reader/__tests__/parser.*`; ask the user if any failures arise before continuing.
 
-- [ ] 6. Implement progress calculation
-  - [ ] 6.1 Implement `calculateProgress`, `absoluteIndex`, and `countTotalParagraphs` in `src/reader/progress.ts`
+- [x] 6. Implement progress calculation
+  - [x] 6.1 Implement `calculateProgress`, `absoluteIndex`, and `countTotalParagraphs` in `src/reader/progress.ts`
     - `calculateProgress(absoluteIdx, totalParagraphs)`: `floor((absoluteIdx / totalParagraphs) * 100)` clamped to `[0, 100]`; return `0` when `totalParagraphs === 0`
     - `absoluteIndex`: sum paragraph counts of all chapters before `chapterIndex`, then add `paragraphIndex`
     - `countTotalParagraphs`: sum paragraph counts across all chapters
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-  - [ ] 6.2 Write property tests for progress (`src/reader/__tests__/progress.prop.test.ts`)
+  - [x] 6.2 Write property tests for progress (`src/reader/__tests__/progress.prop.test.ts`)
     - **Property 8: Progress formula correctness and bounds** — for any `fc.nat()` pair `(absoluteIdx, totalParagraphs)`, result equals `floor(absoluteIdx/totalParagraphs*100)` clamped to `[0,100]`
     - **Property 9: Progress never decreases moving forward** — generate a Book and two ordered positions A < B, assert `calculateProgress(A) ≤ calculateProgress(B)`
     - _Requirements: 5.1, 5.2, 5.3_

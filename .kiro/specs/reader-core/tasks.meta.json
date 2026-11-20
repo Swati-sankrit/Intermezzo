@@ -8,6 +8,10 @@
       "status": "failed",
       "failingExample": "Input: <span class=\"c\"><</span><em class=\"n\"><p style=\"color: red; font-size: 12px\">A</p><p class=\"n\"><p class=\"n\">></p><img src=\"a.png\" alt=\"x\"></p></em>  → stripHtml output \"<A\\n\\n>\" matches /<[a-zA-Z][^>]*>/. Found at 20,000 runs (seed 884226290); 100-run test usually passes. The < and > are literal text from the source, not tags; same issue for \"&lt;b&gt;\" → \"<b>\". Spec ambiguity, not a clear stripHtml bug.",
       "lastRunTimestamp": 1795203919633
+    },
+    "6.2 Write property tests for progress (`src/reader/__tests__/progress.prop.test.ts`)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795209952420
     }
   },
   "executionHistory": {
@@ -218,6 +222,49 @@
         "executionId": "49fac6ee-7817-489b-b0e0-6fcd35d339df",
         "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
         "timestamp": 1795208794725
+      }
+    ],
+    "5. Checkpoint — Ensure all tests pass": [
+      {
+        "executionId": "ca678835-7036-4860-a237-df91c7113e32",
+        "chatSessionId": "sess_dd478bf0-5fdf-4ed9-ac5e-463ae6362d99",
+        "timestamp": 1795209128215
+      },
+      {
+        "executionId": "ca678835-7036-4860-a237-df91c7113e32",
+        "chatSessionId": "sess_dd478bf0-5fdf-4ed9-ac5e-463ae6362d99",
+        "timestamp": 1795209154740
+      }
+    ],
+    "6.1 Implement `calculateProgress`, `absoluteIndex`, and `countTotalParagraphs` in `src/reader/progress.ts`": [
+      {
+        "executionId": "4ec95c04-79b4-4624-bb45-d482954ec4ad",
+        "chatSessionId": "sess_12022016-51a2-4587-ab01-4f599cd77ff2",
+        "timestamp": 1795209170406
+      },
+      {
+        "executionId": "4ec95c04-79b4-4624-bb45-d482954ec4ad",
+        "chatSessionId": "sess_12022016-51a2-4587-ab01-4f599cd77ff2",
+        "timestamp": 1795209199353
+      }
+    ],
+    "6.2 Write property tests for progress (`src/reader/__tests__/progress.prop.test.ts`)": [
+      {
+        "executionId": "4ec95c04-79b4-4624-bb45-d482954ec4ad",
+        "chatSessionId": "sess_12022016-51a2-4587-ab01-4f599cd77ff2",
+        "timestamp": 1795209199931
+      },
+      {
+        "executionId": "4ec95c04-79b4-4624-bb45-d482954ec4ad",
+        "chatSessionId": "sess_12022016-51a2-4587-ab01-4f599cd77ff2",
+        "timestamp": 1795209964438
+      }
+    ],
+    "6. Implement progress calculation": [
+      {
+        "executionId": "4ec95c04-79b4-4624-bb45-d482954ec4ad",
+        "chatSessionId": "sess_12022016-51a2-4587-ab01-4f599cd77ff2",
+        "timestamp": 1795209964476
       }
     ]
   }
