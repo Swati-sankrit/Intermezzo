@@ -7,16 +7,21 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 1rem;
-  background: var(--surface);
+  background: var(--bg);
+  border-bottom: 1px solid var(--surface);
   color: var(--text);
   font-family: system-ui, sans-serif;
+}
+
+/* Fade the controls, not the bar, so the background stays solid. */
+.reader__bar > * {
   opacity: 0.35;
   transition: opacity 600ms ease;
 }
 
-.reader__bar--awake,
-.reader__bar:hover,
-.reader__bar:focus-within {
+.reader__bar--awake > *,
+.reader__bar:hover > *,
+.reader__bar:focus-within > * {
   opacity: 1;
 }
 
@@ -85,7 +90,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reader__bar {
+  .reader__bar > * {
     transition: none;
   }
 }
