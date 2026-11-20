@@ -85,8 +85,8 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - `loadBook` returns `too_large` error for `.txt` > 50 MB
     - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6_
 
-- [ ] 4. Implement the EPUB parser
-  - [ ] 4.1 Implement `buildEpubBook` in `src/reader/parser.ts`
+- [x] 4. Implement the EPUB parser
+  - [x] 4.1 Implement `buildEpubBook` in `src/reader/parser.ts`
     - Accept `ArrayBuffer` and `stripHtml` function parameter; use epub.js to open the buffer
     - Fetch current epub.js docs first; confirm the spine and section-loading methods exist before using them
     - Traverse the spine in order; per item, load the document, call `stripHtml` on its body HTML, then unload
@@ -94,11 +94,11 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Return `{ ok: false }` with a ≤200-char message for corrupt file or missing spine
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
 
-  - [ ] 4.2 Write property tests for HTML stripping (`src/reader/__tests__/parser.prop.test.ts`)
+  - [x] 4.2 Write property tests for HTML stripping (`src/reader/__tests__/parser.prop.test.ts`)
     - **Property 6: HTML stripping removes all tag markup** — for any HTML string, output contains no substrings matching `<[a-zA-Z][^>]*>` (use `fc.string()` with injected HTML templates)
     - _Requirements: 2.3_
 
-  - [ ]* 4.3 Write unit tests for the EPUB parser (`src/reader/__tests__/parser.unit.test.ts`)
+  - [x]* 4.3 Write unit tests for the EPUB parser (`src/reader/__tests__/parser.unit.test.ts`)
     - Load a minimal valid `.epub` fixture; verify chapter titles and text are non-empty strings
     - Corrupt buffer returns `{ ok: false }` with message ≤200 chars containing no stack trace
     - Empty-text chapters are excluded from output
@@ -206,6 +206,7 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Vite serves `public/` from the site root, so `filePath` values are like `"/books/the-yellow-wallpaper.txt"`, never `"public/books/..."`
     - Ship with one entry: The Yellow Wallpaper by Charlotte Perkins Gilman, with `filePath: "/books/the-yellow-wallpaper.txt"` and `format: "txt"`
     - Add a unit test verifying that every `filePath` in `LIBRARY` starts with `"/books/"` and that `format` is `"txt"` or `"epub"`
+    - Library books must go through `stripGutenbergBoilerplate` before `buildTxtBook`.
     - _Requirements: 8.2, 8.4_
 
 - [ ] 12. Implement the UI layer
@@ -219,6 +220,7 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - On `advance`: increment paragraph index; at chapter end set the chapter-completion state; call `updateAveragePace` and `saveState`
     - On mount: call `loadState`; if valid, call `loadSavedBook` to restore the book; if the position is invalid start at 0,0; if the book cannot be read show the empty state
     - Derive and return `paragraphs`, `progress`, `suggestedSecs` from the pure functions
+    - Library books must go through `stripGutenbergBoilerplate` before `buildTxtBook`.
     - _Requirements: 1.7, 2.5, 2.6, 4.4, 5.2, 6.1–6.7, 7.6–7.10, 8.3–8.5_
 
   - [ ] 12.2 Implement `src/ui/LibraryScreen.tsx`

@@ -9,6 +9,7 @@
  */
 
 import { readAsArrayBuffer, readAsText } from './fileIO';
+import { stripGutenbergBoilerplate } from './gutenberg';
 import type { Book, LoadResult } from './types';
 
 // ---------------------------------------------------------------------------
@@ -53,8 +54,7 @@ export function isChapterHeading(line: string): boolean {
  *   chapter with an empty title (omitted when it has no non-whitespace chars).
  * - Heading line becomes the chapter title (trimmed); subsequent lines until
  *   the next heading are the chapter text (joined with '\n').
- * - Chapters whose title is non-empty are always included even if body is empty.
- * - Chapters whose title is empty AND whose body is whitespace-only are skipped.
+ * - Chapters whose body is whitespace-only are dropped, even if titled.
  */
 export function buildTxtBook(fileName: string, text: string): LoadResult {
   if (text.trim().length === 0) {
@@ -89,13 +89,10 @@ export function buildTxtBook(fileName: string, text: string): LoadResult {
       title: seg.title,
       text: seg.lines.join('\n'),
     }))
-    .filter((ch) => {
-      // Always keep chapters that have a title (chapter heading was present).
-      if (ch.title !== '') return true;
-      // For the pre-heading accumulation (empty title), only keep it when
-      // it contains at least one non-whitespace character.
-      return ch.text.trim().length > 0;
-    });
+    // Drop any chapter with no body text, titled or not. This removes
+    // table-of-contents lines (e.g. Gutenberg "CHAPTER I.") that would
+    // otherwise become empty chapters.
+    .filter((ch) => ch.text.trim().length > 0);
 
   // Build the Book. If filtering left no chapters, treat as empty.
   if (chapters.length === 0) {
@@ -110,14 +107,133 @@ export function buildTxtBook(fileName: string, text: string): LoadResult {
 }
 
 /**
- * Stub for EPUB parsing — will be replaced in task 4.1.
+ * Parses an EPUB ArrayBuffer into a Book using epub.js.
+ *
+ * Pipeline:
+ *   ArrayBuffer
+ *   → epub.js Book.open(buffer)
+ *   → traverse spine.spineItems in order
+ *   → per item: load document, stripHtml(body.innerHTML), unload
+ *   → silently exclude items whose stripped text is empty
+ *   → return Book { fileName, chapters }
+ *
+ * Returns `{ ok: false }` with a ≤200-char message when:
+ *   - the buffer is not a valid EPUB (open rejects)
+ *   - the spine is missing or has no items after opening
+ *
+ * Does NOT import FileReader; receives a plain ArrayBuffer.
+ * Does NOT import React.
  */
 export async function buildEpubBook(
-  _fileName: string,
-  _buffer: ArrayBuffer,
-  _stripHtml: (html: string) => string
+  fileName: string,
+  buffer: ArrayBuffer,
+  stripHtml: (html: string) => string
 ): Promise<LoadResult> {
-  return { ok: false, error: 'EPUB parsing not yet implemented.' };
+  const CORRUPT_MSG =
+    'Could not open this EPUB: the file appears to be corrupt or its reading order is missing.';
+
+  // Lazy import so the module stays testable in environments without a full
+  // DOM; the caller (loadBook) only reaches this branch for .epub files.
+  const ePubModule = await import('epubjs');
+  // The default export is the Epub factory function.
+  const Epub = ePubModule.default;
+
+  let book: ReturnType<typeof Epub> | undefined;
+
+  try {
+    book = Epub();
+    await book.open(buffer);
+  } catch {
+    book?.destroy();
+    return { ok: false, error: CORRUPT_MSG };
+  }
+
+  // spine.spineItems is populated after open() resolves.
+  const spineItems = (book.spine as unknown as { spineItems: unknown[] })
+    .spineItems;
+
+  if (!Array.isArray(spineItems) || spineItems.length === 0) {
+    book.destroy();
+    return { ok: false, error: CORRUPT_MSG };
+  }
+
+  // Build a href → label map from the navigation TOC so we can assign titles.
+  // navigation may not be populated for every EPUB, so we fall back to ''.
+  type TocItem = { href?: string; label?: string; subitems?: TocItem[] };
+  const tocLabelByHref = new Map<string, string>();
+  const addToc = (items: TocItem[]): void => {
+    for (const item of items) {
+      if (item.href && item.label) {
+        // Strip any fragment identifier when looking up by href.
+        const hrefWithoutFragment = item.href.split('#')[0];
+        // First entry for a file wins (usually the chapter's own title).
+        if (!tocLabelByHref.has(hrefWithoutFragment)) {
+          tocLabelByHref.set(hrefWithoutFragment, item.label.trim());
+        }
+      }
+      if (Array.isArray(item.subitems)) addToc(item.subitems);
+    }
+  };
+  try {
+    // book.navigation is undefined until loaded.navigation resolves.
+    const nav = await book.loaded.navigation;
+    if (nav && Array.isArray(nav.toc)) addToc(nav.toc as TocItem[]);
+  } catch {
+    // Navigation is optional; continue without titles.
+  }
+
+  const chapters: Array<{ title: string; text: string }> = [];
+
+  for (const rawItem of spineItems) {
+    // Each entry in spineItems is a Section.
+    const section = rawItem as {
+      href?: string;
+      // epub.js resolves load() with the root <html> Element (section.contents),
+      // not a Document; the parsed Document is stored on section.document.
+      load: (req: unknown) => Promise<Element>;
+      unload: () => void;
+      document?: Document;
+    };
+
+    let doc: Document;
+    try {
+      const root = await section.load(book.load.bind(book));
+      doc = section.document ?? root.ownerDocument;
+    } catch {
+      // A single unloadable section is silently skipped.
+      continue;
+    }
+
+    let text = '';
+    try {
+      const body = doc.body ?? doc.documentElement;
+      text = stripHtml(body?.innerHTML ?? '').trim();
+    } catch {
+      // If stripping fails for this item, treat it as empty (skip below).
+    }
+
+    section.unload();
+
+    if (text.length === 0) {
+      // Silently exclude empty-text chapters as specified.
+      continue;
+    }
+
+    // Look up a TOC label for this section's href (sans fragment).
+    const hrefKey = section.href ? section.href.split('#')[0] : '';
+    // Fallback: "Chapter N", N = 1-based position among kept chapters.
+    const title = tocLabelByHref.get(hrefKey) || `Chapter ${chapters.length + 1}`;
+
+    chapters.push({ title, text });
+  }
+
+  book.destroy();
+
+  if (chapters.length === 0) {
+    return { ok: false, error: CORRUPT_MSG };
+  }
+
+  return { ok: true, book: { fileName, chapters } };
 }
 
 /**
@@ -139,7 +255,7 @@ export async function loadBook(
   if (name.endsWith('.txt')) {
     try {
       const text = await readAsText(file);
-      return buildTxtBook(file.name, text);
+      return buildTxtBook(file.name, stripGutenbergBoilerplate(text));
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : 'Could not read the file.';
@@ -150,7 +266,7 @@ export async function loadBook(
   if (name.endsWith('.epub')) {
     try {
       const buffer = await readAsArrayBuffer(file);
-      return buildEpubBook(file.name, buffer, stripHtml);
+      return await buildEpubBook(file.name, buffer, stripHtml);
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : 'Could not read the file.';

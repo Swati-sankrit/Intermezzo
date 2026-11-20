@@ -3,6 +3,11 @@
     "2.2 Write property tests for the splitter (`src/reader/__tests__/splitter.prop.test.ts`)": {
       "status": "passed",
       "lastRunTimestamp": 1794939721181
+    },
+    "4.2 Write property tests for HTML stripping (`src/reader/__tests__/parser.prop.test.ts`)": {
+      "status": "failed",
+      "failingExample": "Input: <span class=\"c\"><</span><em class=\"n\"><p style=\"color: red; font-size: 12px\">A</p><p class=\"n\"><p class=\"n\">></p><img src=\"a.png\" alt=\"x\"></p></em>  → stripHtml output \"<A\\n\\n>\" matches /<[a-zA-Z][^>]*>/. Found at 20,000 runs (seed 884226290); 100-run test usually passes. The < and > are literal text from the source, not tags; same issue for \"&lt;b&gt;\" → \"<b>\". Spec ambiguity, not a clear stripHtml bug.",
+      "lastRunTimestamp": 1795203919633
     }
   },
   "executionHistory": {
@@ -155,6 +160,64 @@
         "executionId": "c65ff14d-ef27-481a-8d0d-f776d8c448a8",
         "chatSessionId": "sess_8ad06a80-e75a-41a9-b6bf-ad8ee6f022ba",
         "timestamp": 1794941850242
+      }
+    ],
+    "4.1 Implement `buildEpubBook` in `src/reader/parser.ts`": [
+      {
+        "executionId": "b88004ad-50f4-4008-b2ec-996831496af7",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795193154530
+      },
+      {
+        "executionId": "b88004ad-50f4-4008-b2ec-996831496af7",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795194447483
+      },
+      {
+        "executionId": "460874cb-5c28-49fa-8778-6557e3210e4e",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795204472522
+      },
+      {
+        "executionId": "460874cb-5c28-49fa-8778-6557e3210e4e",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795204745304
+      }
+    ],
+    "4.2 Write property tests for HTML stripping (`src/reader/__tests__/parser.prop.test.ts`)": [
+      {
+        "executionId": "b88004ad-50f4-4008-b2ec-996831496af7",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795194447936
+      },
+      {
+        "executionId": "49fac6ee-7817-489b-b0e0-6fcd35d339df",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795205120137
+      },
+      {
+        "executionId": "49fac6ee-7817-489b-b0e0-6fcd35d339df",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795206254101
+      }
+    ],
+    "4. Implement the EPUB parser": [
+      {
+        "executionId": "49fac6ee-7817-489b-b0e0-6fcd35d339df",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795206254178
+      }
+    ],
+    "4.3 Write unit tests for the EPUB parser (`src/reader/__tests__/parser.unit.test.ts`)": [
+      {
+        "executionId": "49fac6ee-7817-489b-b0e0-6fcd35d339df",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795206254223
+      },
+      {
+        "executionId": "49fac6ee-7817-489b-b0e0-6fcd35d339df",
+        "chatSessionId": "sess_6a0747a8-37e9-4882-b04e-439870d6d82f",
+        "timestamp": 1795208794725
       }
     ]
   }
