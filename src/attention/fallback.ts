@@ -55,6 +55,11 @@ function isIdle(s: FallbackSample, idleLimitMs: number): boolean {
   return Number.isFinite(s.lastInputT) && s.t - s.lastInputT > idleLimitMs;
 }
 
+/**
+ * While `present`: becomes `away` when the hidden run lasts longer than
+ * `debounceMs` or the sample is idle (strict). While `away`: becomes `present`
+ * only at the first accepted sample with `tabActive` and not idle.
+ */
 export function stepFallback(
   state: FallbackState,
   s: FallbackSample,
@@ -66,12 +71,16 @@ export function stepFallback(
   const inactiveRunStart = s.tabActive ? null : (state.inactiveRunStart ?? s.t);
   const awayByTab =
     inactiveRunStart !== null && s.t - inactiveRunStart > cfg.debounceMs;
-  const isAway = awayByTab || isIdle(s, cfg.idleLimitMs);
+  const idle = isIdle(s, cfg.idleLimitMs);
 
   let signal = state.signal;
-  if (isAway && signal.value === 'present') {
-    signal = { value: 'away', timestamp: Math.max(s.t, signal.timestamp) };
-  } else if (!isAway && signal.value === 'away') {
+  if (signal.value === 'present') {
+    if (awayByTab || idle) {
+      signal = { value: 'away', timestamp: Math.max(s.t, signal.timestamp) };
+    }
+  } else if (s.tabActive && !idle) {
+    // Req 6.4: once away, only an active tab with recent input returns to
+    // present. A hidden sample never does, even inside the debounce time.
     signal = { value: 'present', timestamp: Math.max(s.t, signal.timestamp) };
   }
   return { signal, lastT: s.t, inactiveRunStart };

@@ -264,7 +264,7 @@ export function stepFallback(state: FallbackState, s: FallbackSample, cfg: Fallb
 export function decideFallback(samples: readonly FallbackSample[], cfg: Partial<FallbackConfig>, startT?: number): AttentionSignal;
 ```
 
-Rules: a sample is away-by-tab when `!tabActive` and the inactive run has lasted longer than `debounceMs`. It is away-by-idle when `t - lastInputT > idleLimitMs` (strict, immediate, no extra debounce). The signal is `away` if either holds and `present` otherwise, so input after an idle `away` (which raises `lastInputT`) or a return to the tab yields `present` at the first such sample (Req 6.4). Samples with earlier `t` are ignored, as in the Decision_Function. The idle limit in `FallbackConfig` has already been clamped by `config.clampIdleLimit`.
+Rules: a sample is away-by-tab when `!tabActive` and the inactive run has lasted longer than `debounceMs`. It is away-by-idle when `t - lastInputT > idleLimitMs` (strict, immediate, no extra debounce). The signal becomes `away` if either holds. Once `away`, it becomes `present` only at the first sample whose tab is active and whose input is within the idle limit, so input after an idle `away` (which raises `lastInputT`) or a return to the tab yields `present` at the first such sample, and a hidden-tab sample never returns the signal to `present`, even within the debounce time (Req 6.4). Samples with earlier `t` are ignored, as in the Decision_Function. The idle limit in `FallbackConfig` has already been clamped by `config.clampIdleLimit`.
 
 ### Config helpers (`config.ts`)
 

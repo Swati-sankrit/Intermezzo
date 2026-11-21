@@ -134,7 +134,25 @@ Property 3 also sets `maxSkipsPerRun: 1000` in one block.
    - Property 2 read `undefined` when a generated sequence had no Away run (seed 1727871493). Fixed with `fc.pre`.
    - Property 4 had a wrong expected tail timestamp in the test. Fixed.
 ### Open points
-- `fallback.ts` treats a non-finite `lastInputT` as not idle. design.md and the requirements are silent on this. No test depends on it.
-- The internal trace helper in `decision.p04.prop.test.ts` tracks `lastT` from null instead of from `startT`. The current generators never produce samples before `startT`, so the test passes. It would misjudge such samples.
-- Property 14 checks that a carried signal stays unchanged until its value flips. It does not assert that a flip happens in any case.
+- `fallback.ts` treats a non-finite `lastInputT` as not idle. design.md and the requirements are silent on this. No test depends on it. The user confirmed this behaviour and it is kept (see "attention-signal: requirement 6.4 resolution, Property 4 and 14 test fixes", item a).
+- The internal trace helper in `decision.p04.prop.test.ts` tracks `lastT` from null instead of from `startT`. The current generators never produce samples before `startT`, so the test passes. It would misjudge such samples. Resolved: see "attention-signal: requirement 6.4 resolution, Property 4 and 14 test fixes".
+- Property 14 checks that a carried signal stays unchanged until its value flips. It does not assert that a flip happens in any case. Resolved: see "attention-signal: requirement 6.4 resolution, Property 4 and 14 test fixes".
 - Other changes made with user approval: the task 1.2 text in tasks.md was updated for "stale before session start". The unused `th` parameter was removed from `sampleAt` in `decision.p08.prop.test.ts`, with no assertion change.
+
+## attention-signal: requirement 6.4 resolution, Property 4 and 14 test fixes
+### a. Requirement 6.4 versus the design
+While strengthening the Property 14 test, the reference model showed that design.md and `fallback.ts` said "away if hidden longer than the debounce or idle, present otherwise". So a carried `away` followed by a hidden-tab sample that was still within the debounce and not idle became `present`. Requirement 6.4 said `present` comes when the tab is visible again or input is received. The existing generators never produced that case, so no test had failed.
+Resolution (user decision): follow requirement 6.4. `stepFallback` in `fallback.ts` now returns `present` from `away` only when the tab is active and the input is within the idle limit. The fallback section of design.md was updated to match. Requirement 6.4 was reworded to the same rule. New wording: "WHILE the Attention_Signal is `away` in Fallback_Mode, WHEN a sample is received at which the tab is visible and focused and Idle_Time does not exceed the Idle_Limit, THE Attention_Module SHALL emit `present` within the Return_Time (at most 1000 ms), with the timestamp of that first such sample, and THE Attention_Module SHALL NOT emit `present` on any earlier sample at which the tab is hidden or unfocused or Idle_Time exceeds the Idle_Limit."
+A non-finite last-input time still counts as not idle (user confirmed). Properties 10 and 11 still pass unchanged.
+### b. Property 4 test fix (`decision.p04.prop.test.ts`)
+The trace helper used to track accepted samples from null instead of from the session start. It passed only because the generators never produced samples before `startT`. It now starts at `startT`. The test file generates a random `startT` that often falls after early samples (`arbitraries.ts` is unchanged). Each of the two main properties asserts that at least 40% of cases contain a pre-start sample. A new property covers sequences where every sample is before the start, and the state must stay unchanged. The file has 4 fc.assert blocks of 500 cases each. No counterexamples. No assertion was removed or weakened.
+### c. Property 14 test fix (`modeSwitch.p14.prop.test.ts`)
+Added independent reference models for the camera rules and the fallback rules. At every sample after a switch, the real signal must equal the model in value and timestamp, in both directions, so a missing change now fails.
+Example tests: a carried `away` stays `away` through a short hidden-tab sample and through an active but idle sample. Then `present` is stamped 2100 at the first active, non-idle sample.
+Flip rates (300 cases each): camera to fallback 216/300 (72%), fallback to camera 148/300 (49%). Each direction asserts at least 30%. A first draft used a 50% floor, and fallback to camera came in at 49.7%, so the floor was set to 30%. Only this new statistic was involved. All model comparisons passed.
+Remaining gap: the fallback-to-camera directional test always hands over `present`. A carried `away` into camera mode is covered only by the arbitrary-carried-signal test, which has no flip-rate check.
+The file has 10 tests, `numRuns` 300 per fc.assert. No counterexamples.
+### d. Unexplained hang
+One full `npx vitest --run` run hung for 900 s with no output. The rerun finished in about 4 s. The cause is unknown and it was not reproduced.
+### e. Results at the time
+As reported by the earlier runs: full `npx vitest --run`, 31 files, 144 tests passed. `npx tsc -p tsconfig.app.json --noEmit` was clean. These were not re-run for this documentation edit.

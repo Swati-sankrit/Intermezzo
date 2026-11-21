@@ -28,7 +28,7 @@ Design and implementation phases: before writing any camera or MediaPipe code, f
 - **Return_Time**: The maximum time between the reader facing the screen again and `present` being emitted. Greater than 0 and at most 1000 ms; values at or below 0, or non-finite, use the default 1000 ms.
 - **Camera_Mode**: The operating mode in which the Attention_Module derives the Attention_Signal from the camera and from Tab_Active.
 - **Fallback_Mode**: The operating mode in which the Attention_Module derives the Attention_Signal from tab visibility and idle time.
-- **Idle_Time**: Time since the last keyboard, pointer, or touch input in the app.
+- **Idle_Time**: Time since the last keyboard, pointer, touch, or scroll input in the app.
 - **Idle_Limit**: The Idle_Time after which the reader counts as away in Fallback_Mode. The reading view sets it to 3 times the suggested time of the current paragraph. The Attention_Module enforces a minimum of 60 s and uses 60 s until the reading view sets it.
 - **Camera_Consent_Dialog**: The dialog that explains in plain words why the camera is used and asks for permission.
 - **Camera_Indicator**: The small visible marker in the top bar shown while the camera is on, with a control to turn the camera off.
@@ -147,7 +147,7 @@ Design and implementation phases: before writing any camera or MediaPipe code, f
 1. WHILE the app is in Fallback_Mode, THE Attention_Module SHALL produce the Attention_Signal (`present` or `away`, with a timestamp) from tab visibility, window focus, and Idle_Time only, and SHALL NOT access the camera.
 2. WHEN the tab has been hidden or the window has been without focus continuously for longer than the Debounce_Time, THE Attention_Module SHALL emit `away` once, with the timestamp of the emission.
 3. WHEN Idle_Time exceeds the Idle_Limit, THE Attention_Module SHALL emit `away` once, with the timestamp of the emission. Idle_Time is the time since the last keyboard, mouse, touch, or scroll input.
-4. WHEN the tab becomes visible and focused again, or input is received after an `away` emission, THE Attention_Module SHALL emit `present` within the Return_Time (at most 1000 ms), with the timestamp of the emission.
+4. WHILE the Attention_Signal is `away` in Fallback_Mode, WHEN a sample is received at which the tab is visible and focused and Idle_Time does not exceed the Idle_Limit, THE Attention_Module SHALL emit `present` within the Return_Time (at most 1000 ms), with the timestamp of that first such sample, and THE Attention_Module SHALL NOT emit `present` on any earlier sample at which the tab is hidden or unfocused or Idle_Time exceeds the Idle_Limit.
 5. FOR ALL sequences of visibility, focus, and input events in which every hidden or unfocused run lasts no longer than the Debounce_Time and every idle run lasts no longer than the Idle_Limit, THE fallback decision function SHALL never return `away`.
 6. IF the camera becomes unavailable during a Session (device unplugged, stream ended, or access revoked) or cannot be started for a reason other than permission denial, THEN THE Attention_Module SHALL enter Fallback_Mode within 1000 ms, remove the Camera_Indicator within that same period, show exactly one on-screen notice stating that reading continues without the camera, and keep the reader's current position and Session data unchanged.
 7. THE fallback decision function SHALL be a pure function whose output depends only on its arguments (event history and current time passed in), and it SHALL read no clock, DOM, or storage.
