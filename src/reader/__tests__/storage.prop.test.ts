@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { STORAGE_KEY, loadState, saveState } from '../storage';
+import {
+  PACE_GUIDE_KEY,
+  STORAGE_KEY,
+  loadPaceGuide,
+  loadState,
+  savePaceGuide,
+  saveState,
+} from '../storage';
 import type { StoredState } from '../types';
 
 const validState: fc.Arbitrary<StoredState> = fc.record({
@@ -86,5 +93,26 @@ describe('storage property tests', () => {
       }),
       { numRuns: 100 },
     );
+  });
+
+  // Feature: reader-core, Property 19: Pace-guide setting round-trip
+  // **Validates: Requirements 7.9**
+  it('Property 19: savePaceGuide then loadPaceGuide returns the same value, with no saved book state', () => {
+    fc.assert(
+      fc.property(fc.array(fc.boolean(), { minLength: 1, maxLength: 5 }), (writes) => {
+        localStorage.clear();
+        for (const w of writes) savePaceGuide(w);
+        expect(loadPaceGuide()).toBe(writes[writes.length - 1]);
+        expect(loadState()).toBeNull();
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('loadPaceGuide returns null when absent or invalid', () => {
+    localStorage.clear();
+    expect(loadPaceGuide()).toBeNull();
+    localStorage.setItem(PACE_GUIDE_KEY, 'maybe');
+    expect(loadPaceGuide()).toBeNull();
   });
 });

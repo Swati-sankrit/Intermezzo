@@ -6,28 +6,9 @@ import { DEFAULT_WPM, countWords, suggestedSeconds, updateAveragePace } from '..
 import { resolvePosition } from '../reader/position';
 import { absoluteIndex, calculateProgress, countTotalParagraphs } from '../reader/progress';
 import { splitIntoParagraphs } from '../reader/splitter';
-import { loadState, saveState } from '../reader/storage';
+import { loadPaceGuide, loadState, savePaceGuide, saveState } from '../reader/storage';
 import type { Book, Paragraph } from '../reader/types';
 import { loadFromFile, loadFromLibrary, type Loaded } from './loadSource';
-
-const PACE_GUIDE_KEY = 'rod_pace_guide';
-
-function readPaceGuide(fallback: boolean): boolean {
-  try {
-    const v = localStorage.getItem(PACE_GUIDE_KEY);
-    return v === null ? fallback : v === 'true';
-  } catch {
-    return fallback;
-  }
-}
-
-function writePaceGuide(on: boolean): void {
-  try {
-    localStorage.setItem(PACE_GUIDE_KEY, String(on));
-  } catch {
-    // Storage unavailable: the setting just lasts for this session.
-  }
-}
 
 export interface ReaderState {
   book: Book | null;
@@ -50,8 +31,9 @@ const INITIAL: ReaderState = {
 };
 
 export function useReader() {
-  const [s, setS] = useState<ReaderState>(() => ({ ...INITIAL, paceGuideEnabled: readPaceGuide(false) }));
-  const shownAt = useRef(Date.now());
+  const [s, setS] = useState<ReaderState>(() => ({ ...INITIAL, paceGuideEnabled: loadPaceGuide() ?? false }));
+  // When the active paragraph appeared. Set in the load handlers; no book is shown before then.
+  const shownAt = useRef(0);
   const loadToken = useRef(0);
 
   const persist = useCallback((next: ReaderState) => {
@@ -71,10 +53,11 @@ export function useReader() {
   // Restore the saved book and position on mount.
   useEffect(() => {
     const token = ++loadToken.current;
+    let cancelled = false;
     void (async () => {
       const saved = await loadSavedBook();
-      if (!saved || token !== loadToken.current) return;
-      const restored = restoreBook(saved.fileName, saved.text);
+      if (!saved || cancelled || token !== loadToken.current) return;
+      const restored = restoreBook(saved.fileName, saved.text, saved.title);
       if (!restored.ok) return; // unreadable: stay on the empty state (6.6)
       const state = loadState();
       const usable = state && state.fileName === saved.fileName ? state : null;
@@ -89,11 +72,11 @@ export function useReader() {
         chapterComplete: false,
         error: null,
         averagePace: usable?.averagePace ?? prev.averagePace,
-        paceGuideEnabled: readPaceGuide(usable?.paceGuideEnabled ?? prev.paceGuideEnabled),
+        paceGuideEnabled: loadPaceGuide() ?? usable?.paceGuideEnabled ?? prev.paceGuideEnabled,
       }));
     })();
     return () => {
-      loadToken.current++;
+      cancelled = true;
     };
   }, []);
 
@@ -106,7 +89,7 @@ export function useReader() {
         setS((prev) => ({ ...prev, error: result.error })); // keep the previous book
         return;
       }
-      await saveBook(result.book.fileName, result.storedText);
+      await saveBook(result.book.fileName, result.storedText, result.book.title);
       if (token !== loadToken.current) return;
       shownAt.current = Date.now();
       setS((prev) => {
@@ -176,7 +159,7 @@ export function useReader() {
 
   const togglePaceGuide = useCallback(() => {
     const next = { ...s, paceGuideEnabled: !s.paceGuideEnabled };
-    writePaceGuide(next.paceGuideEnabled);
+    savePaceGuide(next.paceGuideEnabled);
     persist(next);
     setS(next);
   }, [s, persist]);

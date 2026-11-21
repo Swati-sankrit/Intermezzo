@@ -2,6 +2,9 @@ import type { StoredState } from './types';
 
 export const STORAGE_KEY = 'rod_state';
 
+/** Standalone key so the setting survives when no book or position is saved yet. */
+export const PACE_GUIDE_KEY = 'rod_pace_guide';
+
 const MIN_PACE = 50;
 const MAX_PACE = 1000;
 
@@ -71,5 +74,24 @@ export function clearState(): void {
     localStorage.removeItem(STORAGE_KEY);
   } catch {
     // ignore
+  }
+}
+
+/** Save the pace-guide setting on its own. Never throws; the setting then lasts for this session only. */
+export function savePaceGuide(enabled: boolean): void {
+  try {
+    localStorage.setItem(PACE_GUIDE_KEY, String(enabled));
+  } catch {
+    // Storage unavailable: best-effort.
+  }
+}
+
+/** Read the pace-guide setting. Returns null if absent, invalid, or storage is unavailable. */
+export function loadPaceGuide(): boolean | null {
+  try {
+    const v = localStorage.getItem(PACE_GUIDE_KEY);
+    return v === 'true' ? true : v === 'false' ? false : null;
+  } catch {
+    return null;
   }
 }

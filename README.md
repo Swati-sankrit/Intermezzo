@@ -20,7 +20,20 @@ A privacy-first, in-browser reading app. Book content never leaves the device.
 | fast-check | MIT | Property-based testing |
 | fake-indexeddb | Apache-2.0 | In-memory IndexedDB for tests |
 
+| @fontsource/literata | OFL-1.1 | Reading text font (bundled, self-hosted) |
+| @fontsource/cormorant-garamond | OFL-1.1 | Headings and titles font (bundled, self-hosted) |
 > `epubjs` uses the BSD-2-Clause license (also known as the "FreeBSD" license).
+
+## Licences / Fonts
+
+Fonts are bundled from npm via Fontsource and served from this app. Nothing loads from Google Fonts or any other third-party server. Only the Latin subset is imported, at the weights in use.
+
+| Package | Font | Licence | Weights imported |
+|---|---|---|---|
+| @fontsource/literata | Literata (reading text) | SIL Open Font License 1.1 (OFL-1.1) | 400 |
+| @fontsource/cormorant-garamond | Cormorant Garamond (headings, titles) | SIL Open Font License 1.1 (OFL-1.1) | 500, 600 |
+
+Interface labels use the system UI font. The `license` field in both packages' package.json reads `OFL-1.1`.
 
 ---
 

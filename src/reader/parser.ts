@@ -10,6 +10,7 @@
 
 import { readAsArrayBuffer, readAsText } from './fileIO';
 import { stripGutenbergBoilerplate } from './gutenberg';
+import { resolveTitle } from './title';
 import type { Book, LoadResult } from './types';
 
 // ---------------------------------------------------------------------------
@@ -56,7 +57,7 @@ export function isChapterHeading(line: string): boolean {
  *   the next heading are the chapter text (joined with '\n').
  * - Chapters whose body is whitespace-only are dropped, even if titled.
  */
-export function buildTxtBook(fileName: string, text: string): LoadResult {
+export function buildTxtBook(fileName: string, text: string, title?: string): LoadResult {
   if (text.trim().length === 0) {
     return {
       ok: false,
@@ -102,7 +103,7 @@ export function buildTxtBook(fileName: string, text: string): LoadResult {
     };
   }
 
-  const book: Book = { fileName, chapters };
+  const book: Book = { fileName, title: resolveTitle(title, fileName), chapters };
   return { ok: true, book };
 }
 
@@ -182,6 +183,14 @@ export async function buildEpubBook(
     // Navigation is optional; continue without titles.
   }
 
+  let metadataTitle: string | undefined;
+  try {
+    const meta = await book.loaded.metadata;
+    metadataTitle = typeof meta?.title === 'string' ? meta.title : undefined;
+  } catch {
+    // Metadata is optional; the file name is used instead.
+  }
+
   const chapters: Array<{ title: string; text: string }> = [];
 
   for (const rawItem of spineItems) {
@@ -233,7 +242,8 @@ export async function buildEpubBook(
     return { ok: false, error: CORRUPT_MSG };
   }
 
-  return { ok: true, book: { fileName, chapters } };
+  // Metadata title (dc:title); blank or missing falls back to the file name.
+  return { ok: true, book: { fileName, title: resolveTitle(metadataTitle, fileName), chapters } };
 }
 
 /**

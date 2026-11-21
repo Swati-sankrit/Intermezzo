@@ -22,12 +22,13 @@ export function ReaderView() {
     timer.current = setTimeout(() => setAwake(false), IDLE_MS);
   }, []);
 
+  // `awake` starts true, so on mount only the idle timer needs starting.
   useEffect(() => {
-    wake();
+    timer.current = setTimeout(() => setAwake(false), IDLE_MS);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [wake]);
+  }, []);
 
   if (!r.book) {
     return (
@@ -61,7 +62,7 @@ export function ReaderView() {
       </header>
 
       <main className="reader__page">
-        <p className="reader__book">{r.book.fileName}</p>
+        <p className="reader__book">{r.book.title}</p>
         {chapter?.title ? <h1 className="reader__chapter">{chapter.title}</h1> : null}
         <ErrorBanner error={r.error} />
         <ParagraphList

@@ -2,6 +2,7 @@
 // .txt books are kept as their (boilerplate-stripped) source text and re-parsed.
 // .epub books have no plain-text source, so their chapters are kept as JSON.
 import { buildTxtBook } from './parser';
+import { resolveTitle } from './title';
 import type { Book, Chapter, LoadResult } from './types';
 
 const BAD_SAVED = 'The saved book could not be read.';
@@ -21,9 +22,13 @@ function isChapter(v: unknown): v is Chapter {
   return typeof o.title === 'string' && typeof o.text === 'string';
 }
 
-/** Rebuild a Book from text saved by saveBook. Never throws. */
-export function restoreBook(fileName: string, text: string): LoadResult {
-  if (!isEpubName(fileName)) return buildTxtBook(fileName, text);
+/**
+ * Rebuild a Book from text saved by saveBook. Never throws.
+ * `title` is the saved title; data saved before titles existed has none,
+ * so the title falls back to the file name without its extension.
+ */
+export function restoreBook(fileName: string, text: string, title?: string): LoadResult {
+  if (!isEpubName(fileName)) return buildTxtBook(fileName, text, title);
   try {
     const v: unknown = JSON.parse(text);
     if (!Array.isArray(v) || v.length === 0 || !v.every(isChapter)) {
@@ -31,7 +36,7 @@ export function restoreBook(fileName: string, text: string): LoadResult {
     }
     return {
       ok: true,
-      book: { fileName, chapters: v.map((c) => ({ title: c.title, text: c.text })) },
+      book: { fileName, title: resolveTitle(title, fileName), chapters: v.map((c) => ({ title: c.title, text: c.text })) },
     };
   } catch {
     return { ok: false, error: BAD_SAVED };

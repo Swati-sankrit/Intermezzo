@@ -1,5 +1,6 @@
 export interface Book {
   fileName: string;
+  title: string;      // never empty; metadata or library title, else file name without extension
   chapters: Chapter[];
 }
 
@@ -40,4 +41,5 @@ export type ParseErrorCode =
 export interface SavedBook {
   fileName: string;
   text: string;
+  title?: string;     // absent in books saved by older versions
 }

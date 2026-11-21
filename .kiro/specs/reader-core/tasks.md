@@ -263,18 +263,18 @@ Implement the foundational reading module for "Read or Dread" in TypeScript. The
     - Stay under 200 lines
     - _Requirements: 4.4, 4.5, 5.1, 7.9, 8.1, 8.6_
 
-- [ ] 13. Write integration tests
+- [x] 13. Write integration tests
   - [ ]* 13.1 Write end-to-end load tests (`src/reader/__tests__/parser.unit.test.ts` integration section)
     - Load a real small `.txt` fixture (< 1 KB) through `loadBook`; verify chapter count and that all source non-whitespace characters are present in the Book
     - Load a minimal valid `.epub` fixture through `loadBook`; verify chapter titles and text are non-empty strings
     - _Requirements: 1.2, 2.1, 2.3_
 
-  - [ ]* 13.2 Write ReaderView integration tests (`src/ui/__tests__/ReaderView.integration.test.tsx`)
+  - [x]* 13.2 Write ReaderView integration tests (`src/ui/__tests__/ReaderView.integration.test.tsx`)
     - Simulate a full advance sequence through a known Book with React Testing Library; verify `calculateProgress` values match the formula at each step
     - Simulate app reload with a saved `StoredState` and saved book; verify `ReaderView` renders the saved paragraph as active without user action
     - _Requirements: 5.2, 5.3, 6.3_
 
-- [ ] 14. Final checkpoint — Ensure all tests pass
+- [x] 14. Final checkpoint — Ensure all tests pass
   - Run `vitest --run`; confirm all unit, property, and integration tests are green; ask the user if any failures arise.
 
 ## Notes

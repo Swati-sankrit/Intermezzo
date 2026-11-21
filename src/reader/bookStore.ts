@@ -75,9 +75,9 @@ function runTransaction<T>(
 }
 
 /** Store the book, replacing any earlier one. Returns false on any failure. */
-export async function saveBook(fileName: string, text: string): Promise<boolean> {
+export async function saveBook(fileName: string, text: string, title?: string): Promise<boolean> {
   try {
-    const record: SavedBook = { fileName, text };
+    const record: SavedBook = title === undefined ? { fileName, text } : { fileName, text, title };
     const outcome = await runTransaction(
       'readwrite',
       (store) => store.put(record, RECORD_KEY),
@@ -102,7 +102,9 @@ export async function loadSavedBook(): Promise<SavedBook | null> {
     if (typeof v !== 'object' || v === null) return null;
     const o = v as Record<string, unknown>;
     if (typeof o.fileName !== 'string' || typeof o.text !== 'string') return null;
-    return { fileName: o.fileName, text: o.text };
+    return typeof o.title === 'string'
+      ? { fileName: o.fileName, text: o.text, title: o.title }
+      : { fileName: o.fileName, text: o.text };
   } catch {
     return null;
   }

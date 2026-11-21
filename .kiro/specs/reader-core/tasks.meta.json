@@ -513,6 +513,37 @@
         "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
         "timestamp": 1795217332565
       }
+    ],
+    "13.2 Write ReaderView integration tests (`src/ui/__tests__/ReaderView.integration.test.tsx`)": [
+      {
+        "executionId": "36477e9e-54cc-40f0-9bb3-105a7d24b6ad",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795248333482
+      },
+      {
+        "executionId": "36477e9e-54cc-40f0-9bb3-105a7d24b6ad",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795266412641
+      }
+    ],
+    "13. Write integration tests": [
+      {
+        "executionId": "36477e9e-54cc-40f0-9bb3-105a7d24b6ad",
+        "chatSessionId": "sess_19d9a634-1dcc-4941-b613-b62bc684cfac",
+        "timestamp": 1795266412715
+      }
+    ],
+    "14. Final checkpoint — Ensure all tests pass": [
+      {
+        "executionId": "5006ea21-91ce-4d8e-89a9-ae44b2b4a810",
+        "chatSessionId": "sess_aaacbf23-08eb-4bd1-bfc6-6cfa3b092645",
+        "timestamp": 1795267767852
+      },
+      {
+        "executionId": "5006ea21-91ce-4d8e-89a9-ae44b2b4a810",
+        "chatSessionId": "sess_aaacbf23-08eb-4bd1-bfc6-6cfa3b092645",
+        "timestamp": 1795267801263
+      }
     ]
   }
 }

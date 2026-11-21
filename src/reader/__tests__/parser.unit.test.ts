@@ -38,7 +38,7 @@ const xhtml = (body: string): string =>
   `<?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml"><head><title>t</title></head><body>${body}</body></html>`;
 
-async function makeEpub(): Promise<ArrayBuffer> {
+async function makeEpub(opts: { title?: string } = {}): Promise<ArrayBuffer> {
   const zip = new JSZip();
   zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
   zip.file(
@@ -55,7 +55,7 @@ async function makeEpub(): Promise<ArrayBuffer> {
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:identifier id="id">test-book</dc:identifier>
-    <dc:title>Test</dc:title>
+    <dc:title>${opts.title ?? 'Test'}</dc:title>
     <dc:language>en</dc:language>
   </metadata>
   <manifest>
@@ -111,6 +111,17 @@ describe('buildEpubBook', () => {
       'Section One-One',
       'Chapter 3',
     ]);
+  });
+
+  it('takes the book title from the EPUB metadata (dc:title)', async () => {
+    const result = await buildEpubBook('t.epub', await makeEpub(), stripHtml);
+    expect(result.ok && result.book.title).toBe('Test');
+  });
+
+  it('falls back to the file name without extension when the EPUB title is blank', async () => {
+    const blank = await makeEpub({ title: '   ' });
+    const result = await buildEpubBook('my-novel.epub', blank, stripHtml);
+    expect(result.ok && result.book.title).toBe('my-novel');
   });
 
   it('returns ok:false with a message of at most 200 chars for a corrupt buffer', async () => {

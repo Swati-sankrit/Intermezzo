@@ -10,10 +10,13 @@ describe('bookCodec', () => {
       fc.property(
         fc.array(fc.record({ title: fc.string(), text: fc.string() }), { minLength: 1, maxLength: 6 }),
         fc.string({ minLength: 1 }),
-        (chapters, name) => {
+        fc.string({ minLength: 1 }).filter((t) => t.trim().length > 0),
+        (chapters, name, rawTitle) => {
           const fileName = `${name}.epub`;
-          const r = restoreBook(fileName, chaptersToStoredText({ fileName, chapters }));
-          expect(r).toEqual({ ok: true, book: { fileName, chapters } });
+          const title = rawTitle.trim();
+          const book = { fileName, title, chapters };
+          const r = restoreBook(fileName, chaptersToStoredText(book), title);
+          expect(r).toEqual({ ok: true, book });
         },
       ),
       { numRuns: 100 },

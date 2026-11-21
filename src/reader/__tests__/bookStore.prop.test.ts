@@ -35,4 +35,16 @@ describe('bookStore properties', () => {
       { numRuns: 100 },
     );
   });
+
+  // Feature: reader-core, Property 16: Book storage round-trip (title)
+  // **Validates: Requirements 6.1**
+  it('Property 16: a saved title comes back with the book', async () => {
+    await fc.assert(
+      fc.asyncProperty(fc.string(), fc.string(), fc.string(), async (fileName, text, title) => {
+        expect(await saveBook(fileName, text, title)).toBe(true);
+        expect(await loadSavedBook()).toEqual({ fileName, text, title });
+      }),
+      { numRuns: 100 },
+    );
+  });
 });

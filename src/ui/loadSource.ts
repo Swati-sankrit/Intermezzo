@@ -6,6 +6,7 @@ import type { LibraryEntry } from '../reader/library';
 import { buildEpubBook, buildTxtBook } from '../reader/parser';
 import { chaptersToStoredText } from '../reader/bookCodec';
 import { stripHtml } from '../reader/stripHtml';
+import { resolveTitle } from '../reader/title';
 import type { Book } from '../reader/types';
 
 export type Loaded = { ok: true; book: Book; storedText: string } | { ok: false; error: string };
@@ -17,15 +18,18 @@ function message(err: unknown): string {
   return (err instanceof Error ? err.message : 'Could not read the file.').slice(0, 200);
 }
 
-async function fromText(fileName: string, raw: string): Promise<Loaded> {
+async function fromText(fileName: string, raw: string, title?: string): Promise<Loaded> {
   const text = stripGutenbergBoilerplate(raw);
-  const r = buildTxtBook(fileName, text);
+  const r = buildTxtBook(fileName, text, title);
   return r.ok ? { ok: true, book: r.book, storedText: text } : r;
 }
 
-async function fromBuffer(fileName: string, buffer: ArrayBuffer): Promise<Loaded> {
+async function fromBuffer(fileName: string, buffer: ArrayBuffer, title?: string): Promise<Loaded> {
   const r = await buildEpubBook(fileName, buffer, stripHtml);
-  return r.ok ? { ok: true, book: r.book, storedText: chaptersToStoredText(r.book) } : r;
+  if (!r.ok) return r;
+  // A library entry's title wins over the EPUB's own metadata.
+  const book = title ? { ...r.book, title: resolveTitle(title, fileName) } : r.book;
+  return { ok: true, book, storedText: chaptersToStoredText(book) };
 }
 
 export async function loadFromFile(file: File): Promise<Loaded> {
@@ -46,8 +50,8 @@ export async function loadFromLibrary(entry: LibraryEntry): Promise<Loaded> {
     const res = await fetch(entry.filePath);
     if (!res.ok) return { ok: false, error: FETCH_FAILED };
     return entry.format === 'epub'
-      ? await fromBuffer(fileName, await res.arrayBuffer())
-      : await fromText(fileName, await res.text());
+      ? await fromBuffer(fileName, await res.arrayBuffer(), entry.title)
+      : await fromText(fileName, await res.text(), entry.title);
   } catch {
     return { ok: false, error: FETCH_FAILED };
   }

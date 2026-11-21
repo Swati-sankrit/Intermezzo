@@ -14,7 +14,7 @@ const chapterArb = fc
 
 const bookArb: fc.Arbitrary<Book> = fc
   .array(chapterArb, { minLength: 1, maxLength: 6 })
-  .map((chapters) => ({ fileName: 'book.txt', chapters }));
+  .map((chapters) => ({ fileName: 'book.txt', title: 'book', chapters }));
 
 function stateAt(chapterIndex: number, paragraphIndex: number): StoredState {
   return {
