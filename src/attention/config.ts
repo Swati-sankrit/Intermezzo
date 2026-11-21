@@ -36,9 +36,13 @@ export function clampDebounce(ms: number): number {
   return Math.min(MAX_DEBOUNCE_MS, Math.max(MIN_DEBOUNCE_MS, ms));
 }
 
-/** Clamp to at most 1000. Non-finite input gives the default (1000). */
+/**
+ * Return_Time is greater than 0 and at most 1000. Non-finite input and values
+ * at or below 0 give the default (1000); larger values are capped at 1000.
+ */
 export function clampReturnTime(ms: number): number {
   if (!Number.isFinite(ms)) return DEFAULT_RETURN_MS;
+  if (ms <= 0) return DEFAULT_RETURN_MS;
   return Math.min(MAX_RETURN_MS, ms);
 }
 

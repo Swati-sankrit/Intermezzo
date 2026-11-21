@@ -8,11 +8,11 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
 
 ## Tasks
 
-- [ ] 1. Implement the pure decision logic (Decision_Function and fallback decision function)
+- [x] 1. Implement the pure decision logic (Decision_Function and fallback decision function)
   - [x] 1.1 Create the module skeleton, `types.ts`, and `config.ts`
     - Create `src/attention/` and `src/attention/__tests__/`
     - `types.ts`: `AttentionValue`, `AttentionSignal`, `PoseSample`, `Thresholds`, `DecisionConfig` exactly as in the design. `PoseSample` has no eye-gaze field
-    - `config.ts`: `DEFAULT_THRESHOLDS` (baseline 0/0, limits 25 and 20), `isBeyond` (strict, baseline-relative, either side), `DEFAULT_DEBOUNCE_MS = 1500`, `DEFAULT_RETURN_MS = 1000`, `MIN_IDLE_LIMIT_MS = 60_000`, `clampDebounce` (to 500..5000, non-finite gives default), `clampReturnTime` (to at most 1000), `clampIdleLimit(ms, previous)` (non-finite gives previous, else `max(ms, 60000)`)
+    - `config.ts`: `DEFAULT_THRESHOLDS` (baseline 0/0, limits 25 and 20), `isBeyond` (strict, baseline-relative, either side), `DEFAULT_DEBOUNCE_MS = 1500`, `DEFAULT_RETURN_MS = 1000`, `MIN_IDLE_LIMIT_MS = 60_000`, `clampDebounce` (to 500..5000, non-finite gives default), `clampReturnTime` (greater than 0 and at most 1000; at or below 0 or non-finite gives 1000), `clampIdleLimit(ms, previous)` (non-finite gives previous, else `max(ms, 60000)`)
     - No DOM, clock, camera, or storage access in these files
     - _Requirements: 4.2, 4.10, 4.11, 4.17, 4.18, 6.9, 6.10, 6.11, 6.12_
 
@@ -45,7 +45,7 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - **Property 3: Short Away runs never produce away**
     - **Validates: Requirements 4.4, 4.15, 10.1, 10.5**
 
-  - [ ] 1.7 Write property test for prompt return
+  - [x] 1.7 Write property test for prompt return
     - File: `src/attention/__tests__/decision.p04.prop.test.ts`, at least 300 runs
     - **Property 4: Return is prompt, stamped by the first Facing sample, and away persists until then**
     - **Validates: Requirements 4.5, 4.7, 5.9, 10.2, 10.3**
@@ -60,44 +60,44 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - **Property 6: Duplicate samples do not change the result**
     - **Validates: Requirements 4.9**
 
-  - [ ] 1.10 Write property test for non-finite angles
+  - [x] 1.10 Write property test for non-finite angles
     - File: `src/attention/__tests__/decision.p07.prop.test.ts`
     - **Property 7: Non-finite angles behave as no face found**
     - **Validates: Requirements 4.12**
 
-  - [ ] 1.11 Write property test for the strict boundary and defaults
+  - [x] 1.11 Write property test for the strict boundary and defaults
     - File: `src/attention/__tests__/decision.p08.prop.test.ts`
     - **Property 8: Baseline-relative boundary is strict and defaults apply**
     - **Validates: Requirements 4.17, 4.18**
 
-  - [ ] 1.12 Write property test for baseline symmetry
+  - [x] 1.12 Write property test for baseline symmetry
     - File: `src/attention/__tests__/decision.p21.prop.test.ts`
     - **Property 21: Away classification is symmetric about the baseline**
     - **Validates: Requirements 4.18**
 
-  - [ ] 1.13 Write property test for config clamping
+  - [x] 1.13 Write property test for config clamping
     - File: `src/attention/__tests__/config.p09.prop.test.ts`
     - **Property 9: Config clamping**
     - **Validates: Requirements 4.10, 4.11, 6.10, 6.11, 6.12**
 
-  - [ ] 1.14 Implement the fallback decision function in `fallback.ts`
+  - [x] 1.14 Implement the fallback decision function in `fallback.ts`
     - `FallbackSample`, `FallbackConfig`, `FallbackState`, `initialFallbackState(startT, from?)`, `stepFallback`, `decideFallback`
     - Away by tab: `!tabActive` for longer than the debounce time. Away by idle: `t - lastInputT > idleLimitMs` (strict, immediate). Either gives `away`; the first sample with an active tab and input within the idle limit gives `present` stamped with that sample's `t`
     - Stale samples are ignored as in `stepDecision`. No clock, DOM, or storage access
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.7, 6.13_
 
-  - [ ] 1.15 Write property test for short inactivity and short idle
+  - [x] 1.15 Write property test for short inactivity and short idle
     - Create `src/attention/__tests__/arbFallback.ts` (generator for fallback sequences with hidden runs and idle runs below, at, and above the limits)
     - File: `src/attention/__tests__/fallback.p10.prop.test.ts`
     - **Property 10: Fallback never reports away for short inactivity and short idle**
     - **Validates: Requirements 6.5**
 
-  - [ ] 1.16 Write property test for fallback away and return rules
+  - [x] 1.16 Write property test for fallback away and return rules
     - File: `src/attention/__tests__/fallback.p11.prop.test.ts`, at least 300 runs
     - **Property 11: Fallback away and return rules**
     - **Validates: Requirements 6.2, 6.3, 6.4, 6.7**
 
-  - [ ] 1.17 Write property test for mode switch keeping the signal
+  - [x] 1.17 Write property test for mode switch keeping the signal
     - File: `src/attention/__tests__/modeSwitch.p14.prop.test.ts`
     - **Property 14: Mode switch keeps the signal**
     - **Validates: Requirements 9.2**
@@ -107,7 +107,7 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - Empty and single-sample sequences return `present`; difference exactly equal to a limit is Facing; debounce boundary (exactly 1500 ms is not away, 1501 ms is); `clampIdleLimit(30000, 60000)` is 60000; fallback idle exactly at the limit is not away
     - _Requirements: 4.3, 4.14, 4.18, 6.3, 6.10_
 
-  - [ ] 1.19 Report results in `docs/BUILD_LOG.md`
+  - [x] 1.19 Report results in `docs/BUILD_LOG.md`
     - Append a section for tasks 1.4 to 1.17: properties added (1 to 11, 14, 21), cases run per property, and any counterexample with seed and shrunk input. If a property fails, stop and report it; never weaken the assertion
     - _Requirements: none (testing rule)_
 

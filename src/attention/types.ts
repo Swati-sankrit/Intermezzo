@@ -40,6 +40,6 @@ export interface DecisionConfig {
   readonly thresholds: Thresholds;
   /** Clamped to [500, 5000], default 1500. */
   readonly debounceMs: number;
-  /** Clamped to (0, 1000], default 1000. */
+  /** Greater than 0 and at most 1000; at or below 0 or non-finite gives 1000. */
   readonly returnMs: number;
 }

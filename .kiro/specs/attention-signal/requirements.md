@@ -25,7 +25,7 @@ Design and implementation phases: before writing any camera or MediaPipe code, f
 - **Thresholds**: The per-reader set of four values in degrees: baselineYaw, baselinePitch, yawLimit, and pitchLimit. A Pose_Sample is beyond the Thresholds when the absolute value of (yaw minus baselineYaw) is strictly greater than yawLimit, or the absolute value of (pitch minus baselinePitch) is strictly greater than pitchLimit. A difference exactly equal to a limit is not beyond. Because the difference is measured from the Baseline, a turn to either side counts equally. Valid Thresholds have finite values and limits greater than 0.
 - **Default_Thresholds**: A Baseline of 0 degrees yaw and 0 degrees pitch, a yawLimit of 25 degrees, and a pitchLimit of 20 degrees. The Attention_Module uses them until Calibration succeeds, and whenever stored Thresholds are missing or invalid or Calibration is skipped.
 - **Debounce_Time**: The continuous time a reader must be away before `away` is emitted. Default 1500 ms.
-- **Return_Time**: The maximum time between the reader facing the screen again and `present` being emitted. Default 1000 ms.
+- **Return_Time**: The maximum time between the reader facing the screen again and `present` being emitted. Greater than 0 and at most 1000 ms; values at or below 0, or non-finite, use the default 1000 ms.
 - **Camera_Mode**: The operating mode in which the Attention_Module derives the Attention_Signal from the camera and from Tab_Active.
 - **Fallback_Mode**: The operating mode in which the Attention_Module derives the Attention_Signal from tab visibility and idle time.
 - **Idle_Time**: Time since the last keyboard, pointer, or touch input in the app.

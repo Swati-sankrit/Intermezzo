@@ -46,7 +46,7 @@ No other dependency is added. The wasm runtime files are copied from `node_modul
 
 ### Design decisions
 
-- **Return_Time and `present`.** `present` is emitted on the first Facing_Sample after `away` (Req 4.5 asks for that sample's timestamp). Latency is bounded by the sampling interval, so the adapter ticks at least every `min(Return_Time, 250 ms)`. Return_Time is therefore the upper bound the adapter must meet, and it is a `DecisionConfig` field (default 1000 ms, clamped to at most 1000).
+- **Return_Time and `present`.** `present` is emitted on the first Facing_Sample after `away` (Req 4.5 asks for that sample's timestamp). Latency is bounded by the sampling interval, so the adapter ticks at least every `min(Return_Time, 250 ms)`. Return_Time is therefore the upper bound the adapter must meet, and it is a `DecisionConfig` field (default 1000 ms; greater than 0 and at most 1000, and a value at or below 0 or non-finite gives 1000).
 - **Heartbeat samples.** The pure function only sees samples, so the controller emits a tick sample at least every 250 ms that repeats the latest pose with a fresh timestamp and current Tab_Active. Repeated samples are harmless (Property 7).
 - **Tab_Active changes feed a sample immediately** (Req 4.19), including while detection is stopped.
 - **Calibration freezes the signal.** The requirements do not say what the signal does during the 5 s look-away phase. The design keeps the signal at `present` during Calibration (the controller treats it as an internal hold, separate from the public `pause()`), so a haunt cannot start while the reader is following instructions. Flag for review.
@@ -216,7 +216,7 @@ export interface Thresholds {
 export interface DecisionConfig {
   readonly thresholds: Thresholds;   // default baseline 0/0, limits 25 / 20
   readonly debounceMs: number;       // clamped to [500, 5000], default 1500
-  readonly returnMs: number;         // clamped to (0, 1000], default 1000
+  readonly returnMs: number;         // greater than 0 and at most 1000; at or below 0 or non-finite gives 1000
 }
 ```
 
