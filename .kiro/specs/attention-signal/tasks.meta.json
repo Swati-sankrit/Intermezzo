@@ -1,0 +1,143 @@
+{
+  "pbtResults": {
+    "1.4 Write property test for determinism and valid output": {
+      "status": "passed",
+      "lastRunTimestamp": 1795273005923
+    },
+    "1.8 Write property test for timestamps and stale samples": {
+      "status": "passed",
+      "lastRunTimestamp": 1795280736438
+    },
+    "1.5 Write property test for long Away runs": {
+      "status": "passed",
+      "lastRunTimestamp": 1795277654342
+    },
+    "1.6 Write property test for short Away runs": {
+      "status": "passed",
+      "lastRunTimestamp": 1795277656310
+    },
+    "1.7 Write property test for prompt return": {
+      "status": "passed",
+      "lastRunTimestamp": 1795277747301
+    },
+    "1.9 Write property test for duplicate samples": {
+      "status": "passed",
+      "lastRunTimestamp": 1795280881064
+    }
+  },
+  "executionHistory": {
+    "1.1 Create the module skeleton, `types.ts`, and `config.ts`": [
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272604012
+      },
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272648542
+      }
+    ],
+    "1.2 Implement `decision.ts`": [
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272658688
+      },
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272713441
+      }
+    ],
+    "1.3 Create shared generators in `src/attention/__tests__/arbitraries.ts`": [
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272714050
+      },
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272949553
+      }
+    ],
+    "1.4 Write property test for determinism and valid output": [
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272949662
+      },
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795277965951
+      }
+    ],
+    "1.5 Write property test for long Away runs": [
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272949691
+      },
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795277966020
+      }
+    ],
+    "1.6 Write property test for short Away runs": [
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272950445
+      },
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795277966067
+      }
+    ],
+    "1.7 Write property test for prompt return": [
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272950956
+      },
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795277966115
+      }
+    ],
+    "1.8 Write property test for timestamps and stale samples": [
+      {
+        "executionId": "2d3660d4-b06c-420b-8a4a-83a6ad0cf370",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795272951506
+      },
+      {
+        "executionId": "53c3870f-3161-482f-bfbe-0daee4c61294",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795278257125
+      },
+      {
+        "executionId": "53c3870f-3161-482f-bfbe-0daee4c61294",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795279856072
+      }
+    ],
+    "1.9 Write property test for duplicate samples": [
+      {
+        "executionId": "9a11607d-c77a-460a-83f9-77e319b6a9f9",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795280706482
+      },
+      {
+        "executionId": "9a11607d-c77a-460a-83f9-77e319b6a9f9",
+        "chatSessionId": "sess_cd3380d4-5f9e-4c6b-ba1f-5446a9bcc9a2",
+        "timestamp": 1795281858932
+      }
+    ]
+  }
+}

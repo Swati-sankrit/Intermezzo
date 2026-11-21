@@ -9,38 +9,38 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
 ## Tasks
 
 - [ ] 1. Implement the pure decision logic (Decision_Function and fallback decision function)
-  - [ ] 1.1 Create the module skeleton, `types.ts`, and `config.ts`
+  - [x] 1.1 Create the module skeleton, `types.ts`, and `config.ts`
     - Create `src/attention/` and `src/attention/__tests__/`
     - `types.ts`: `AttentionValue`, `AttentionSignal`, `PoseSample`, `Thresholds`, `DecisionConfig` exactly as in the design. `PoseSample` has no eye-gaze field
     - `config.ts`: `DEFAULT_THRESHOLDS` (baseline 0/0, limits 25 and 20), `isBeyond` (strict, baseline-relative, either side), `DEFAULT_DEBOUNCE_MS = 1500`, `DEFAULT_RETURN_MS = 1000`, `MIN_IDLE_LIMIT_MS = 60_000`, `clampDebounce` (to 500..5000, non-finite gives default), `clampReturnTime` (to at most 1000), `clampIdleLimit(ms, previous)` (non-finite gives previous, else `max(ms, 60000)`)
     - No DOM, clock, camera, or storage access in these files
     - _Requirements: 4.2, 4.10, 4.11, 4.17, 4.18, 6.9, 6.10, 6.11, 6.12_
 
-  - [ ] 1.2 Implement `decision.ts`
+  - [x] 1.2 Implement `decision.ts`
     - `initialDecisionState(startT, from?)`, `isAwaySample`, `stepDecision`, `decide`
-    - Ignore a sample whose `t` is non-finite or earlier than `lastT`; equal `t` is accepted
+    - Ignore a sample whose `t` is non-finite, earlier than the session start, or earlier than `lastT`; equal `t` is accepted. `lastT` starts at `startT` (or `max(startT, from.timestamp)` when a signal is carried over), and new signals are stamped with `max(sample t, current signal timestamp)`
     - Away sample: `!tabActive`, or `!faceFound`, or non-finite yaw or pitch, or beyond the Thresholds (strict). Away run longer than the debounce time on a `present` signal gives `away` stamped with that sample's `t`
     - First Facing sample after `away` gives `present` stamped with that sample's `t`
     - `decide` normalizes config through `config.ts`; missing Thresholds use `DEFAULT_THRESHOLDS`; empty sequence returns `present`
     - _Requirements: 4.1, 4.2, 4.3, 4.5, 4.6, 4.8, 4.12, 4.13, 4.14, 4.16, 4.17, 4.18_
 
-  - [ ] 1.3 Create shared generators in `src/attention/__tests__/arbitraries.ts`
+  - [x] 1.3 Create shared generators in `src/attention/__tests__/arbitraries.ts`
     - `arbPoseSample` (increasing time walk with gaps 0..400 ms, optional out-of-order jumps, `NaN` and `Infinity` angles, angles on exact limits)
     - `arbRunSequence(debounceMs, mode)` (alternating facing and away runs with durations below, at, and above the debounce time)
     - `arbThresholds` (baseline in [-60, 60], limits in (0, 90], all multiples of 0.25 so boundary and symmetry cases are exact)
     - _Requirements: 4.3, 4.4, 4.18_
 
-  - [ ] 1.4 Write property test for determinism and valid output
+  - [x] 1.4 Write property test for determinism and valid output
     - File: `src/attention/__tests__/decision.p01.prop.test.ts`
     - **Property 1: Decision_Function is deterministic and always valid**
     - **Validates: Requirements 4.1, 4.8, 4.14**
 
-  - [ ] 1.5 Write property test for long Away runs
+  - [x] 1.5 Write property test for long Away runs
     - File: `src/attention/__tests__/decision.p02.prop.test.ts`
     - **Property 2: A long Away run yields away at the right timestamp**
     - **Validates: Requirements 4.3, 4.16, 11.5**
 
-  - [ ] 1.6 Write property test for short Away runs
+  - [x] 1.6 Write property test for short Away runs
     - File: `src/attention/__tests__/decision.p03.prop.test.ts`, at least 300 runs
     - **Property 3: Short Away runs never produce away**
     - **Validates: Requirements 4.4, 4.15, 10.1, 10.5**
@@ -50,12 +50,12 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - **Property 4: Return is prompt, stamped by the first Facing sample, and away persists until then**
     - **Validates: Requirements 4.5, 4.7, 5.9, 10.2, 10.3**
 
-  - [ ] 1.8 Write property test for timestamps and stale samples
+  - [x] 1.8 Write property test for timestamps and stale samples
     - File: `src/attention/__tests__/decision.p05.prop.test.ts`
     - **Property 5: Signal timestamps never decrease and stale samples are ignored**
     - **Validates: Requirements 4.6, 4.13**
 
-  - [ ] 1.9 Write property test for duplicate samples
+  - [x] 1.9 Write property test for duplicate samples
     - File: `src/attention/__tests__/decision.p06.prop.test.ts`
     - **Property 6: Duplicate samples do not change the result**
     - **Validates: Requirements 4.9**
