@@ -604,7 +604,7 @@ For any sequence of published signals (including unchanged values and out-of-ord
 
 ### Property 13: Pause suppresses away, and resume resets the accumulator
 
-For any interleaving of `start`, `pause`, `resume`, `stop`, samples, and ticks driven through the controller with fake ports and a fake clock: calls that do not apply (pause when not running or already paused, resume when not paused) never throw and publish nothing; every `away` published has a timestamp outside the closed interval from each `pause` to its matching `resume`; and for any away run that began before `pause`, the first `away` after `resume` has a timestamp more than the debounce time after the `resume` timestamp.
+For any interleaving of `start`, `pause`, `resume`, `stop`, samples, and ticks driven through the controller with fake ports and a fake clock: calls that do not apply (pause when not running or already paused, resume when not paused) never throw and publish nothing; no `away` is published after a `pause` call and before its matching `resume` call (or `stop`), judged by the order of calls and emissions and not by timestamps, so an `away` published before `pause` in the same millisecond is allowed; and for any away run that began before `pause`, the first `away` after `resume` has a timestamp more than the debounce time after the `resume` timestamp.
 
 **Validates: Requirements 8.1, 8.2, 8.4, 8.5, 8.9, 8.10**
 

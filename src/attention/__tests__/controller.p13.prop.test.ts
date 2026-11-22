@@ -58,11 +58,14 @@ interface Record {
   readonly hiddenSinceResume: boolean;
   /** Time of the last input at publish time. */
   readonly lastInput: number;
+  /** Position in the single ordered sequence of calls and emissions. */
+  readonly seq: number;
 }
 
+/** Paused interval by order: from the `pause()` call to the matching `resume()`/`stop()` call. */
 interface Interval {
-  readonly from: number;
-  to: number | null;
+  readonly fromSeq: number;
+  toSeq: number | null;
 }
 
 interface Outcome {
@@ -87,6 +90,7 @@ function execute(script: readonly Op[], skipNoops: boolean): Outcome {
   let lastInput = START_MS;
   let tabActive = true;
   let subCount = 0;
+  let seq = 0;
 
   const fail = (msg: string): void => {
     failures.push(`t=${fp.clock.now() - START_MS}: ${msg}`);
@@ -104,6 +108,7 @@ function execute(script: readonly Op[], skipNoops: boolean): Outcome {
         resumeT,
         hiddenSinceResume,
         lastInput,
+        seq: ++seq,
       });
       first = false;
     });
@@ -133,10 +138,11 @@ function execute(script: readonly Op[], skipNoops: boolean): Outcome {
         break;
       }
       case 'stop': {
+        seq += 1;
         if (!guarded('stop', () => att.stop())) break;
         if (running && paused) {
           const open = intervals[intervals.length - 1];
-          if (open && open.to === null) open.to = now;
+          if (open && open.toSeq === null) open.toSeq = seq;
         }
         running = false;
         paused = false;
@@ -151,13 +157,15 @@ function execute(script: readonly Op[], skipNoops: boolean): Outcome {
         if (!applies && skipNoops) break;
         const before = records.length;
         const prior = records[records.length - 1]?.signal;
+        seq += 1;
+        const pauseSeq = seq;
         if (!guarded('pause', () => att.pause())) break;
         if (!applies) {
           if (records.length !== before) fail('no-op pause published a signal');
           break;
         }
         paused = true;
-        intervals.push({ from: now, to: null });
+        intervals.push({ fromSeq: pauseSeq, toSeq: null });
         if (prior?.value === 'away') {
           const last = records[records.length - 1];
           if (records.length === before || last === undefined) {
@@ -172,6 +180,8 @@ function execute(script: readonly Op[], skipNoops: boolean): Outcome {
         const applies = running && paused;
         if (!applies && skipNoops) break;
         const before = records.length;
+        seq += 1;
+        const resumeSeq = seq;
         if (!guarded('resume', () => att.resume())) break;
         if (!applies) {
           if (records.length !== before) fail('no-op resume published a signal');
@@ -179,7 +189,7 @@ function execute(script: readonly Op[], skipNoops: boolean): Outcome {
         }
         paused = false;
         const open = intervals[intervals.length - 1];
-        if (open) open.to = now;
+        if (open) open.toSeq = resumeSeq;
         resumeT = now;
         hiddenSinceResume = !tabActive;
         break;
@@ -218,15 +228,15 @@ function checkProperty(script: readonly Op[]): string[] {
   const full = execute(script, false);
   const problems = [...full.failures];
 
-  // Closed interval from each pause to its matching resume (or still open).
+  // Order check: no away between a pause() call and its matching resume()/stop() call.
   for (const r of full.records) {
     const ts = r.signal.timestamp;
     if (r.signal.value === 'away') {
       if (r.pausedAtPublish) problems.push(`away published while paused: ${JSON.stringify(r.signal)}`);
       for (const iv of full.intervals) {
-        if (ts >= iv.from && (iv.to === null || ts <= iv.to)) {
+        if (r.seq > iv.fromSeq && (iv.toSeq === null || r.seq < iv.toSeq)) {
           problems.push(
-            `away timestamp ${ts - START_MS} inside paused interval [${iv.from - START_MS}, ${iv.to === null ? 'open' : iv.to - START_MS}]`,
+            `away (timestamp ${ts - START_MS}, seq ${r.seq}) emitted after pause() call (seq ${iv.fromSeq}) and before resume()/stop() (seq ${iv.toSeq === null ? 'none' : iv.toSeq})`,
           );
         }
       }

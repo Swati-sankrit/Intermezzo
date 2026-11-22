@@ -55,6 +55,10 @@
     "1.23 Write property test for effect regions": {
       "status": "passed",
       "lastRunTimestamp": 1795346491972
+    },
+    "5.2 Write property test for reduced motion over every real haunt": {
+      "status": "passed",
+      "lastRunTimestamp": 1795359473890
     }
   },
   "executionHistory": {
@@ -512,6 +516,16 @@
         "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
         "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
         "timestamp": 1795357874599
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795358206807
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795358824605
       }
     ],
     "4.5 Report results in `docs/BUILD_LOG.md`": [
@@ -531,6 +545,188 @@
         "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
         "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
         "timestamp": 1795358057545
+      }
+    ],
+    "3.7 Write unit tests for the gate adapters": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795358825272
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359087967
+      }
+    ],
+    "5.1 Implement `src/haunts/candle.ts`": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359088018
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359152268
+      }
+    ],
+    "5.2 Write property test for reduced motion over every real haunt": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359153051
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359501615
+      }
+    ],
+    "5.4 Write the static source scan test": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359501705
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359686599
+      }
+    ],
+    "5.5 Write the discovery smoke test": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359686847
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359769649
+      }
+    ],
+    "5. Implement the candle haunt and the registry checks": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359769684
+      }
+    ],
+    "6.1 Implement `src/ui/HauntStage.tsx` and `HauntStage.css`": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359770183
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359936437
+      }
+    ],
+    "6.2 Implement `src/ui/useHauntSettings.ts` and `src/ui/HauntControl.tsx` with its CSS": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795359937073
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360035969
+      }
+    ],
+    "6.3 Implement `src/ui/SafetyNotice.tsx` and its CSS": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360036640
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360110919
+      }
+    ],
+    "6.4 Implement `src/ui/HauntLayer.tsx`": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360111612
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360207064
+      }
+    ],
+    "6.5 Wire `HauntLayer` and the dialog hold-back into `src/ui/AttentionLayer.tsx`": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360207699
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360257248
+      }
+    ],
+    "6.6 Add `HauntControl` to the top bar and mark the reading column": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360257906
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360317846
+      }
+    ],
+    "6.7 Remove `TempAttentionLabel` and its test": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360318765
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360392944
+      }
+    ],
+    "6.8 Write the colour and column-isolation test": [
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360393038
+      },
+      {
+        "executionId": "63cedbad-9a9a-4938-a55e-cad710a24d5d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360723911
+      }
+    ],
+    "6.11 Report results in `docs/BUILD_LOG.md`": [
+      {
+        "executionId": "661778e5-1799-4fe4-9587-2363906c65c1",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795360946932
+      },
+      {
+        "executionId": "661778e5-1799-4fe4-9587-2363906c65c1",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795361345532
+      }
+    ],
+    "6. Wire the haunts into the reading view": [
+      {
+        "executionId": "661778e5-1799-4fe4-9587-2363906c65c1",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795361345571
       }
     ]
   }

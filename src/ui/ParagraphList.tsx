@@ -78,7 +78,7 @@ export function ParagraphList({
 
   return (
     <>
-      <div className="paragraph-list">
+      <div className="paragraph-list" data-reading-column>
         {visible.map((p, i) => {
           const isActive = i === lastVisible;
           if (!isActive) {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AttentionLayer } from './AttentionLayer';
 import { ErrorBanner } from './ErrorBanner';
+import { HauntControl } from './HauntControl';
 import { LibraryScreen } from './LibraryScreen';
 import { PaceTimer } from './PaceTimer';
 import { ParagraphList } from './ParagraphList';
@@ -63,6 +64,7 @@ export function ReaderView() {
             >
               Pace Guide: {r.paceGuideEnabled ? 'on' : 'off'}
             </button>
+            <HauntControl />
             {cameraIndicator}
           </header>
 

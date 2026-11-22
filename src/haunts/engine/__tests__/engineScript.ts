@@ -15,11 +15,12 @@ import { createSettingsStore, KEYS } from '../settings';
 import type { AttentionSignalLike, EngineState } from '../types';
 import { rollArb } from './arbitraries';
 import { createFakeGate, createFakeHaunt, createFakeStorage, createFakeTime } from './fakes';
-import type { FakeHaunt } from './fakes';
+import type { FakeGatePort, FakeHaunt } from './fakes';
 
 export const FADE_WINDOW_MS = 800;
 export const FLUSH_WINDOW_MS = 50;
 const START_TIME = 1_000_000;
+const HELD_WEIGHT = 1;
 
 // ------------------------------------------------------------------ script
 
@@ -90,9 +91,11 @@ const opArb: fc.Arbitrary<Op> = fc.oneof(
 
 const away: Op = { k: 'away' };
 const present: Op = { k: 'present' };
+const fire: Op = { k: 'fire' };
 const gentleOn: Op = { k: 'gentle', on: true };
 const gentleOff: Op = { k: 'gentle', on: false };
 const advance = (ms: number): Op => ({ k: 'advance', ms });
+
 
 /** Short runs of ops that reach the deep states (level 3, gentle at level 3, fades) more often. */
 const macroArb: fc.Arbitrary<Op[]> = fc.oneof(
@@ -103,10 +106,21 @@ const macroArb: fc.Arbitrary<Op[]> = fc.oneof(
   fc.constant<Op[]>([{ k: 'arm' }, away, advance(13_000)]),
 );
 
+
+/** Gentle on at level 3, then the clock passes the 800 ms window with no present or stop (Property 20 clause 9). */
+const heldMacroArb: fc.Arbitrary<Op[]> = fc.oneof(
+  fc.integer({ min: 800, max: 2500 }).map((ms) => [away, advance(12_000), gentleOn, advance(ms)]),
+  fc.integer({ min: 100, max: 1500 }).map((ms) => [away, advance(12_000), gentleOn, advance(700), advance(ms)]),
+  fc.integer({ min: 0, max: 1500 }).map((ms) => [away, advance(12_000), gentleOn, fire, fire, advance(ms)]),
+);
+
+
 const chunkArb: fc.Arbitrary<Op[]> = fc.oneof(
   { weight: 7, arbitrary: opArb.map((o) => [o]) },
   { weight: 3, arbitrary: macroArb },
+  { weight: HELD_WEIGHT, arbitrary: heldMacroArb },
 );
+
 
 export const scriptArb: fc.Arbitrary<Script> = fc.record({
   haunts: fc
@@ -151,6 +165,25 @@ export interface ScriptStats {
   armedWhileAway: boolean;
   engineStopMidLookAway: boolean;
   opsAfterEngineStop: boolean;
+  /** Gentle turned on at level 3 with lead and companion running, and the clock then reached +800 ms with no present and no engine stop. */
+  gentleOnLevel3Held800: boolean;
+}
+
+/** One gentle-on at level 3 (Property 20 clause 9), checked when the clock reaches `deadline`. */
+interface GentleWindow {
+  readonly deadline: number;
+  readonly lead: FakeHaunt;
+  readonly companion: FakeHaunt;
+  readonly leadPort: FakeGatePort;
+  readonly companionPort: FakeGatePort;
+  readonly leadStarts: number;
+  readonly leadStops: number;
+  readonly companionStops: number;
+  readonly companionFadeOuts: number;
+  /** A lead `setLevel` call made by the gentle-on threw, so the engine had to stop the lead. */
+  leadSetLevelThrew: boolean;
+  /** Gentle went off again inside the window, so level 1 is no longer expected. */
+  gentleWentOff: boolean;
 }
 
 // ------------------------------------------------------------------ runner
@@ -235,6 +268,7 @@ export function runScript(script: Script): ScriptStats {
     armedWhileAway: false,
     engineStopMidLookAway: false,
     opsAfterEngineStop: false,
+    gentleOnLevel3Held800: false,
   };
 
   // Model, kept outside the engine.
@@ -249,6 +283,43 @@ export function runScript(script: Script): ScriptStats {
   let portsAtStop = 0;
   const retiring = new Map<string, Retiree>();
   const keyOf = (id: string) => `${id}#${hauntById.get(id)!.startCount}`;
+  /** Gentle-on windows still waiting for their +800 ms check. Cleared by `present` and by engine.stop(). */
+  const windows: GentleWindow[] = [];
+  const setLevelCalls = (h: FakeHaunt) => h.calls.filter((c) => c.type === 'setLevel').length;
+
+  /**
+   * Clause 9: 800 ms after gentle turned on at level 3, (a) the companion got `port.fadeOut(ms)` with
+   * ms <= 800, was stopped and its port closed; (b) the lead is the same running instance, not
+   * stopped, port open, last level 1, and the engine reports level 1. (b) is skipped when the
+   * lead's own `setLevel` threw (the engine must stop it) or gentle went off again inside the window.
+   */
+  function resolveWindows(op: OpKind): void {
+    const now = clock.now();
+    for (const w of [...windows]) {
+      if (now < w.deadline) continue;
+      windows.splice(windows.indexOf(w), 1);
+      const at = `after ${op} at t=${now - START_TIME}, ${now - (w.deadline - FADE_WINDOW_MS)} ms after gentle on at level 3`;
+      const asked = w.companionPort.fadeOuts.slice(w.companionFadeOuts);
+      ok(asked.length > 0, () => `${at}: companion ${w.companion.id} got no port.fadeOut`);
+      ok(asked.every((ms) => Number.isFinite(ms) && ms >= 0 && ms <= FADE_WINDOW_MS), () => `${at}: companion fadeOut(${asked}) is not within ${FADE_WINDOW_MS} ms`);
+      ok(w.companion.stopCount > w.companionStops, () => `${at}: companion ${w.companion.id} was not stopped`);
+      ok(w.companionPort.closed, () => `${at}: companion ${w.companion.id} port not closed`);
+      if (!w.leadSetLevelThrew && !w.gentleWentOff) {
+        const st = engine.getState();
+        ok(w.lead.startCount === w.leadStarts && w.lead.stopCount === w.leadStops && w.lead.openCount === 1, () => `${at}: lead ${w.lead.id} was restarted or stopped`);
+        ok(!w.leadPort.closed && gate.openPorts().includes(w.leadPort), () => `${at}: lead ${w.lead.id} port closed`);
+        ok(w.lead.lastLevel === 1, () => `${at}: lead ${w.lead.id} last level ${w.lead.lastLevel}, expected 1`);
+        ok(st.level === 1 && st.leadId === w.lead.id, () => `${at}: engine level ${st.level}, lead ${st.leadId}, expected level 1, lead ${w.lead.id}`);
+      }
+      stats.gentleOnLevel3Held800 = true;
+    }
+  }
+
+  const nextDeadline = (limit: number): number | null => {
+    let best: number | null = null;
+    for (const w of windows) if (w.deadline <= limit && (best === null || w.deadline < best)) best = w.deadline;
+    return best;
+  };
 
   function checkStopped(): void {
     const st = engine.getState();
@@ -342,6 +413,16 @@ export function runScript(script: Script): ScriptStats {
     if (valueChanged && signal === 'present' && hadRetiring) stats.presentDuringFade = true;
     if (valueChanged && signal === 'away' && hadRetiring) stats.newAwayDuringFade = true;
     check(op, before, valueChanged);
+    if (!stopped) resolveWindows(op);
+  }
+
+  /** Advances by `ms`, pausing at each pending +800 ms deadline so it is checked at that moment. */
+  function advanceChecked(ms: number): void {
+    const target = clock.now() + Math.max(0, ms);
+    for (let d = nextDeadline(target); d !== null; d = nextDeadline(target)) {
+      step('advance', () => scheduler.advance(d - clock.now()));
+    }
+    step('advance', () => scheduler.advance(target - clock.now()));
   }
 
   /** Model update for a delivered signal, then delivery. */
@@ -349,8 +430,10 @@ export function runScript(script: Script): ScriptStats {
     if (!stopped && signal !== value) {
       signal = value;
       if (!armed) stats.signalWhileNotArmed = true;
-      if (value === 'present') presentAt = clock.now();
-      else {
+      if (value === 'present') {
+        presentAt = clock.now();
+        windows.length = 0;
+      } else {
         leadOfLookAway = null;
         companionOfLookAway = null;
         // A new look-away ends every fade within the flush window.
@@ -368,6 +451,7 @@ export function runScript(script: Script): ScriptStats {
       engine.stop();
       if (!stopped) {
         stopped = true;
+        windows.length = 0;
         startCountsAtStop = haunts.map((h) => h.startCount);
         portsAtStop = gate.ports.length;
       }
@@ -395,11 +479,16 @@ export function runScript(script: Script): ScriptStats {
         step(op.k, () => deliver(op.k as 'present' | 'away'));
         break;
       case 'advance':
-        step('advance', () => scheduler.advance(op.ms));
+        advanceChecked(op.ms);
         break;
-      case 'fire':
+      case 'fire': {
+        // Do not let one timer jump the clock past a pending +800 ms deadline unchecked.
+        const first = scheduler.pendingDueTimes()[0];
+        const dl = nextDeadline(Number.POSITIVE_INFINITY);
+        if (first !== undefined && dl !== null && first > dl) advanceChecked(dl - clock.now());
         step('fire', () => void scheduler.fireNext());
         break;
+      }
       case 'sound':
         step('sound', () => store.set({ sound: op.on }));
         break;
@@ -413,11 +502,42 @@ export function runScript(script: Script): ScriptStats {
       case 'gentle': {
         const wasGentle = gentle;
         const kind: OpKind = op.on && !wasGentle ? 'gentleOn' : 'gentle';
+        if (!stopped && wasGentle && !op.on) for (const w of windows) w.gentleWentOff = true;
+        // Gentle turns on at level 3 with lead and companion both running: open a +800 ms window.
+        let win: GentleWindow | null = null;
+        const { leadId, companionId } = before;
+        if (!stopped && kind === 'gentleOn' && armed && signal === 'away' && before.level === 3 && leadId !== null && companionId !== null) {
+          const lead = hauntById.get(leadId)!;
+          const companion = hauntById.get(companionId)!;
+          const leadPorts = gate.openPorts().filter((p) => p.hauntId === leadId);
+          const companionPorts = gate.openPorts().filter((p) => p.hauntId === companionId);
+          if (lead.openCount === 1 && companion.openCount === 1 && leadPorts.length === 1 && companionPorts.length === 1) {
+            win = {
+              deadline: clock.now() + FADE_WINDOW_MS,
+              lead,
+              companion,
+              leadPort: leadPorts[0],
+              companionPort: companionPorts[0],
+              leadStarts: lead.startCount,
+              leadStops: lead.stopCount,
+              companionStops: companion.stopCount,
+              companionFadeOuts: companionPorts[0].fadeOuts.length,
+              leadSetLevelThrew: false,
+              gentleWentOff: false,
+            };
+            windows.push(win);
+          }
+        }
+        const levelCallsBefore = win ? setLevelCalls(win.lead) : 0;
         step(kind, () => {
           if (!stopped && op.on && before.level === 3 && before.companionId !== null) stats.gentleOnAtLevel3 = true;
           if (!stopped) gentle = op.on;
           store.set({ gentle: op.on });
         });
+        if (win) {
+          const throwsOn = rule(script.haunts[haunts.indexOf(win.lead)].setLevel);
+          for (let n = levelCallsBefore + 1; n <= setLevelCalls(win.lead); n++) if (throwsOn(n)) win.leadSetLevelThrew = true;
+        }
         if (!stopped && wasGentle && !op.on && engine.getState().level === 3) stats.gentleOffRestoresLevel3 = true;
         break;
       }

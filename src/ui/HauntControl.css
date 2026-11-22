@@ -1,0 +1,7 @@
+/* One bar child, so the bar's fade rules apply to both buttons.
+   Button look and the --accent focus ring come from .reader__button. */
+.haunt-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

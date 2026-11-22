@@ -18,7 +18,10 @@ describe('Haunt engine: rules hold for any script', () => {
     // companion do not change within a look-away; nothing runs 800 ms after present; no haunt is
     // started twice without a stop; every start has exactly one stop and every port is closed,
     // also when stop, start or setLevel throw; after engine.stop() nothing runs, no timer is
-    // pending, both subscriptions are removed and later signals start nothing.
+    // pending, both subscriptions are removed and later signals start nothing. Clause 9: when gentle
+    // turns on at level 3 with lead and companion running, then 800 ms later (unless present, an
+    // engine stop, or a lead setLevel throw intervened) the companion had port.fadeOut(ms <= 800), was
+    // stopped and its port closed, and the lead is the same running instance at level 1, engine level 1.
     fc.assert(
       fc.property(scriptArb, (script) => {
         runScript(script);
@@ -42,6 +45,7 @@ describe('Haunt engine: rules hold for any script', () => {
       armedWhileAway: 0,
       engineStopMidLookAway: 0,
       opsAfterEngineStop: 0,
+      gentleOnLevel3Held800: 0,
     };
     let runs = 0;
     fc.assert(
@@ -64,6 +68,7 @@ describe('Haunt engine: rules hold for any script', () => {
     expect(atLeast('signalWhileNotArmed', 0.25), `signal while not armed: ${msg}`).toBe(true);
     expect(atLeast('armedWhileAway', 0.05), `armed while away: ${msg}`).toBe(true);
     expect(atLeast('engineStopMidLookAway', 0.3), `engine.stop() mid look-away: ${msg}`).toBe(true);
+    expect(atLeast('gentleOnLevel3Held800', 0.1), `gentle on at level 3, then 800 ms with no present or stop: ${msg}`).toBe(true);
     expect(atLeast('opsAfterEngineStop', 0.12), `signals after engine.stop(): ${msg}`).toBe(true);
   });
 });

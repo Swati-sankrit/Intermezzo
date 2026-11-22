@@ -5,11 +5,13 @@ import type { LevelInput } from '../levelLogic';
 import { awayHistoryArb, eventHistoryArb, rollsArb } from './arbitraries';
 
 const NUM_RUNS = 300;
+/** The coverage check has a floor and a ceiling for gentle mode, so it gets more cases (same approach as p08). */
+const COVERAGE_RUNS = 1000;
 
-/** Gentle mode on about 37% of the time. */
+/** Gentle mode on about 35% of the time, the centre of the 25% to 45% coverage band. */
 const gentleArb = fc.oneof(
-  { weight: 5, arbitrary: fc.constant(false) },
-  { weight: 3, arbitrary: fc.constant(true) },
+  { weight: 13, arbitrary: fc.constant(false) },
+  { weight: 7, arbitrary: fc.constant(true) },
 );
 
 const idArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,7}$/);
@@ -145,7 +147,7 @@ describe('Level_Logic evaluate: determinism and no input mutation', () => {
         if (input.gentle) seen.gentle++;
         if (out.companionId !== null) seen.companion++;
       }),
-      { numRuns: NUM_RUNS },
+      { numRuns: COVERAGE_RUNS },
     );
     const atLeast = (n: number, pct: number) => n >= seen.runs * pct;
     const msg = JSON.stringify(seen);

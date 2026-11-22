@@ -209,14 +209,14 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - Append a section for tasks 3 and 4: Property 20 added, cases run, any counterexample with seed and shrunk input, and the Web Audio and other API findings from 3.1
     - _Requirements: none (testing rule)_
 
-- [ ] 5. Implement the candle haunt and the registry checks
-  - [ ] 5.1 Implement `src/haunts/candle.ts`
+- [x] 5. Implement the candle haunt and the registry checks
+  - [x] 5.1 Implement `src/haunts/candle.ts`
     - Exports `id` (`candle`), `name`, `start`, `setLevel`, `stop`; state at module level, none created at import time
     - Uses only `visual.glow.setDim` and `visual.glow.setGutter`: dim increases at each level; gutter starts at level 2 and is larger at level 3; no sound; `stop` restores level 0 appearance and clears its reference
     - Imports only types from `./engine/types`
     - _Requirements: 4.1, 4.3, 4.5, 4.6, 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7_
 
-  - [ ] 5.2 Write property test for reduced motion over every real haunt
+  - [x] 5.2 Write property test for reduced motion over every real haunt
     - File: `src/haunts/engine/__tests__/reducedMotion.p15.prop.test.ts`
     - Iterates the discovered registry (`loadHaunts()`), so whispers and shadow are covered automatically when they are added. Uses the real gate and visual adapter with a jsdom stage host
     - **Property 15: Reduced motion emits no flashing from any haunt**
@@ -227,54 +227,54 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - Type assertion `const h: Haunt = candle`; dim and gutter observables are non-decreasing across levels 1 to 3 with at least one strict rise; `stop()` resets dim and gutter to 0; no audio calls
     - _Requirements: 4.3, 4.5, 4.6, 13.1, 13.2, 13.3, 13.4, 13.6, 13.7_
 
-  - [ ] 5.4 Write the static source scan test
+  - [x] 5.4 Write the static source scan test
     - File: `src/haunts/__tests__/staticScan.unit.test.ts`; reads the source files at test time
     - Files `src/haunts/*.ts` must not contain `document`, `window`, `AudioContext(`, `.destination`, `fetch`, `Audio(`, `speechSynthesis`, `@keyframes`, `animation`, `setInterval`, `setTimeout`, `localStorage`, or an import from outside `./engine/types` and `./engine/noise`
     - `levelLogic.ts` and `plan.ts` must not mention `document`, `window`, `Date`, `performance`, `setTimeout` or `Math.random`; nothing under `src/haunts/` imports from `src/attention`, `src/ui`, or camera or video code; `.destination` appears only in `audioAdapter.ts` and `audioGraph.ts`; no `.mp3`, `.wav`, `.ogg` or `.m4a` string appears under `src/haunts/`
     - The test iterates the files found on disk, so later haunts are covered without edits
     - _Requirements: 4.4, 6.1, 6.18, 6.19, 10.3, 11.2_
 
-  - [ ] 5.5 Write the discovery smoke test
+  - [x] 5.5 Write the discovery smoke test
     - File: `src/haunts/engine/__tests__/discover.unit.test.ts`
     - The keys of `discovered` equal the `.ts` files present directly in `src/haunts/` (found with Node `fs`), contain no test file and nothing under `engine/`; `loadHaunts()` returns a haunt for each valid file; a synthetic extra valid module passed to `buildRegistry` appears without any engine change
     - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 6. Wire the haunts into the reading view
-  - [ ] 6.1 Implement `src/ui/HauntStage.tsx` and `HauntStage.css`
+- [x] 6. Wire the haunts into the reading view
+  - [x] 6.1 Implement `src/ui/HauntStage.tsx` and `HauntStage.css`
     - Fixed full-viewport overlay (`pointer-events: none`, `aria-hidden`, z-index below the top bar) holding the Candle_Glow and left and right side regions
     - Measure `[data-reading-column]` with `ResizeObserver` and the window `resize` event, size regions with `computeRegions`, fall back to a centred 65ch estimate when the element or `ResizeObserver` is missing; expose the host elements through a ref callback
     - Candle_Glow drawn outside the column with `color-mix(in srgb, var(--accent) 20%, transparent)` (or a `--glow` variable in `theme.css`); drift of at most 3 percent over a 16 s cycle; `animation: none` under `prefers-reduced-motion: reduce`. All `@keyframes` live in this stylesheet. No hard-coded colours. Component under 200 lines
     - Removes the glow from the document when unmounted
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 6.11, 6.12_
 
-  - [ ] 6.2 Implement `src/ui/useHauntSettings.ts` and `src/ui/HauntControl.tsx` with its CSS
+  - [x] 6.2 Implement `src/ui/useHauntSettings.ts` and `src/ui/HauntControl.tsx` with its CSS
     - `useHauntSettings`: `useSyncExternalStore` over the settings store
     - `HauntControl`: two buttons with `aria-pressed` and text labels ("Haunt sound: on/off", "Gentle mode: on/off"), keyboard operable, visible focus ring in `--accent`, uses the existing `reader__button` styling; saves through the store
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.7, 9.8_
 
-  - [ ] 6.3 Implement `src/ui/SafetyNotice.tsx` and its CSS
+  - [x] 6.3 Implement `src/ui/SafetyNotice.tsx` and its CSS
     - Modal (`role="dialog"`, `aria-modal`, `useFocusTrap`), one button "Begin reading". Text states that haunts include dimming light and moving shadow, that haunts include quiet sound, and that the reader can turn sound off or use Gentle mode. Dismiss writes `noticeSeen` to the settings store. Keyboard only operation works. Gothic, calm wording per the design steering
     - _Requirements: 8.1, 8.2, 8.3, 8.8_
 
-  - [ ] 6.4 Implement `src/ui/HauntLayer.tsx`
+  - [x] 6.4 Implement `src/ui/HauntLayer.tsx`
     - Creates the gate and engine once per mounted reading view in `useEffect` with cleanup (`engine.stop()`, `gate.dispose()`); takes `subscribeSignal` as a prop; renders `HauntStage` and, when `visibleDialogs(...).notice` is true, `SafetyNotice`; passes sound, gentle and reduced-motion values to the gate; wiring only, no logic
     - _Requirements: 8.1, 8.4, 11.1, 12.6, 16.1, 16.2_
 
-  - [ ] 6.5 Wire `HauntLayer` and the dialog hold-back into `src/ui/AttentionLayer.tsx`
+  - [x] 6.5 Wire `HauntLayer` and the dialog hold-back into `src/ui/AttentionLayer.tsx`
     - Render `ConsentDialog` only when `visibleDialogs(noticeSeen, status.choice).consent` is true; render `<HauntLayer subscribeSignal={subscribeSignal} />` in place of `<TempAttentionLabel />`
     - Do not change the attention module, its status, or its camera logic. The haunt code does not call `useAttention()`
     - _Requirements: 8.9, 8.10, 8.11, 8.12, 16.1, 16.3_
 
-  - [ ] 6.6 Add `HauntControl` to the top bar and mark the reading column
+  - [x] 6.6 Add `HauntControl` to the top bar and mark the reading column
     - `ReaderView`: place `<HauntControl />` next to the Pace Guide button
     - `ParagraphList`: add `data-reading-column` to `.paragraph-list`. Nothing else in the reading flow changes
     - _Requirements: 9.1, 16.4_
 
-  - [ ] 6.7 Remove `TempAttentionLabel` and its test
+  - [x] 6.7 Remove `TempAttentionLabel` and its test
     - Delete `src/ui/TempAttentionLabel.tsx`, `TempAttentionLabel.css`, and `src/ui/__tests__/TempAttentionLabel.unit.test.tsx` (path as in the repo). Update `AttentionLayer` tests that relied on the label to use `HauntLayer`. Search for any remaining reference and remove it
     - _Requirements: 16.3_
 
-  - [ ] 6.8 Write the colour and column-isolation test
+  - [x] 6.8 Write the colour and column-isolation test
     - File: `src/haunts/engine/__tests__/colorRule.unit.test.ts`
     - Render `HauntStage` beside a column element with known inline `color` and `background-color`. For every real haunt in `loadHaunts()` at levels 1 to 3, with the real gate, record `getComputedStyle` of the column and a text element before and after, and install a `MutationObserver` on `document.documentElement`. Assert the computed colours are unchanged and every mutation target lies inside the stage overlay root
     - _Requirements: 6.11, 6.12, 12.5, 16.4_
@@ -288,7 +288,7 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - Asserts the drift amplitude is at most 3 percent, the cycle is at least 8 s (16 s as designed), and `animation: none` appears under `prefers-reduced-motion: reduce`
     - _Requirements: 12.3, 12.4_
 
-  - [ ] 6.11 Report results in `docs/BUILD_LOG.md`
+  - [x] 6.11 Report results in `docs/BUILD_LOG.md`
     - Append a section for tasks 5 and 6: Property 15 added (candle only so far), cases run, any counterexample with seed and shrunk input
     - _Requirements: none (testing rule)_
 

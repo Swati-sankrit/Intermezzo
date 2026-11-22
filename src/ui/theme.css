@@ -6,4 +6,5 @@
   --accent: #e0a64a;
   --danger: #c0564b;
   --shadow: rgba(0, 0, 0, 0.6);
+  --glow: color-mix(in srgb, var(--accent) 20%, transparent);
 }

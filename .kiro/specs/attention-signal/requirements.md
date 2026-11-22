@@ -187,7 +187,7 @@ Design and implementation phases: before writing any camera or MediaPipe code, f
 6. WHEN a Session ends, THE Attention_Module SHALL stop the camera, clear all timers, and remove all subscriptions within 1000 ms.
 7. WHEN the reader leaves the reading view, THE Attention_Module SHALL stop emitting Attention_Signals and SHALL stop the camera within 1000 ms.
 8. IF the Attention_Module is in Paused_State when a Session ends or the reader leaves the reading view, THEN THE Attention_Module SHALL leave Paused_State and perform the same shutdown as in criteria 6 and 7.
-9. FOR ALL event sequences containing a paused interval, THE Attention_Module SHALL emit no `away` signal with a timestamp inside that interval, where the interval includes both the `pause()` and `resume()` timestamps.
+9. FOR ALL event sequences containing a `pause()` call followed by a `resume()` call, THE Attention_Module SHALL emit no `away` signal after `pause()` is called and before `resume()` is called, judged by the order of calls and emissions and not by timestamps; an `away` signal emitted before `pause()` is called is allowed even when it has the same timestamp as the `pause()` call.
 10. WHILE the Attention_Module is in Paused_State, THE Attention_Module SHALL count a reader who leaves the screen as present, and SHALL NOT treat leaving the screen as a breach.
 11. WHILE the camera is on and the Attention_Module is in Paused_State, THE Camera_Indicator SHALL remain visible.
 

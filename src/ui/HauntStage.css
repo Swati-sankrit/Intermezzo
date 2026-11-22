@@ -1,0 +1,110 @@
+/*
+ * Haunt stage: fixed overlay below the top bar (z-index 10). Everything is drawn
+ * inside the two side regions, never over the reading column. Only opacity and
+ * transform are animated; no `color` or `background-color` of the page changes.
+ * All @keyframes for the haunt feature live in this file.
+ * Variables written by the visual adapter on .haunt-stage:
+ *   --glow-dim, --glow-fade, --gutter-depth, --gutter-period, .is-guttering
+ * and on each .haunt-layer: opacity, transition-duration, --sweep-period, .is-sweeping.
+ */
+.haunt-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.haunt-stage__region {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Candle_Glow: brightness is reduced by --glow-dim (0..1), faded over --glow-fade. */
+.haunt-stage__glow {
+  position: absolute;
+  inset: 0;
+  opacity: calc(1 - var(--glow-dim, 0));
+  transition: opacity var(--glow-fade, 0ms) ease;
+}
+
+.haunt-stage__gutter,
+.haunt-stage__drift {
+  position: absolute;
+  inset: 0;
+}
+
+.haunt-stage__drift {
+  background: radial-gradient(ellipse at 100% 50%, var(--glow), transparent 70%);
+  animation: haunt-glow-drift 16s ease-in-out infinite;
+}
+
+.haunt-stage__glow--right .haunt-stage__drift {
+  background: radial-gradient(ellipse at 0% 50%, var(--glow), transparent 70%);
+}
+
+/* Gutter: exactly one brightness dip per --gutter-period. */
+.haunt-stage.is-guttering .haunt-stage__gutter {
+  animation: haunt-gutter var(--gutter-period, 1000ms) ease-in-out infinite;
+}
+
+/* Haunt layers created by the adapter inside a side region. */
+.haunt-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition-property: opacity;
+  transition-timing-function: ease;
+}
+
+.haunt-layer > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Sweep: one pass back and forth per --sweep-period, clipped by the region. */
+.haunt-layer.is-sweeping {
+  animation: haunt-sweep var(--sweep-period, 4000ms) ease-in-out infinite;
+}
+
+@keyframes haunt-glow-drift {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.97;
+  }
+}
+
+@keyframes haunt-gutter {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: calc(1 - var(--gutter-depth, 0));
+  }
+}
+
+@keyframes haunt-sweep {
+  0%,
+  100% {
+    transform: translateX(-10%);
+  }
+  50% {
+    transform: translateX(10%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .haunt-stage__drift,
+  .haunt-stage.is-guttering .haunt-stage__gutter,
+  .haunt-layer.is-sweeping {
+    animation: none;
+  }
+}

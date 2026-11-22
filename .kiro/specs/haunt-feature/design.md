@@ -35,7 +35,7 @@ Content was rephrased for compliance with licensing restrictions.
 Facts taken from the existing code, which the design must match:
 
 - `useAttention()` exposes `subscribeSignal(cb)` (`src/ui/useAttention.ts`). It is a stable module-level function, and it delivers the current signal once on subscribe (`src/attention/signalBus.ts`). `AttentionSignal` is `{ value: 'present' | 'away'; timestamp: number }`, and timestamps use `performance.timeOrigin + performance.now()`. The engine clock must use the same time base.
-- `AttentionLayer` makes the only `useAttention()` call, renders `ConsentDialog` when `status.choice === 'unanswered'`, and renders `TempAttentionLabel`. `ReaderView` passes the camera indicator into the top bar through a render prop.
+- `AttentionLayer` makes the only `useAttention()` call, renders `HauntLayer` (the removed temporary label's place), and renders `ConsentDialog` only when `visibleDialogs(...).consent` is true, so the consent dialog waits until the safety notice has been seen. `ReaderView` passes the camera indicator into the top bar through a render prop.
 - Storage keys use the `rod_` prefix with string values (`rod_pace_guide` is `'true'` or `'false'`). Storage reads and writes are wrapped in try/catch and are best-effort.
 - The reading column is `.paragraph-list` (`max-width: 65ch`, centred). `src/ui/theme.css` defines the colour variables.
 - Test files sit in `__tests__/` next to the code, named `*.unit.test.ts` and `*.pNN.prop.test.ts`.

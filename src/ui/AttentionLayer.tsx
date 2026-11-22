@@ -1,9 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { visibleDialogs } from '../haunts/engine';
 import { CameraIndicator } from './CameraIndicator';
 import { ConsentDialog } from './ConsentDialog';
 import { NoticeBanner } from './NoticeBanner';
-import { TempAttentionLabel } from './TempAttentionLabel';
+import { HauntLayer } from './HauntLayer';
 import { useAttention } from './useAttention';
+import { useHauntSettings } from './useHauntSettings';
 
 interface AttentionLayerProps {
   /** Suggested reading time for the active paragraph; sets the idle limit. */
@@ -19,6 +21,8 @@ interface AttentionLayerProps {
 export function AttentionLayer({ suggestedSecs, children }: AttentionLayerProps) {
   const { status, chooseCamera, setCameraOn, setIdleLimit, subscribeSignal } = useAttention();
 
+  const { settings } = useHauntSettings();
+
   useEffect(() => {
     setIdleLimit(3 * suggestedSecs * 1000);
   }, [setIdleLimit, suggestedSecs]);
@@ -33,14 +37,14 @@ export function AttentionLayer({ suggestedSecs, children }: AttentionLayerProps)
 
   return (
     <>
-      {status.choice === 'unanswered' && <ConsentDialog onChoose={chooseCamera} />}
+      {visibleDialogs(settings.noticeSeen, status.choice).consent && <ConsentDialog onChoose={chooseCamera} />}
       <NoticeBanner
         text={text === dismissed ? null : text}
         isError={isError}
         onDismiss={() => setDismissed(text)}
       />
       {children(<CameraIndicator cameraOn={status.cameraOn} onTurnOff={() => void setCameraOn(false)} />)}
-      <TempAttentionLabel subscribeSignal={subscribeSignal} />
+      <HauntLayer subscribeSignal={subscribeSignal} cameraChoice={status.choice} />
     </>
   );
 }
