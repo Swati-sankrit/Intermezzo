@@ -6,26 +6,17 @@
  */
 import { KEYS } from '../settings';
 import type { AudioOut, Gate, GatePort } from '../types';
+import { createAudibleHub } from './audible';
 import { createAudioAdapter } from './audioAdapter';
-import type { AudioChannel, RampKind } from './audioTypes';
+import type { RampKind } from './audioTypes';
 import type { GateDeps } from './gateTypes';
-import { wrapVisual, type PortVisual } from './gatePort';
+import { wrapVisual } from './gatePort';
+import { planGains } from './gainPlan';
+import type { PortRecord } from './portRecord';
 import { allocateFlashRates, effectiveRequests, parseVolumeCap, planFadeOut, scaleGains } from './plan';
 import { createVisualAdapter } from './visualAdapter';
 
 export type { GateDeps, StorageEventTarget } from './gateTypes';
-
-interface PortRecord {
-  readonly id: string;
-  readonly channel: AudioChannel;
-  readonly pv: PortVisual;
-  readonly closeVisual: () => void;
-  requested: number;
-  /** Last target sent to the channel; new channels start silent. */
-  sent: number;
-  faded: boolean;
-  closed: boolean;
-}
 
 export function createGate(deps: GateDeps): Gate {
   const warn = deps.warn ?? (() => undefined);
@@ -49,18 +40,28 @@ export function createGate(deps: GateDeps): Gate {
     return parseVolumeCap(raw);
   }
   let cap = readCap();
+  /** The one pending cap deadline (audio seconds), or null (gainPlan.ts, rule 4). */
+  let capDeadlineSec: number | null = null;
 
   const isReduced = (): boolean => osReduced || appReduced;
 
-  function planAudio(kind: RampKind, fadeMs?: number): void {
+  /** Recompute every target, then apply the ramps chosen by `planGains` (see gainPlan.ts for the rules). */
+  function planAudio(kind: RampKind, capDropped = false): void {
     const requests = [...ports].map((p) => ({ key: p.id, gain: p.faded ? 0 : p.requested }));
     const effective = effectiveRequests(requests, soundOn, audio.isReady());
     const scaled = scaleGains(effective, cap);
-    for (const p of ports) {
-      const target = scaled.find((r) => r.key === p.id)?.gain ?? 0;
-      if (target === p.sent) continue;
-      p.sent = target;
-      p.channel.setGain(target, { kind, requestedMs: fadeMs, reduced: isReduced() });
+    const nowSec = audio.now();
+    const views = [...ports].map((p) => ({
+      id: p.id, target: scaled.find((r) => r.key === p.id)?.gain ?? 0, sent: p.sent,
+      current: p.channel.currentGain(), inFlight: p.channel.inFlight(), fadeMs: p.fadeMs,
+    }));
+    const plan = planGains({ nowSec, kind, reduced: isReduced(), capDropped, deadlineSec: capDeadlineSec, ports: views });
+    capDeadlineSec = plan.deadlineSec;
+    for (const a of plan.actions) {
+      const p = [...ports].find((r) => r.id === a.id);
+      if (p === undefined) continue;
+      p.sent = a.target;
+      p.channel.setGain(a.target, a.ramp);
     }
   }
 
@@ -74,8 +75,13 @@ export function createGate(deps: GateDeps): Gate {
     planVisual();
   }
 
+  const audible = createAudibleHub(() => soundOn && audio.isReady(), warn);
+
   const offRequest = visual.onRequestChange(planVisual);
-  const offReady = audio.onReadyChange(() => planAudio('fade'));
+  const offReady = audio.onReadyChange(() => {
+    planAudio('fade');
+    audible.notify();
+  });
   const offMotion = deps.reducedMotion.subscribe((on) => {
     osReduced = on;
     setReduced();
@@ -89,14 +95,17 @@ export function createGate(deps: GateDeps): Gate {
   function refreshVolumeCap(): void {
     const next = readCap();
     if (next === cap) return;
+    const dropped = next < cap;
     cap = next;
-    planAudio('cap');
+    planAudio('cap', dropped);
   }
 
   function closePort(p: PortRecord): void {
     if (p.closed) return;
     p.closed = true;
     ports.delete(p);
+    for (const off of [...p.audibleOffs]) off();
+    p.audibleOffs.clear();
     p.channel.close();
     p.closeVisual();
     planAudio('fade');
@@ -106,11 +115,12 @@ export function createGate(deps: GateDeps): Gate {
   /** Per-port part of every fade-out: mark the port faded and fade its visuals. */
   function fadePort(p: PortRecord, ms: number): void {
     p.faded = true;
+    p.fadeMs = ms;
     p.pv.fadeOut(ms);
   }
 
-  function replanAfterFade(ms: number): void {
-    planAudio('fade', ms);
+  function replanAfterFade(): void {
+    planAudio('fade');
     planVisual();
   }
 
@@ -119,7 +129,7 @@ export function createGate(deps: GateDeps): Gate {
     const vch = visual.openChannel();
     const pv = wrapVisual(vch.visual);
     const rec: PortRecord = {
-      id: `${nextId++}:${hauntId}`, channel, pv, closeVisual: () => vch.close(), requested: 0, sent: 0, faded: false, closed: false,
+      id: `${nextId++}:${hauntId}`, channel, pv, closeVisual: () => vch.close(), requested: 0, sent: 0, faded: false, closed: false, audibleOffs: new Set(),
     };
     ports.add(rec);
     const out: AudioOut = {
@@ -129,6 +139,12 @@ export function createGate(deps: GateDeps): Gate {
         rec.requested = Number.isFinite(requested) ? requested : 0;
         planAudio('fade');
       },
+      onAudibleChange(cb) {
+        if (rec.closed) return () => {};
+        const off = audible.subscribe(cb);
+        rec.audibleOffs.add(off);
+        return () => void (off(), rec.audibleOffs.delete(off));
+      },
     };
     const port: GatePort = {
       audio: out,
@@ -137,7 +153,7 @@ export function createGate(deps: GateDeps): Gate {
         if (rec.closed) return;
         const planned = planFadeOut(ms);
         fadePort(rec, planned);
-        replanAfterFade(planned);
+        replanAfterFade();
       },
       close: () => closePort(rec),
     };
@@ -150,13 +166,14 @@ export function createGate(deps: GateDeps): Gate {
     fadeOutAll(requestedMs) {
       const ms = planFadeOut(requestedMs);
       for (const p of ports) fadePort(p, ms);
-      replanAfterFade(ms);
+      replanAfterFade();
       return ms;
     },
     setSoundEnabled(on) {
       if (soundOn === on) return;
       soundOn = on;
       planAudio(on ? 'fade' : 'soundOff');
+      audible.notify();
     },
     setReducedMotion(on) {
       if (appReduced === on) return;
@@ -168,6 +185,7 @@ export function createGate(deps: GateDeps): Gate {
     dispose() {
       if (disposed) return;
       disposed = true;
+      audible.clear();
       for (const p of [...ports]) closePort(p);
       offRequest();
       offReady();

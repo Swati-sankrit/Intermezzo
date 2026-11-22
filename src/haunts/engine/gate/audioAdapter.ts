@@ -7,6 +7,7 @@
  * safety limiter for filter resonance peaks, not the guarantee.
  */
 import { applyGain, attach, buildGraph, newRecord, type ChannelRecord, type Graph } from './audioGraph';
+import { valueAt } from './gainSchedule';
 import type { AudioAdapter, AudioAdapterDeps, UnlockEvent } from './audioTypes';
 
 export { CAP_RAMP_MS, SOUND_OFF_RAMP_MS, LIMITER } from './audioTypes';
@@ -103,6 +104,15 @@ export function createAudioAdapter(deps: AudioAdapterDeps): AudioAdapter {
           if (graph !== null && rec.node !== null) applyGain(graph.ctx, rec, target, ramp);
           else rec.pending = { target, ramp };
         },
+        currentGain() {
+          if (rec.closed || graph === null || rec.node === null) return 0;
+          return valueAt(rec.sched, graph.ctx.currentTime);
+        },
+        inFlight() {
+          if (rec.closed || graph === null || rec.node === null) return null;
+          if (!(graph.ctx.currentTime < rec.sched.endTime)) return null;
+          return { target: rec.sched.target, endSec: rec.sched.endTime };
+        },
         close() {
           if (rec.closed) return;
           rec.closed = true;
@@ -123,6 +133,7 @@ export function createAudioAdapter(deps: AudioAdapterDeps): AudioAdapter {
     },
     unlock,
     isReady: () => ready,
+    now: () => (graph === null ? 0 : graph.ctx.currentTime),
     onReadyChange(cb) {
       readyListeners.add(cb);
       return () => void readyListeners.delete(cb);

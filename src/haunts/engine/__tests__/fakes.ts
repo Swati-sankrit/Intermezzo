@@ -223,6 +223,14 @@ export interface FakeGatePort extends GatePort {
   readonly fadeOuts: number[];
   /** Calls every pending whenReady callback once. */
   fireReady(ctx: HauntAudioContext): void;
+  /** Current audibility the port reports to `onAudibleChange` subscribers. Starts true. */
+  readonly audible: boolean;
+  /** Number of `onAudibleChange` calls made on this port, cancelled or not. */
+  readonly audibleSubscriptions: number;
+  /** Callbacks currently subscribed through `onAudibleChange`. */
+  readonly audibleCallbacks: ((audible: boolean) => void)[];
+  /** Sets audibility; subscribers are called only when the value changes. */
+  setAudible(audible: boolean): void;
 }
 
 export interface FakeVisualLayer extends VisualLayer {
@@ -296,6 +304,9 @@ export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
       const layers: FakeVisualLayer[] = [];
       const readyCallbacks: FakeGatePort['readyCallbacks'] = [];
       const fadeOuts: number[] = [];
+      const audibleCallbacks: FakeGatePort['audibleCallbacks'] = [];
+      let audible = true;
+      let audibleSubscriptions = 0;
       let closeCalls = 0;
       const port: FakeGatePort = {
         hauntId,
@@ -303,6 +314,18 @@ export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
         glowCalls,
         layers,
         readyCallbacks,
+        audibleCallbacks,
+        get audible() {
+          return audible;
+        },
+        get audibleSubscriptions() {
+          return audibleSubscriptions;
+        },
+        setAudible(next) {
+          if (audible === next) return;
+          audible = next;
+          for (const cb of [...audibleCallbacks]) cb(next);
+        },
         get closeCalls() {
           return closeCalls;
         },
@@ -318,6 +341,15 @@ export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
             };
           },
           setGain: (g) => void gains.push(g),
+          onAudibleChange(cb) {
+            audibleSubscriptions += 1;
+            audibleCallbacks.push(cb);
+            cb(audible);
+            return () => {
+              const i = audibleCallbacks.indexOf(cb);
+              if (i >= 0) audibleCallbacks.splice(i, 1);
+            };
+          },
         },
         visual: {
           glow: {
@@ -340,6 +372,7 @@ export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
         },
         close() {
           closeCalls += 1;
+          audibleCallbacks.length = 0;
           calls.push({ type: 'close', hauntId });
           if (gate.options.closeThrows) throw new Error(`fake gate: close ${hauntId} threw`);
         },

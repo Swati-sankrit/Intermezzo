@@ -18,6 +18,8 @@ export interface GainRamp {
   /** Used by `fade` only. */
   readonly requestedMs?: number;
   readonly reduced?: boolean;
+  /** Explicit length of a falling ramp, set by the gate's plan; overrides the length chosen by `kind`. */
+  readonly fallMs?: number;
 }
 
 export type ReadyCallback = (ctx: HauntAudioContext) => void;
@@ -27,6 +29,10 @@ export interface AudioChannel {
   whenReady(cb: ReadyCallback): Unsubscribe;
   /** `target` is the gate's final, capped gain. Rising ramps last at least 300 ms. */
   setGain(target: number, ramp: GainRamp): void;
+  /** In-flight gain now, from the adapter's own schedule record (never `param.value`). 0 if not attached. */
+  currentGain(): number;
+  /** Target and end time (context seconds) of the ramp still running, or null if none (or not attached). */
+  inFlight(): { readonly target: number; readonly endSec: number } | null;
   /** Disconnects the channel. Safe to call twice. */
   close(): void;
 }
@@ -52,6 +58,8 @@ export interface AudioAdapter {
   unlock(): void;
   /** True only while the context state is `running`. */
   isReady(): boolean;
+  /** Context clock in seconds; 0 while there is no context. */
+  now(): number;
   /** Called when readiness changes. */
   onReadyChange(cb: (ready: boolean) => void): Unsubscribe;
   dispose(): void;

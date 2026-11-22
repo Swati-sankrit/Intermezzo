@@ -59,9 +59,43 @@ interface Scene {
   readonly hosts: VisualHosts;
   readonly gate: ReturnType<typeof createGate>;
   readonly observer: MutationObserver;
-  readonly records: MutationRecord[];
-  /** Pulls any records still queued into `records`. */
+  /** Every mutation seen, judged against the stage at the moment it was drained. */
+  readonly judged: Judged[];
+  /** Pulls queued records and judges them now. Call before any step that can detach nodes. */
   drain(): void;
+}
+
+interface Judged {
+  readonly inStage: boolean;
+  readonly label: string;
+  /** An attribute write to `style` on the stage root itself. */
+  readonly isRootStyle: boolean;
+}
+
+/**
+ * Judges a batch of records at the time it is drained, never after teardown. A record is inside the
+ * stage when its target is inside the stage root now, or when its target's detached subtree root was
+ * removed from inside the stage in the same batch (a haunt layer mutated and removed within one step).
+ * A node that was never in the stage and is not in the stage now is reported as outside.
+ */
+function judgeBatch(root: HTMLElement, batch: readonly MutationRecord[], into: Judged[]): void {
+  const removedFromStage = new Set<Node>();
+  for (const r of batch) {
+    if (r.type === 'childList' && root.contains(r.target)) for (const n of r.removedNodes) removedFromStage.add(n);
+  }
+  const topOf = (n: Node): Node => {
+    let cur = n;
+    while (cur.parentNode !== null) cur = cur.parentNode;
+    return cur;
+  };
+  for (const r of batch) {
+    const inStage = root.contains(r.target) || removedFromStage.has(topOf(r.target));
+    into.push({
+      inStage,
+      label: `${r.type}:${r.target.nodeName}:${r.attributeName ?? ''}`,
+      isRootStyle: r.target === root && r.attributeName === 'style',
+    });
+  }
 }
 
 /** Renders the stage next to the column, builds the real gate, and installs the observer last. */
@@ -93,8 +127,8 @@ async function makeScene(reduced: boolean): Promise<Scene> {
   unlock.dispatchEvent(new Event('pointerdown'));
   await flush();
 
-  const records: MutationRecord[] = [];
-  const observer = new MutationObserver((batch) => void records.push(...batch));
+  const judged: Judged[] = [];
+  const observer = new MutationObserver((batch) => judgeBatch(stageHosts.root, batch, judged));
   observer.observe(document.documentElement, {
     attributes: true,
     attributeOldValue: true,
@@ -102,10 +136,14 @@ async function makeScene(reduced: boolean): Promise<Scene> {
     childList: true,
     subtree: true,
   });
-  return { column, text, hosts: stageHosts, gate, observer, records, drain: () => void records.push(...observer.takeRecords()) };
+  return {
+    column, text, hosts: stageHosts, gate, observer, judged,
+    drain: () => judgeBatch(stageHosts.root, observer.takeRecords(), judged),
+  };
 }
 
 function teardown(scene: Scene): void {
+  scene.drain();
   scene.observer.disconnect();
   scene.gate.dispose();
   cleanup();
@@ -115,17 +153,32 @@ function teardown(scene: Scene): void {
 /** Runs one scenario with the given haunts as simultaneous lead + companion. Returns the ports used. */
 function runHaunts(scene: Scene, haunts: readonly Haunt[]): void {
   const ports: GatePort[] = [];
+  // Drain before every step so each mutation is judged while its node is still attached.
   for (const h of haunts) {
+    scene.drain();
     const port = scene.gate.open(h.id);
     ports.push(port);
     h.start(1, port.audio, port.visual);
   }
   for (const level of [2, 3, 1, 3] as const) {
-    for (const h of haunts) h.setLevel(level);
+    for (const h of haunts) {
+      scene.drain();
+      h.setLevel(level);
+    }
   }
-  for (const port of ports) port.fadeOut(400);
-  for (const h of haunts) h.stop();
-  for (const port of ports) port.close();
+  for (const port of ports) {
+    scene.drain();
+    port.fadeOut(400);
+  }
+  for (const h of haunts) {
+    scene.drain();
+    h.stop();
+  }
+  for (const port of ports) {
+    scene.drain();
+    port.close();
+  }
+  scene.drain();
 }
 
 interface Case {
@@ -142,8 +195,6 @@ function buildCases(all: readonly Haunt[]): Case[] {
   }
   return cases;
 }
-
-const insideStage = (scene: Scene, node: Node): boolean => scene.hosts.root.contains(node);
 
 afterEach(() => cleanup());
 
@@ -175,18 +226,18 @@ describe('colour rule and column isolation (runtime, jsdom)', () => {
             `color: ${COLUMN_COLOR}; background-color: ${COLUMN_BG};`,
           );
 
-          const outside = scene.records.filter((r) => !insideStage(scene, r.target));
+          const outside = scene.judged.filter((j) => !j.inStage);
           expect(
-            outside.map((r) => `${r.type}:${r.target.nodeName}:${r.attributeName ?? ''}`),
+            outside.map((j) => j.label),
             `mutations outside the stage for ${c.label}`,
           ).toEqual([]);
 
-          const inside = scene.records.filter((r) => insideStage(scene, r.target));
+          const inside = scene.judged.filter((j) => j.inStage);
           totalInside += inside.length;
           // Guard against vacuity: a case containing the candle must have changed the stage root.
           if (c.haunts.some((h) => h.id === 'candle')) {
             expect(
-              inside.some((r) => r.target === scene.hosts.root && r.attributeName === 'style'),
+              inside.some((j) => j.isRootStyle),
               `no stage-root style mutation recorded for ${c.label}`,
             ).toBe(true);
           }
@@ -219,7 +270,37 @@ describe('colour rule and column isolation (runtime, jsdom)', () => {
       scene.column.style.color = 'rgb(1, 2, 3)';
       scene.drain();
       expect(readColors(scene.column, scene.text)).not.toEqual(before);
-      expect(scene.records.some((r) => r.target === scene.column && !insideStage(scene, r.target))).toBe(true);
+      expect(scene.judged.some((j) => j.label === 'attributes:DIV:style' && !j.inStage)).toBe(true);
+    } finally {
+      teardown(scene);
+    }
+  });
+
+  it('control: the stage check reports mutations outside the stage as outside (it would fail)', async () => {
+    const scene = await makeScene(false);
+    try {
+      scene.column.style.color = 'rgb(1, 2, 3)';
+      document.body.append(document.createElement('aside'));
+      scene.drain();
+      const outside = scene.judged.filter((j) => !j.inStage).map((j) => j.label);
+      expect(outside).toEqual(expect.arrayContaining(['attributes:DIV:style', 'childList:BODY:']));
+      expect(scene.judged.every((j) => !j.inStage)).toBe(true);
+    } finally {
+      teardown(scene);
+      document.body.querySelector('aside')?.remove();
+    }
+  });
+
+  it('control: a layer mutated and removed inside the stage within one step is judged inside, not outside', async () => {
+    const scene = await makeScene(false);
+    try {
+      const layer = document.createElement('div');
+      scene.hosts.left.append(layer);
+      layer.setAttribute('style', 'opacity: 0.5');
+      layer.remove();
+      scene.drain();
+      expect(scene.judged.length).toBeGreaterThanOrEqual(3);
+      expect(scene.judged.every((j) => j.inStage)).toBe(true);
     } finally {
       teardown(scene);
     }

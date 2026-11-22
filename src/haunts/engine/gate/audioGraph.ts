@@ -67,7 +67,10 @@ export function attach(g: Graph, rec: ChannelRecord): void {
   if (pending !== null) applyGain(g.ctx, rec, pending.target, pending.ramp);
 }
 
-/** Rising ramps last at least 300 ms (planFadeIn). Falling ramps: fade 50 to 800 ms, cap 50 ms, sound off 150 ms. */
+/**
+ * Rising ramps last at least 300 ms (planFadeIn). Falling ramps: `fallMs` when the gate's plan
+ * gives one; else fade 50 to 800 ms, cap 50 ms, sound off 150 ms.
+ */
 export function applyGain(ctx: AudioContext, rec: ChannelRecord, rawTarget: number, ramp: GainRamp): void {
   const param = rec.node?.gain;
   if (param === undefined) return;
@@ -76,6 +79,7 @@ export function applyGain(ctx: AudioContext, rec: ChannelRecord, rawTarget: numb
   const current = valueAt(rec.sched, now);
   let ms: number;
   if (target > current) ms = planFadeIn(ramp.kind === 'fade' ? ramp.requestedMs : undefined, ramp.reduced === true);
+  else if (ramp.fallMs !== undefined && Number.isFinite(ramp.fallMs)) ms = Math.max(0, ramp.fallMs);
   else if (ramp.kind === 'cap') ms = CAP_RAMP_MS;
   else if (ramp.kind === 'soundOff') ms = SOUND_OFF_RAMP_MS;
   else ms = planFadeOut(ramp.requestedMs);

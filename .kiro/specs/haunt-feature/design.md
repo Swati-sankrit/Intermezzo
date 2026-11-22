@@ -227,6 +227,13 @@ export interface AudioOut {
   whenReady(cb: (ctx: HauntAudioContext) => void): Unsubscribe;
   /** Requested absolute gain, 0 to 1. The gate clamps, scales and ramps it. */
   setGain(requested: number): void;
+  /**
+   * Read-only: is sound audible? True only when the Sound_Setting is on AND audio is unlocked
+   * AND the context state is `running`. Calls `cb` at once with the current value, then only on
+   * a real change (no repeats). Stops on the cancel function or the port's `close()`; it keeps
+   * delivering after `fadeOut` (which only ignores requests). No calls after `gate.dispose()`.
+   */
+  onAudibleChange(cb: (audible: boolean) => void): Unsubscribe;
 }
 
 /** In engine/hauntAudio.ts (types only), re-exported from engine/types.ts. */
@@ -303,7 +310,7 @@ export function stop(): void { visual?.glow.setDim(0); visual?.glow.setGutter(0,
 function apply(level: HauntLevel): void { /* glow.setDim(DIM[level]); glow.setGutter(...) */ }
 ```
 
-The numbers are starting values to tune by eye; tests check order (level 1 < 2 < 3), not the exact values. The whispers haunt starts with gains 0.04, 0.10 and 0.18, and the shadow haunt uses sweep periods of 14 s, 10 s and 6 s. A haunt module keeps its state at module level. The engine never starts a running haunt twice, so one instance per module is enough.
+The numbers are starting values to tune by eye; tests check order (level 1 < 2 < 3), not the exact values. The whispers haunt starts with gains 0.04, 0.10 and 0.18, and the shadow haunt uses sweep periods of 14 s, 10 s and 6 s. Whispers (Req 14.8): the vignette must show while sound is off or locked, and a haunt cannot see the gate's sound and unlock state. Whispers therefore subscribes with `audio.onAudibleChange`: the `createLayer` vignette is shown at the level's strength whenever audible is false, faded out when it is true, and follows later changes in both directions; `stop` unsubscribes. `whenReady` is still used to build the audio graph. A haunt module keeps its state at module level. The engine never starts a running haunt twice, so one instance per module is enough.
 
 ### Level_Logic (`engine/levelLogic.ts`)
 
@@ -395,6 +402,29 @@ Design notes:
 - A flash is one dip and recovery of brightness or opacity. A sweep crossing counts as one flash-equivalent, so the budget covers moving shadows as well as glow gutters. The minimum sweep period of 2 s caps one sweep at 0.5 per second.
 - Fades that fall (gain or opacity going down, cap lowered, sound switched off) use `planFadeOut`. Fades that rise use `planFadeIn`. Lowering the cap or switching sound off uses a fixed short ramp (cap: 50 ms, sound off: 150 ms), which is inside the 100 ms and 300 ms limits of Req 6.13 and 9.2.
 
+#### Gain planning rules (`gate/gainPlan.ts`)
+
+Every planning pass, whatever caused it (haunt request, cap change, fade, sound off, context ready or not, close, reduced motion), follows the same rules:
+
+1. Every channel still moving (its ramp has not reached its end) and every channel whose target changed is re-issued from its current value, taken from the adapter's own schedule. A channel at its target and not moving is left alone.
+2. All rises in the pass share one end time `T = now + planFadeIn(undefined, reduced)` (300 ms, 1000 ms under reduced motion; every rise has the same minimum, so no rise is faster than its own minimum). An in-flight rise counts as a rise.
+3. When the pass has a rise, every fall ends at or before `T`. Otherwise a fall keeps its own length: fade-out 50 to 800 ms (`planFadeOut`), cap 50 ms, sound off 150 ms.
+4. The gate holds one pending deadline `D`. On a cap drop (`next < cap`): if no deadline is pending (`D` is null or `D <= now`), `D = now + 50 ms`; if one is pending it is kept, never extended. `D` is cleared once `now >= D`. While `D` is pending (`now < D`), every falling channel (target below current) in any pass ends by `D`: fall length is the least of its own length, `T - now` when the pass has a rise, and `D - now`. If `D - now` is very small the fall is abrupt but still downward, and still ends by `D`. Haunt-safety limits fade-in, not downward steps.
+
+#### Cap guarantee
+
+Claim: at every instant `t`, the combined gain `C(t)` (sum over channels of channel gain times master gain, before the compressor) is at most `allowed(t)`, the highest cap in force at any moment of the previous 50 ms.
+
+Proof, by induction over planning passes. A channel starts silent, so `C <= allowed` holds before the first pass. Take a pass at time `now` with `C(now) <= allowed(now)`. Let `S` be the sum of the new targets, and `cap_now` the cap in force. `scaleGains` gives `S <= cap_now`. A cap change always triggers a pass, so `cap_now` stays in force until the next pass, and `allowed(t) >= cap_now` there.
+
+- Within a pass: every re-issued ramp starts at `now` from its current value. Rises are linear and end together at `T`. Each fall is linear and constant after its own end, which makes it convex. Channels left alone are constant. On `[now, T]` the sum is convex, so its largest value is at an endpoint: `C(now)` at the start, and at `T` the sum of targets `S`, because every fall has ended by `T` and every rise has arrived. With no rise the sum is convex on all of `[now, ∞)` and settles at `S`. After `T` (or after the last fall) `C = S`. So on the pass, `C(t) <= max(C(now), S)`.
+- Case "no deadline pending" (`D` null or `now >= D`, and this pass is not a drop): no cap drop happened in the last 50 ms, because that drop's pass would have set `D > now`. So every cap change in the window is a raise, and `allowed(now) = cap_now`. Then `C(now) <= cap_now`, `S <= cap_now <= allowed(t)`, and the bound holds.
+- Case "`D` pending" (`now < D`; this includes the pass of a drop that just set `D`). Let `d1` be the drop that anchored `D`, so `D = d1 + 50 ms`, and let `c_pre` be the cap in force just before `d1`. Any change inside `(now - 50 ms, d1)` is a raise, because a drop there would have set an earlier pending deadline and `d1` would not be the anchor. So every cap in the window of `now` that was set before `d1` is at most `c_pre`, and `allowed(now) = max(c_pre, caps set from d1 on, up to now)`. For `t` in `[now, D)` the window of `t` still contains `d1`'s predecessor value `c_pre` (since `t - 50 ms < d1`) and every cap set from `d1` on. Therefore `allowed(t) >= allowed(now) >= C(now)`, and `allowed(t) >= cap_now >= S`. By the convexity bound, `C(t) <= max(C(now), S) <= allowed(t)` on `[now, D)`. Later raises only add allowance, and a second drop inside `[d1, D)` keeps `D`, so the anchor is the first pending drop.
+- Case `t >= D` in a pass where `D` was pending: every fall of the pass ended by `D`. Each channel is then at its target or rising toward it, so its value is at most its target, and `C(t) <= S <= cap_now <= allowed(t)`. No convexity is needed.
+- The next pass starts from `C(now') <= allowed(now')` (the bound is continuous across passes, because every ramp is re-issued from the adapter's schedule value), so the induction continues. A closed channel is disconnected, which is a downward step. ∎
+
+Consequence for Req 6.13: at `T_change + 100 ms` the combined gain is at most `allowed` at that moment, which equals the new cap unless another cap change happened in the 50 ms before that moment. The property test compares against `allowed`, not the cap in force, for that reason.
+
 Adapters:
 
 ```ts
@@ -428,6 +458,8 @@ export function createGate(deps: GateDeps): Gate;
 `GateDeps` holds the host elements, a storage reader, a `createAudioContext` factory, a scheduler and a `matchMedia` adapter, so tests inject fakes. The gate recomputes the whole plan (scaled gains, flash allocation, glow dim as the maximum over ports) whenever any request, the cap, the sound setting, the unlock state or reduced motion changes.
 
 Audio adapter: each port gets a `GainNode` (`input`) feeding a master `GainNode`, then a `DynamicsCompressorNode`, then `destination`. Gains change with `linearRampToValueAtTime` from the current value. Only `audioAdapter.ts` and `audioGraph.ts` touch `ctx.destination`. The Audio_Unlock listener (`pointerdown` and `keydown` on `window`, once, capture) creates the context if needed and calls `resume()`, then notifies waiting `whenReady` callbacks with the port's restricted context.
+
+Audibility (`gate/audible.ts`): `onAudibleChange` is driven by the gate. Audible is `soundOn && audio.isReady()`, and `isReady()` is true only while the context state is `running`. The gate calls the hub's `notify()` after `setSoundEnabled` changes the value and from the audio adapter's `onReadyChange` (unlock, `suspended`, `interrupted`, back to `running`). Each subscriber keeps its last-seen value, so a callback runs once at subscribe time and afterwards only on a change. Each port tracks its subscriptions and removes them in `close()`; `dispose()` clears the hub before the adapter is disposed, so nothing is delivered afterwards. A closed port accepts no new subscriber. A callback that throws is caught and sent to `warn`.
 
 Restricted audio context (`gate/restrictedAudio.ts`): a haunt never receives the real `AudioContext`, `destination` or a real `AudioNode`. A real node has a `.context` property that leads back to both, so the restriction is structural and not only a type. `createRestrictedContext(ctx, channelGain)` returns wrapper objects that keep the real node in a closure and expose only the parameters in `HauntParam` and the properties listed above. A wrapper's `connect(target)` looks the target up in a per-port `WeakMap` and throws `TypeError` unless it is another wrapper of the same port or `ctx.input`. `ctx.input` has no `connect`, so a chain can only end at the channel gain. There is no `createGain`, `createMediaStreamDestination`, `createMediaElementSource` or `audioWorklet`. `onended` is called without the event, because `event.target` would be the real node. Every path to the speakers therefore passes through the channel gain (the Volume_Cap scaling), the master gain and the compressor, so no haunt can bypass the cap (haunt-safety: the cap is enforced in one place). The static scan (task 5.4) stays as a second guard on haunt source files.
 

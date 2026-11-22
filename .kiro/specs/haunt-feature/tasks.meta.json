@@ -728,6 +728,111 @@
         "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
         "timestamp": 1795361345571
       }
+    ],
+    "7. Checkpoint - Engine, candle haunt and wiring work end to end": [
+      {
+        "executionId": "6427307d-05e7-411b-972e-700512ef8512",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795368962835
+      }
+    ],
+    "8.1 Fetch current documentation for the audio nodes used by whispers": [
+      {
+        "executionId": "6427307d-05e7-411b-972e-700512ef8512",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795368969068
+      },
+      {
+        "executionId": "6427307d-05e7-411b-972e-700512ef8512",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795370398508
+      }
+    ],
+    "8.2 Implement `src/haunts/whispers.ts`": [
+      {
+        "executionId": "6427307d-05e7-411b-972e-700512ef8512",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795370399155
+      },
+      {
+        "executionId": "5407510f-4a4d-4a9e-8338-c5e7a512a6e2",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795372580482
+      }
+    ],
+    "8.3 Write property test for the cap over real haunts and the real adapter": [
+      {
+        "executionId": "5407510f-4a4d-4a9e-8338-c5e7a512a6e2",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795372580636
+      },
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795381132175
+      }
+    ],
+    "8.5 Report results in `docs/BUILD_LOG.md`": [
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795381132684
+      },
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795381364124
+      }
+    ],
+    "8. Add the whispers haunt (one file, no engine edits)": [
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795381364195
+      }
+    ],
+    "10.1 Write the network and storage spy test": [
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795381365075
+      },
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795381748693
+      }
+    ],
+    "10.2 Write the final entry in `docs/BUILD_LOG.md`": [
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795381749270
+      },
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795382399140
+      }
+    ],
+    "10. Final integration checks": [
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795382399208
+      }
+    ],
+    "11. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795382399391
+      },
+      {
+        "executionId": "9513a2de-d429-4212-a6b8-cb9bae0eb296",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795382784750
+      }
     ]
   }
 }

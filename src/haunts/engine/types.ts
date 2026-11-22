@@ -31,6 +31,13 @@ export interface AudioOut {
   whenReady(cb: (ctx: HauntAudioContext) => void): Unsubscribe;
   /** Requested absolute gain, 0 to 1. The gate clamps, scales and ramps it. */
   setGain(requested: number): void;
+  /**
+   * Read-only notification of whether sound can be heard: the sound setting is on AND audio is
+   * unlocked AND the context state is `running`. Calls `cb` at once with the current value, then
+   * only when the value changes. Stops after the returned cancel function or the port's `close()`
+   * (it keeps delivering after `fadeOut`, which only stops requests). No calls after `gate.dispose()`.
+   */
+  onAudibleChange(cb: (audible: boolean) => void): Unsubscribe;
 }
 
 export interface GlowControl {

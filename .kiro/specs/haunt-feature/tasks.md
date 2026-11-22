@@ -292,21 +292,21 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - Append a section for tasks 5 and 6: Property 15 added (candle only so far), cases run, any counterexample with seed and shrunk input
     - _Requirements: none (testing rule)_
 
-- [ ] 7. Checkpoint - Engine, candle haunt and wiring work end to end
+- [x] 7. Checkpoint - Engine, candle haunt and wiring work end to end
   - Run `npx vitest --run`. Ensure all tests pass, ask the user if questions arise. With only the candle present, the lead is always the candle and no companion appears. Remind the user of the manual check: run `npm run dev`, look away from the screen (or switch tabs with the camera off), and watch the glow dim, gutter and recover when looking back. Whispers must not start until this is green.
 
-- [ ] 8. Add the whispers haunt (one file, no engine edits)
-  - [ ] 8.1 Fetch current documentation for the audio nodes used by whispers
+- [x] 8. Add the whispers haunt (one file, no engine edits)
+  - [x] 8.1 Fetch current documentation for the audio nodes used by whispers
     - Use Context7 or MDN for `AudioBufferSourceNode` (looping), `BiquadFilterNode` (bandpass or lowpass), `StereoPannerNode`, and node `disconnect()`. Do not rely on remembered APIs; if something cannot be confirmed, say so in `docs/BUILD_LOG.md` and do not use it
     - _Requirements: 14.2, 14.7_
 
-  - [ ] 8.2 Implement `src/haunts/whispers.ts`
+  - [x] 8.2 Implement `src/haunts/whispers.ts`
     - Exports `id` (`whispers`), `name`, `start`, `setLevel`, `stop`. Uses `audio.whenReady` (its callback gets the restricted `HauntAudioContext`: no `destination`, connect only to `ctx.input`) and `createNoiseBuffer` from `./engine/noise`, a filter, and a stereo pan to one side; gain requested through `audio.setGain` only (starting values 0.04, 0.10, 0.18, tuned by ear, increasing by level)
     - Without sound (setting off or no unlock) shows an edge vignette on the whisper side through `visual.createLayer`, stronger at higher levels; fade rules come from the gate. `stop` disconnects every node, cancels `whenReady`, and removes the layer. No speech, no lyrics, no audio file
     - Do not edit any file in `src/haunts/engine/`. If an edit seems needed, stop and report it
     - _Requirements: 4.1, 4.3, 4.5, 4.6, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9, 14.10, 5.2_
 
-  - [ ] 8.3 Write property test for the cap over real haunts and the real adapter
+  - [x] 8.3 Write property test for the cap over real haunts and the real adapter
     - File: `src/haunts/engine/__tests__/gateCap.p14.prop.test.ts`
     - Iterates ordered pairs of distinct haunts from `loadHaunts()`, so shadow is covered when it is added. Real gate and audio adapter against the fake `AudioContext`; any interleaving of `setGain`, `setLevel`, cap changes and sound toggles
     - **Property 14: Real adapter and real haunts stay under the cap**
@@ -317,7 +317,7 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - Contract type assertion; gain and vignette strength non-decreasing across levels with a strict rise; after `stop()` nodes created equal nodes disconnected and layers created equal layers removed; no sound before `whenReady` fires
     - _Requirements: 4.6, 14.3, 14.4, 14.5, 14.7, 14.8_
 
-  - [ ] 8.5 Report results in `docs/BUILD_LOG.md`
+  - [x] 8.5 Report results in `docs/BUILD_LOG.md`
     - Append a section for task 8: Properties 14 and 15 over candle and whispers, cases run, any counterexample with seed and shrunk input, and a confirmation that no file under `src/haunts/engine/` changed (`git diff --stat src/haunts/engine`)
     - _Requirements: none (testing rule)_
 
@@ -338,17 +338,17 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - Append a section for task 9: Properties 14 and 15 over all three haunts and all ordered pairs, cases run, any counterexample with seed and shrunk input, and a confirmation that no file under `src/haunts/engine/` changed
     - _Requirements: none (testing rule)_
 
-- [ ] 10. Final integration checks
-  - [ ] 10.1 Write the network and storage spy test
+- [x] 10. Final integration checks
+  - [x] 10.1 Write the network and storage spy test
     - File: `src/haunts/engine/__tests__/network.unit.test.ts`
     - Run a session with the real engine, gate and all discovered haunts; assert `fetch`, `XMLHttpRequest` and `navigator.sendBeacon` are never called, and `localStorage.setItem` is called only with the four documented keys
     - _Requirements: 16.6, 16.7_
 
-  - [ ] 10.2 Write the final entry in `docs/BUILD_LOG.md`
+  - [x] 10.2 Write the final entry in `docs/BUILD_LOG.md`
     - List all properties (1 to 20), total cases run, any counterexamples found and how they were resolved, and the manual checks still to do: listen to each haunt at each level with the cap at its default and at 1; check flash rate and feel by eye with and without reduced motion; keyboard-only pass through notice, consent, reading and the top bar
     - _Requirements: none (testing rule)_
 
-- [ ] 11. Final checkpoint - Ensure all tests pass
+- [x] 11. Final checkpoint - Ensure all tests pass
   - Run `npx vitest --run`, `npm run lint` and `npm run build`. Ensure all tests and lint pass, ask the user if questions arise. Remind the user of the manual checks that cannot be automated (listening pass at default and maximum cap, visual flash and reduced-motion pass, keyboard-only pass).
 
 ## Notes
