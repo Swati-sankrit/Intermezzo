@@ -88,7 +88,7 @@ flowchart TD
   ENG --> LL
   ENG --> REG
   REG --> H1 & H2 & H3
-  ENG -->|open, fadeOutAll| gate
+  ENG -->|open, fadeOutAll, port.fadeOut| gate
   H1 & H2 & H3 -->|AudioOut, VisualOut only| gate
   AUD --> SPK[(Speakers)]
   VIS --> HS
@@ -97,7 +97,7 @@ flowchart TD
 Rules the diagram encodes:
 
 - Nothing in `src/haunts/` imports from `src/attention/`, `src/ui/` or camera code. The engine receives `subscribeSignal` as a constructor argument (Req 11.1, 11.2).
-- Haunt files import only types and the noise helper from `./engine/`. They reach speakers and the document only through `AudioOut` and `VisualOut` (Req 4.4).
+- Haunt files import only types and the noise helper from `./engine/`. They reach speakers and the document only through `AudioOut` and `VisualOut` (Req 4.4). The `HauntAudioContext` from `whenReady` is restricted by construction: no `destination`, no raw context, connections only to the port input.
 - `src/haunts/engine/` has no React. React lives in `src/ui/`.
 
 ### Signal to haunt sequence
@@ -156,6 +156,7 @@ src/haunts/
   __tests__/             haunt tests (the glob does not match subfolders)
   engine/
     types.ts             Haunt, HauntLevel, AudioOut, VisualOut, Gate, ports
+    hauntAudio.ts        HauntAudioContext and wrapper node types (types only)
     levelLogic.ts        evaluate, nextChangeDelay (pure)
     registry.ts          buildRegistry (pure)
     discover.ts          the one import.meta.glob call
@@ -168,6 +169,8 @@ src/haunts/
       plan.ts            parseVolumeCap, scaleGains, allocateFlashRates, planFadeIn, planFadeOut (pure)
       gate.ts            createGate: ties plan to the adapters
       audioAdapter.ts    AudioContext, per-haunt channel gain, master limiter, unlock
+      audioGraph.ts      node graph and gain ramps (with audioAdapter.ts, the only `.destination` use)
+      restrictedAudio.ts wrapper nodes: the restricted context haunts receive
       visualAdapter.ts   writes into the stage host elements
       reducedMotion.ts   matchMedia adapter
     index.ts             public surface for src/ui
@@ -216,12 +219,45 @@ export interface Haunt {
 export interface AudioOut {
   /**
    * Calls `cb` once, as soon as sound is possible (after Audio_Unlock), or at
-   * once if it already is. `input` is this haunt's channel gain node: connect
-   * every source to it and to nothing else. Returns a cancel function.
+   * once if it already is. `ctx` is a restricted context: it makes sources,
+   * filters and panners, and connects them only to each other and to
+   * `ctx.input` (this haunt's channel gain). It has no `destination` and no
+   * raw AudioContext. Returns a cancel function.
    */
-  whenReady(cb: (ctx: AudioContext, input: AudioNode) => void): Unsubscribe;
+  whenReady(cb: (ctx: HauntAudioContext) => void): Unsubscribe;
   /** Requested absolute gain, 0 to 1. The gate clamps, scales and ramps it. */
   setGain(requested: number): void;
+}
+
+/** In engine/hauntAudio.ts (types only), re-exported from engine/types.ts. */
+export interface HauntParam {
+  setValueAtTime(value: number, time: number): void;
+  linearRampToValueAtTime(value: number, time: number): void;
+  cancelScheduledValues(time: number): void;
+}
+export interface HauntSink { readonly isHauntSink: true }            // another haunt node, or ctx.input
+export interface HauntNode extends HauntSink {
+  connect<T extends HauntSink>(target: T): T;                        // throws for any foreign target
+  disconnect(): void;
+}
+export interface HauntBufferSource extends HauntNode {
+  buffer: AudioBuffer | null; loop: boolean; readonly playbackRate: HauntParam;
+  onended: (() => void) | null; start(when?: number): void; stop(when?: number): void;
+}
+export interface HauntFilter extends HauntNode {
+  type: BiquadFilterType;
+  readonly frequency: HauntParam; readonly Q: HauntParam; readonly gain: HauntParam; readonly detune: HauntParam;
+}
+export interface HauntPanner extends HauntNode { readonly pan: HauntParam }
+export interface HauntAudioContext {
+  readonly input: HauntSink;
+  readonly sampleRate: number;
+  readonly currentTime: number;
+  /** Shaped like `createBuffer`, so `createNoiseBuffer(ctx, seconds)` in noise.ts works. */
+  createBuffer(numberOfChannels: number, length: number, sampleRate: number): AudioBuffer;
+  createBufferSource(): HauntBufferSource;
+  createBiquadFilter(): HauntFilter;
+  createStereoPanner(): HauntPanner;
 }
 
 export interface GlowControl {
@@ -377,6 +413,12 @@ export interface Gate {
 export interface GatePort {
   readonly audio: AudioOut;
   readonly visual: VisualOut;
+  /**
+   * Fades only this port's audio and visuals to 0 over `planFadeOut(ms)` (at most 800 ms in
+   * every mode, reduced motion included), then ignores further audio and visual requests.
+   * Does not release the port; `close()` still does. `fadeOutAll` runs the same per-port path.
+   */
+  fadeOut(ms: number): void;
   /** Gate-side cleanup: removes layers, disconnects the channel. Safe to call twice. */
   close(): void;
 }
@@ -385,7 +427,9 @@ export function createGate(deps: GateDeps): Gate;
 
 `GateDeps` holds the host elements, a storage reader, a `createAudioContext` factory, a scheduler and a `matchMedia` adapter, so tests inject fakes. The gate recomputes the whole plan (scaled gains, flash allocation, glow dim as the maximum over ports) whenever any request, the cap, the sound setting, the unlock state or reduced motion changes.
 
-Audio adapter: each port gets a `GainNode` (`input`) feeding a master `GainNode`, then a `DynamicsCompressorNode`, then `destination`. Gains change with `linearRampToValueAtTime` from the current value. The adapter is the only code in the project that touches `ctx.destination`. The Audio_Unlock listener (`pointerdown` and `keydown` on `window`, once, capture) creates the context if needed and calls `resume()`, then notifies waiting `whenReady` callbacks.
+Audio adapter: each port gets a `GainNode` (`input`) feeding a master `GainNode`, then a `DynamicsCompressorNode`, then `destination`. Gains change with `linearRampToValueAtTime` from the current value. Only `audioAdapter.ts` and `audioGraph.ts` touch `ctx.destination`. The Audio_Unlock listener (`pointerdown` and `keydown` on `window`, once, capture) creates the context if needed and calls `resume()`, then notifies waiting `whenReady` callbacks with the port's restricted context.
+
+Restricted audio context (`gate/restrictedAudio.ts`): a haunt never receives the real `AudioContext`, `destination` or a real `AudioNode`. A real node has a `.context` property that leads back to both, so the restriction is structural and not only a type. `createRestrictedContext(ctx, channelGain)` returns wrapper objects that keep the real node in a closure and expose only the parameters in `HauntParam` and the properties listed above. A wrapper's `connect(target)` looks the target up in a per-port `WeakMap` and throws `TypeError` unless it is another wrapper of the same port or `ctx.input`. `ctx.input` has no `connect`, so a chain can only end at the channel gain. There is no `createGain`, `createMediaStreamDestination`, `createMediaElementSource` or `audioWorklet`. `onended` is called without the event, because `event.target` would be the real node. Every path to the speakers therefore passes through the channel gain (the Volume_Cap scaling), the master gain and the compressor, so no haunt can bypass the cap (haunt-safety: the cap is enforced in one place). The static scan (task 5.4) stays as a second guard on haunt source files.
 
 Visual adapter: it writes only inside the stage host (see below). Glow dim and gutter set CSS custom properties and classes on the stage root (`--glow-dim`, `--glow-fade`, `--gutter-depth`, `--gutter-period`, `is-guttering`). A layer is a `div` appended to a side region. Opacity sets `opacity` and `transition-duration`. A sweep sets `--sweep-period` and the class `is-sweeping`. Under reduced motion the adapter never adds `is-sweeping` or `is-guttering` and holds the sweep layer in place at a fade (Req 15.6). The adapter does not use the Web Animations API, which jsdom lacks, so the DOM tests run in the normal test environment.
 
@@ -423,7 +467,7 @@ Behaviour:
 - The engine keeps the events since the last `present`. A consecutive duplicate value is ignored. When a look-away begins it draws `rolls` once with `random()` and freezes `previousLeadId` as the lead of the previous look-away.
 - `recompute()` calls `evaluate` with `clock.now()`, then `reconcile`:
   - `level 0`: if anything runs, call `gate.fadeOutAll(600)`, then after 600 ms call `stop()` on each running haunt in its own try/catch, then `port.close()` for each. A thrown error is passed to `warn`. The level is 0 from the moment of the call (Req 2.1 to 2.4).
-  - `level > 0`: start the lead if not running (`gate.open(id)`, `haunt.start(level, port.audio, port.visual)`), call `setLevel(level)` on running haunts when the level changed, and start the companion when `companionId` is set. When the companion is no longer wanted (gentle turned on), call `gate.fadeOutAll` for that port only through `port.fadeOut`, then stop it after at most 600 ms (Req 7.2).
+  - `level > 0`: start the lead if not running (`gate.open(id)`, `haunt.start(level, port.audio, port.visual)`), call `setLevel(level)` on running haunts when the level changed, and start the companion when `companionId` is set. When the companion is no longer wanted (gentle turned on), call `port.fadeOut(600)` on the companion's port only (the lead keeps running), then stop the companion and `port.close()` it after at most 600 ms (Req 7.2).
   - Every `start`, `setLevel` and `stop` call is wrapped in try/catch. A failing haunt is stopped and reported through `warn`. It does not stop the engine.
   - A timer is set for `nextChangeDelay`. On firing, the engine calls `recompute()` with the clock time, so a timer delayed by a background tab only delays the change. The engine also recomputes when the settings store changes.
 - If a look-away starts while haunts are still retiring, the engine flushes them first (ramp of at most 50 ms, then `stop()`), so a haunt chosen again has no module-level state left over. This case is rare: it needs present then away within 600 ms.
@@ -681,9 +725,10 @@ Fakes (in `__tests__/fakes.ts`): fake clock and scheduler; fake haunts that reco
 Unit and example tests:
 
 - **Haunt contract (Req 4.1, 4.5, 4.6, 13 to 15):** each real haunt is checked with a type assertion (`const h: Haunt = candle`) and at run time. A recorder counts what each haunt asks for at levels 1, 2 and 3. For each haunt, every "stronger means larger" observable is non-decreasing from level to level and at least one strictly rises (dim, gain, opacity, size, and sweep frequency). After `stop()`, nodes created equals nodes disconnected and layers created equals layers removed. The haunt never calls `setLevel` side effects that stop it.
-- **Static source scan (Req 4.4, 6.1, 6.18, 6.19, 10.3, 11.2):** the files `src/haunts/*.ts` do not contain `document`, `window`, `AudioContext(`, `.destination`, `fetch`, `Audio(`, `speechSynthesis`, `SpeechSynthesis`, `@keyframes`, `animation`, `setInterval`, `setTimeout`, `localStorage`, or an import from outside `./engine/types` and `./engine/noise`. `levelLogic.ts` and `plan.ts` do not mention `document`, `window`, `Date`, `performance`, `setTimeout` or `Math.random`. `src/haunts/` has no import from `src/attention`, `src/ui` or camera or video code. `.destination` appears only in `audioAdapter.ts`. No `.mp3`, `.wav`, `.ogg` or `.m4a` string appears under `src/haunts/`.
+- **Static source scan (Req 4.4, 6.1, 6.18, 6.19, 10.3, 11.2):** the files `src/haunts/*.ts` do not contain `document`, `window`, `AudioContext(`, `.destination`, `fetch`, `Audio(`, `speechSynthesis`, `SpeechSynthesis`, `@keyframes`, `animation`, `setInterval`, `setTimeout`, `localStorage`, or an import from outside `./engine/types` and `./engine/noise`. `levelLogic.ts` and `plan.ts` do not mention `document`, `window`, `Date`, `performance`, `setTimeout` or `Math.random`. `src/haunts/` has no import from `src/attention`, `src/ui` or camera or video code. `.destination` appears only in `audioAdapter.ts` and `audioGraph.ts`. The scan is the second guard: the restricted audio context already gives haunts no way to reach `destination` (`engine/__tests__/restrictedAudio.unit.test.ts`). No `.mp3`, `.wav`, `.ogg` or `.m4a` string appears under `src/haunts/`.
 - **Discovery smoke test (Req 5.1, 5.3):** the keys of `discovered` are exactly the haunt files present, and contain no test file and nothing under `engine/`. A synthetic extra valid module passed to `buildRegistry` appears in the result without any engine change (Req 5.2).
 - **Colour rule (Req 6.12, 12.5):** a jsdom fixture renders `HauntStage` beside a column element whose `color` and `background-color` come from inline styles. For each real haunt at each level, with the real gate, the test records `getComputedStyle` of the column and of a text element before and after, and installs a `MutationObserver` on `document.documentElement`. It asserts that the computed colours are unchanged and that every mutation target lies inside the stage overlay root. This is the DOM-level check of the rule that haunt visuals write only to the overlay outside the column. The static scan above is its second half.
+- **Restricted audio context:** with only the context from `whenReady`, a caller finds no `destination`, raw context or `.context` on the context or any wrapper (own and inherited properties walked); `connect` to anything but a same-port wrapper or `ctx.input` throws; after source, filter, panner, `ctx.input`, the fake graph shows exactly one path to `destination`, through the channel gain, master gain and compressor.
 - **Gate adapters:** cap change applied within 100 ms; sound toggle off ramps to zero within 300 ms; gain ramps start from the current value; rising ramps last at least 300 ms; no sound before unlock, and the first `pointerdown` or `keydown` unlocks (Req 8.5 to 8.7).
 - **Engine:** a first signal delivered at subscribe time is treated as an event (Req 11.4); away, 5 s, 12 s gives start, `setLevel(2)`, companion start; present stops everything within 800 ms; gentle on at level 3 lowers the lead and stops the companion within 800 ms; gentle off restores the level from elapsed time with the same lead (Req 7.2, 7.3); present then away restarts timing and picks a new lead (Req 2.5); arming while away starts at level 1.
 - **Components (React Testing Library):** `SafetyNotice` is shown on the first session, dismisses with the keyboard, and is not shown again; `ConsentDialog` is not in the document while the notice shows and appears after dismissal when the choice is unanswered, and with a saved notice only under the attention-signal conditions (Req 8.1 to 8.11); `HauntControl` has labels, `aria-pressed`, keyboard operation and a focus ring, and saves and restores values; the reading view has no `temp-attention-label`; reading with Enter and Space still works while a haunt runs (Req 16.5); the stage contains the Candle_Glow while the view is open and removes it on close (Req 12.1, 12.6); `HauntStage.css` is checked as text for the 3 percent amplitude, the 16 s cycle and `animation: none` under `prefers-reduced-motion` (Req 12.3, 12.4).

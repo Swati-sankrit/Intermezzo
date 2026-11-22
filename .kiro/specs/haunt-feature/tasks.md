@@ -145,34 +145,34 @@ Testing rules that apply to every task (from the testing steering file): no fake
 - [x] 2. Checkpoint - Pure core
   - Run `npx vitest --run src/haunts/`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 3. Implement the Safety_Gate adapters
-  - [ ] 3.1 Fetch current documentation before writing adapter code
+- [x] 3. Implement the Safety_Gate adapters
+  - [x] 3.1 Fetch current documentation before writing adapter code
     - Use Context7 (`tool::context7::resolve-library-id`, then `tool::context7::query-docs`) where a library applies, and fetch MDN pages otherwise, for: Web Audio `AudioContext`, `GainNode`, `AudioParam` (`linearRampToValueAtTime`, `cancelScheduledValues`, `setValueAtTime`), `DynamicsCompressorNode`, `resume()` and autoplay behaviour; `window.matchMedia('(prefers-reduced-motion: reduce)')` and its `change` event; `ResizeObserver`; the `storage` event
     - Do not rely on remembered APIs. If a method or option cannot be confirmed in the docs, say so in `docs/BUILD_LOG.md` and do not use it
     - _Requirements: 6.3, 6.4, 6.13, 8.5, 8.6_
 
-  - [ ] 3.2 Implement `gate/reducedMotion.ts` and `engine/noise.ts`
+  - [x] 3.2 Implement `gate/reducedMotion.ts` and `engine/noise.ts`
     - `reducedMotion.ts`: `matchMedia` adapter with `get()` and `subscribe(cb)`; returns false when `matchMedia` is unavailable
     - `noise.ts`: `createNoiseBuffer(ctx, seconds)` helper that fills an `AudioBuffer` with noise. This is built now so that adding the whispers haunt later needs no edit in `src/haunts/engine/`
     - _Requirements: 6.8, 6.18, 14.2_
 
-  - [ ] 3.3 Create fakes in `src/haunts/engine/__tests__/fakes.ts`
+  - [x] 3.3 Create fakes in `src/haunts/engine/__tests__/fakes.ts`
     - Fake clock and scheduler; fake haunt that records calls and can throw; fake gate; fake `AudioContext` that records node creation, `connect`, `disconnect` and every `AudioParam` automation call; fake storage; fake `matchMedia`
     - _Requirements: 6.2, 6.3, 6.4, 6.13_
 
-  - [ ] 3.4 Implement `gate/audioAdapter.ts`
-    - One channel `GainNode` per port feeding a master `GainNode`, a `DynamicsCompressorNode`, then `destination`. This is the only file in the project that touches `ctx.destination`
+  - [x] 3.4 Implement `gate/audioAdapter.ts`
+    - One channel `GainNode` per port feeding a master `GainNode`, a `DynamicsCompressorNode`, then `destination`. With `audioGraph.ts`, this is the only code in the project that touches `ctx.destination`. `whenReady` callbacks receive the restricted `HauntAudioContext` from `gate/restrictedAudio.ts`, never the raw `AudioContext` (wrapper nodes that connect only to each other and to `ctx.input`)
     - Gain changes use ramps from the current value with the durations from `plan.ts`; cap change ramps in 50 ms, sound off in 150 ms
     - Audio_Unlock listener (`pointerdown` and `keydown` on `window`, once, capture) creates and resumes the context; `whenReady` callbacks fire after unlock; if the context cannot be created, callbacks never fire and no message is shown
     - _Requirements: 6.1, 6.3, 6.4, 6.13, 6.18, 8.5, 8.6, 8.7, 9.2_
 
-  - [ ] 3.5 Implement `gate/visualAdapter.ts`
+  - [x] 3.5 Implement `gate/visualAdapter.ts`
     - Writes only inside the stage host elements. Glow dim and gutter set CSS custom properties and classes on the stage root (`--glow-dim`, `--glow-fade`, `--gutter-depth`, `--gutter-period`, `is-guttering`); a layer is a `div` in a side region with `setMarkup`, `setOpacity`, `setSweep`, `remove`
     - Under reduced motion never add `is-sweeping` or `is-guttering`; fades use `planFadeIn` and `planFadeOut`. No Web Animations API
     - _Requirements: 6.5, 6.8, 6.10, 6.11, 6.12, 13.5, 15.6_
 
-  - [ ] 3.6 Implement `gate/gate.ts` (`createGate`)
-    - `open`, `fadeOutAll`, `setSoundEnabled`, `setReducedMotion`, `refreshVolumeCap` (also on the `storage` event), `unlockAudio`, `dispose`; `GatePort` with `audio`, `visual`, `close()` (safe to call twice)
+  - [x] 3.6 Implement `gate/gate.ts` (`createGate`)
+    - `open`, `fadeOutAll`, `setSoundEnabled`, `setReducedMotion`, `refreshVolumeCap` (also on the `storage` event), `unlockAudio`, `dispose`; `GatePort` with `audio`, `visual`, `fadeOut(ms)` (fades only that port to 0 over `planFadeOut(ms)`, then ignores further requests; `fadeOutAll` uses the same per-port path) and `close()` (safe to call twice)
     - Recompute the whole plan (scaled gains, flash allocation, glow dim as the maximum over ports) on any change; the Volume_Cap is read from storage when the gate is created
     - _Requirements: 6.1, 6.2, 6.5, 6.6, 6.7, 6.13, 6.14, 6.15, 6.16, 6.17, 4.4_
 
@@ -181,20 +181,20 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - New cap applied within 100 ms; sound off ramps to zero within 300 ms; ramps start from the current value; rising ramps last at least 300 ms; no sound before unlock and the first `pointerdown` or `keydown` unlocks; reduced motion adds no movement classes; gate output nodes disconnect on `close()`
     - _Requirements: 6.3, 6.4, 6.13, 8.5, 8.6, 9.2_
 
-- [ ] 4. Implement the engine
-  - [ ] 4.1 Implement `src/haunts/engine/engine.ts` (`createHauntEngine`)
+- [x] 4. Implement the engine
+  - [x] 4.1 Implement `src/haunts/engine/engine.ts` (`createHauntEngine`)
     - `start`, `stop`, `getState`. Subscribe through `subscribeSignal` and to the settings store; treat the value delivered at subscribe time as the first event; ignore consecutive duplicate values; draw `rolls` once per look-away and freeze `previousLeadId`
     - `recompute()` calls `evaluate` and reconciles: start lead and companion through `gate.open`, `setLevel` on level change, on level 0 call `gate.fadeOutAll(600)` and then stop each haunt in its own try/catch; failing haunts are stopped, closed and reported through `warn`
-    - Timer from `nextChangeDelay`, recompute from the clock when it fires; flush retiring haunts (ramp at most 50 ms) when a new look-away starts; gentle on lowers the lead and fades out the companion within 800 ms; gentle off restores the level from elapsed time with the same lead
+    - Timer from `nextChangeDelay`, recompute from the clock when it fires; flush retiring haunts (ramp at most 50 ms) when a new look-away starts; gentle on lowers the lead and fades out the companion with `port.fadeOut` within 800 ms; gentle off restores the level from elapsed time with the same lead
     - Not armed (notice not seen): remember events, act on none, level 0. On arming while `away`, record a synthetic `away` stamped now
     - `stop()` clears timers, unsubscribes, stops and closes every port. No import of camera, detector, video or `src/attention/` code. Split into `engineTimer.ts` if the file approaches 200 lines
     - _Requirements: 1.5, 1.7, 2.1, 2.2, 2.3, 2.4, 2.5, 3.4, 3.5, 7.2, 7.3, 8.4, 11.1, 11.2, 11.3, 11.4, 16.1, 16.2_
 
-  - [ ] 4.2 Create the public surface `src/haunts/engine/index.ts`
+  - [x] 4.2 Create the public surface `src/haunts/engine/index.ts`
     - Export `createHauntEngine`, `createGate`, `createSettingsStore`, `loadHaunts`, `visibleDialogs`, `computeRegions`, `DEFAULT_SETTINGS`, and the types needed by `src/ui/`
     - _Requirements: 16.1_
 
-  - [ ] 4.3 Write property test for engine behaviour over any script
+  - [x] 4.3 Write property test for engine behaviour over any script
     - File: `src/haunts/engine/__tests__/engine.p20.prop.test.ts`
     - Real engine with fake haunts, fake gate, fake clock and fake scheduler; scripts of signal events, clock advances, timer firings, gentle toggles, sound toggles and arming; some fake `stop` calls throw
     - **Property 20: Engine keeps haunts within its rules for any script**
@@ -205,7 +205,7 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - Signal delivered at subscribe time is the first event; away, 5 s, 12 s gives start, `setLevel(2)`, companion start; present stops everything within 800 ms; gentle on at level 3 lowers the lead and stops the companion; gentle off restores the level with the same lead; present then away restarts timing with a new lead; arming while away starts at level 1; no haunt available leaves level 0 without an error
     - _Requirements: 2.5, 3.7, 7.2, 7.3, 8.4, 11.4_
 
-  - [ ] 4.5 Report results in `docs/BUILD_LOG.md`
+  - [x] 4.5 Report results in `docs/BUILD_LOG.md`
     - Append a section for tasks 3 and 4: Property 20 added, cases run, any counterexample with seed and shrunk input, and the Web Audio and other API findings from 3.1
     - _Requirements: none (testing rule)_
 
@@ -230,7 +230,7 @@ Testing rules that apply to every task (from the testing steering file): no fake
   - [ ] 5.4 Write the static source scan test
     - File: `src/haunts/__tests__/staticScan.unit.test.ts`; reads the source files at test time
     - Files `src/haunts/*.ts` must not contain `document`, `window`, `AudioContext(`, `.destination`, `fetch`, `Audio(`, `speechSynthesis`, `@keyframes`, `animation`, `setInterval`, `setTimeout`, `localStorage`, or an import from outside `./engine/types` and `./engine/noise`
-    - `levelLogic.ts` and `plan.ts` must not mention `document`, `window`, `Date`, `performance`, `setTimeout` or `Math.random`; nothing under `src/haunts/` imports from `src/attention`, `src/ui`, or camera or video code; `.destination` appears only in `audioAdapter.ts`; no `.mp3`, `.wav`, `.ogg` or `.m4a` string appears under `src/haunts/`
+    - `levelLogic.ts` and `plan.ts` must not mention `document`, `window`, `Date`, `performance`, `setTimeout` or `Math.random`; nothing under `src/haunts/` imports from `src/attention`, `src/ui`, or camera or video code; `.destination` appears only in `audioAdapter.ts` and `audioGraph.ts`; no `.mp3`, `.wav`, `.ogg` or `.m4a` string appears under `src/haunts/`
     - The test iterates the files found on disk, so later haunts are covered without edits
     - _Requirements: 4.4, 6.1, 6.18, 6.19, 10.3, 11.2_
 
@@ -301,7 +301,7 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - _Requirements: 14.2, 14.7_
 
   - [ ] 8.2 Implement `src/haunts/whispers.ts`
-    - Exports `id` (`whispers`), `name`, `start`, `setLevel`, `stop`. Uses `audio.whenReady` and `createNoiseBuffer` from `./engine/noise`, a filter, and a stereo pan to one side; gain requested through `audio.setGain` only (starting values 0.04, 0.10, 0.18, tuned by ear, increasing by level)
+    - Exports `id` (`whispers`), `name`, `start`, `setLevel`, `stop`. Uses `audio.whenReady` (its callback gets the restricted `HauntAudioContext`: no `destination`, connect only to `ctx.input`) and `createNoiseBuffer` from `./engine/noise`, a filter, and a stereo pan to one side; gain requested through `audio.setGain` only (starting values 0.04, 0.10, 0.18, tuned by ear, increasing by level)
     - Without sound (setting off or no unlock) shows an edge vignette on the whisper side through `visual.createLayer`, stronger at higher levels; fade rules come from the gate. `stop` disconnects every node, cancels `whenReady`, and removes the layer. No speech, no lyrics, no audio file
     - Do not edit any file in `src/haunts/engine/`. If an edit seems needed, stop and report it
     - _Requirements: 4.1, 4.3, 4.5, 4.6, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9, 14.10, 5.2_

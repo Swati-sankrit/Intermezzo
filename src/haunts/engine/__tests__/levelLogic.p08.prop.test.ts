@@ -5,11 +5,13 @@ import type { LevelInput } from '../levelLogic';
 import { awayHistoryArb, eventHistoryArb, rollsArb } from './arbitraries';
 
 const NUM_RUNS = 300;
+/** Runs for the coverage test only: the 25% to 40% band is about 5 SD wide on each side at this count. */
+const COVERAGE_RUNS = 1000;
 
-/** Gentle mode on about 30% of the time. */
+/** Gentle mode on 32.5% of the time: the centre of the 25% to 40% coverage band. */
 const gentleArb = fc.oneof(
-  { weight: 7, arbitrary: fc.constant(false) },
-  { weight: 3, arbitrary: fc.constant(true) },
+  { weight: 27, arbitrary: fc.constant(false) },
+  { weight: 13, arbitrary: fc.constant(true) },
 );
 
 const idArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,7}$/);
@@ -127,7 +129,7 @@ describe('Level_Logic nextChangeDelay: lands on the next level change', () => {
         if (nextChangeDelay(input) === null) seen.delayNull++;
         else seen.delayNumber++;
       }),
-      { numRuns: NUM_RUNS },
+      { numRuns: COVERAGE_RUNS },
     );
     const atLeast = (n: number, pct: number) => n >= seen.runs * pct;
     const msg = JSON.stringify(seen);

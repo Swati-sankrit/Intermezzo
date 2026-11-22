@@ -3,6 +3,12 @@
  * camera access, and no import from src/attention/.
  */
 
+import type { HauntAudioContext } from './hauntAudio';
+
+export type {
+  HauntAudioContext, HauntBufferSource, HauntFilter, HauntNode, HauntPanner, HauntParam, HauntSink,
+} from './hauntAudio';
+
 export type HauntLevel = 1 | 2 | 3;
 export type Unsubscribe = () => void;
 
@@ -18,10 +24,11 @@ export interface Haunt {
 export interface AudioOut {
   /**
    * Calls `cb` once, as soon as sound is possible (after Audio_Unlock), or at
-   * once if it already is. `input` is this haunt's channel gain node: connect
-   * every source to it and to nothing else. Returns a cancel function.
+   * once if it already is. `ctx` is a restricted context: it makes sources, filters and
+   * panners, and connects them only to each other and to `ctx.input` (this haunt's channel
+   * gain). It has no `destination` and no raw AudioContext. Returns a cancel function.
    */
-  whenReady(cb: (ctx: AudioContext, input: AudioNode) => void): Unsubscribe;
+  whenReady(cb: (ctx: HauntAudioContext) => void): Unsubscribe;
   /** Requested absolute gain, 0 to 1. The gate clamps, scales and ramps it. */
   setGain(requested: number): void;
 }
@@ -64,6 +71,11 @@ export interface Gate {
 export interface GatePort {
   readonly audio: AudioOut;
   readonly visual: VisualOut;
+  /**
+   * Fades only this port's audio and visuals to 0 over `planFadeOut(ms)` (at most 800 ms in
+   * every mode), then ignores further audio and visual requests. Does not release the port.
+   */
+  fadeOut(ms: number): void;
   /** Gate-side cleanup: removes layers, disconnects the channel. Safe to call twice. */
   close(): void;
 }

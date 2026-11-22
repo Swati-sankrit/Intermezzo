@@ -19,11 +19,11 @@ const sizedIdsArb: fc.Arbitrary<string[]> = fc
   .integer({ min: 0, max: 5 })
   .chain((n) => fc.uniqueArray(idArb, { minLength: n, maxLength: n }));
 
-/** Milliseconds after the away start; levels 1, 2 and 3 are each about a third. */
+/** Milliseconds after the away start; level 2 is weighted up because gentle mode and empty haunt lists remove cases from it. */
 const elapsedArb = fc.oneof(
-  fc.integer({ min: 0, max: 4999 }),
-  fc.integer({ min: 5000, max: 11_999 }),
-  fc.integer({ min: 12_000, max: 30_000 }),
+  { weight: 2, arbitrary: fc.integer({ min: 0, max: 4999 }) },
+  { weight: 4, arbitrary: fc.integer({ min: 5000, max: 11_999 }) },
+  { weight: 3, arbitrary: fc.integer({ min: 12_000, max: 30_000 }) },
 );
 
 /** Input whose last events are `away`, with `now` drawn relative to the trailing away start. */

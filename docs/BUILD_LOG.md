@@ -368,3 +368,163 @@ Only two entries are failures against something other than a coverage floor: the
 - The P6 shaping is logged as "Task 1.22 follow-up", not task 1.23. The P5 shaping is logged as "Task 1.18 follow-up", under the same heading as the P8 counterexample. The task 1.23 entry is the P18 overlap one only.
 - Seeds exist in the log only for P9 (task 1.13) and P18 (task 1.23). The P8 defect, the P5 and P6 coverage misses, and P19 have no recorded seed.
 - The task 1.3 `-0` issue and the level-2 coverage notes for P4 are not counterexamples against code under test, as their entries say.
+
+## haunt-feature, task 3.1: API documentation findings
+
+Fetched on the day of task 3.1. MDN pages were read directly (developer.mozilla.org) and compatibility data came from the MDN browser-compat-data JSON on GitHub. Context7 (`/mdn/content`) was used to cross-check the `AudioParam` methods. No code or tests were changed. Sections below are paraphrased.
+
+### Summary
+
+- Every API in the task list is confirmed except two items: reading `param.value` mid-ramp (not described on any page fetched) and the exact rule for a zero-length `createBuffer` (not described). Both are marked "do not rely on" below.
+- **Do not use `cancelAndHoldAtTime`.** Firefox has no support (Firefox `version_added: false`, bug 1308431), so a ramp interrupted mid-flight cannot be held in place with it.
+- **Do not use `MediaQueryList.addListener` / `removeListener`.** Deprecated. Use `addEventListener('change', ...)`.
+- **Do not use `webkitAudioContext`.** The unprefixed `AudioContext` is in Chrome 35, Firefox 25, Safari 14.1. Not needed for the target browsers.
+- **Do not use `exponentialRampToValueAtTime` for the fade to zero.** Not fetched here, so no claim is made about it. The gate uses linear ramps as in design.md.
+- jsdom 31.0.1 (the project test environment) defines none of `AudioContext`, `webkitAudioContext`, `ResizeObserver`, `matchMedia`. Task 3.3 fakes must cover all three.
+
+### AudioContext (constructor, `state`, `resume()`, `close()`, `currentTime`, `destination`)
+
+- Constructor: `new AudioContext()` or `new AudioContext(options)`. Options: `latencyHint`, `sampleRate` (3000 to 768000 Hz), `renderSizeHint`, `sinkId`. Throws `InvalidStateError` if the document is not fully active, `NotSupportedError` for an unsupported `sampleRate` or `renderSizeHint`. Chrome throws `TypeError` for a bad `latencyHint`. The adapter calls it with no options. A throw means "not ready" (design: failure table, Req 8.7), so the factory call must be inside try/catch.
+- `state`: `running`, `suspended`, `closed`, or `interrupted`. `interrupted` is set by the browser when something outside the page pauses audio (a call, a closed laptop lid; iOS Safari does it when the user leaves the page). It needs `resume()` like `suspended`. The adapter must treat any state other than `running` as "not producing sound" and not only compare to `'suspended'`. Listen to `onstatechange` / the `statechange` event to follow changes.
+- `resume()`: returns a Promise. It resolves when the context is running again and rejects if the context is already closed. Handle the rejection (catch) so a closed context cannot raise an unhandled rejection. Baseline widely available (Chrome 41, Firefox 40, Safari 9).
+- `close()`: returns a Promise, releases system audio resources, stops time. `OfflineAudioContext` throws `INVALID_STATE_ERR`; not relevant here. After `close()`, `resume()` rejects. What `close()` does when called on an already closed context is not stated on the page; guard with a `state !== 'closed'` check and do not rely on it.
+- `currentTime`: seconds on the audio timeline, starting at 0. It advances in render blocks (128 frames, about 2.7 to 2.9 ms), so repeated reads can return the same value. It stops advancing while the context is suspended. It is separate from `Date.now()` and `performance.now()`. Firefox may round it (1 ms default, 16.667 ms with resistFingerprinting). Do not compare it with the engine clock (`performance.timeOrigin + performance.now()`); use it only to schedule `AudioParam` events.
+- `destination`: read-only `AudioDestinationNode`. Only `audioAdapter.ts` may touch it (design and tasks 3.4).
+- Autoplay: browsers allow audio only after a user interaction, a muted or zero-volume start, or an allowlist. Starting playback outside a user input is subject to the autoplay rules. Chrome (since 71) creates an `AudioContext` made before the first user gesture in the `suspended` state and needs `resume()` after the gesture. Creating the context inside the gesture handler is the alternative; Chrome's guidance is to check `state` after creation (`running` means allowed, `suspended` means not yet). Chrome's article says the set of events that count as a gesture is not defined consistently across browsers and recommends `click`. design.md uses `pointerdown` and `keydown`. MDN's autoplay guide says "clicking, tapping, pressing keys, etc."; a `pointerdown` or `keydown` is reasonable but not guaranteed in every browser. Safari and Firefox gesture rules were not found in the fetched pages. Plan: on unlock, create the context if needed, call `resume()`, and treat the context as ready only when `state === 'running'` (listen to `statechange`), instead of assuming `resume()` succeeded.
+- Browser support (BCD): constructor Chrome 35, Firefox 25, Safari 14.1 (earlier Safari had only `webkitAudioContext`). Edge follows Chrome.
+- Sources: https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/AudioContext , https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/state , https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/resume , https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/close , https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/currentTime , https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/destination , https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay , https://developer.chrome.com/blog/autoplay , https://raw.githubusercontent.com/mdn/browser-compat-data/main/api/AudioContext.json
+
+### GainNode
+
+- One input, one output. `gain` is an a-rate `AudioParam`. Setting `gain.value` directly applies at once and can click. MDN says to use `AudioParam` automation instead. Baseline widely available (July 2015).
+- Gotcha: any gain change, including the cap change (50 ms) and sound off (150 ms), must go through a ramp, never `gain.value = x`.
+- Source: https://developer.mozilla.org/en-US/docs/Web/API/GainNode
+
+### AudioParam
+
+- `setValueAtTime(value, startTime)`: instant change at `startTime`. If `startTime` is before `currentTime` the change happens immediately. A negative `startTime` throws `TypeError`. Returns the `AudioParam` (older implementations return `undefined`, so do not chain). Baseline widely available (July 2015).
+- `linearRampToValueAtTime(value, endTime)`: linear change that starts at the time of the previous scheduled event and ends at `endTime` with `value`. `endTime` is an absolute time on the context clock (the example uses `currentTime + 2`). MDN labels it "limited availability" without a visible per-browser table in the fetched text, and the BCD entry for this method was not read. Per-browser support for the ramp is therefore not confirmed here, although `setValueAtTime` is Baseline. Task 3.4 should check the BCD (`api/AudioParam.json`) or test in Firefox and Safari by hand.
+- **Gotcha: a ramp starts from the previous event, not from "now".** If no event precedes it, or the previous event is far in the past, the ramp can start from an unintended point. Required pattern before every ramp: `cancelScheduledValues(now)`, then `setValueAtTime(current, now)`, then `linearRampToValueAtTime(target, now + durationSeconds)`.
+- `cancelScheduledValues(startTime)`: cancels all events scheduled at or after `startTime`. Does not set a value. Returns the `AudioParam` (older ones return `undefined`). The page does not say what value the parameter holds afterwards, so the value to anchor with must be known by the adapter (see next point).
+- **Reading the current value is not confirmed.** None of the fetched pages states what `param.value` returns while a ramp is running. Do not rely on `param.value` for "the current value" mid-ramp. The adapter should compute the in-flight value itself from the start value, target, start time and end time of the ramp it scheduled, or track the last-set target when no ramp is active. Task 3.3's fake `AudioParam` should record the calls so this can be tested. This is a difference from design.md ("from the current value"); see below.
+- `cancelAndHoldAtTime(cancelTime)`: documented (cancels future changes and holds the value at that time), but BCD shows Chrome 57, Safari 14.1, and **Firefox not supported**. Mark: **do not use**.
+- Units: all times are seconds on the `AudioContext` clock, so convert from the plan's milliseconds (`ms / 1000`).
+- Sources: https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/linearRampToValueAtTime , https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setValueAtTime , https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/cancelScheduledValues , https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/cancelAndHoldAtTime , https://raw.githubusercontent.com/mdn/browser-compat-data/main/api/AudioParam.json (Context7 `/mdn/content` agreed on the ramp, cancel and hold descriptions)
+
+### DynamicsCompressorNode
+
+- One input, one output, channel count mode `clamped-max`, count 2. Parameters are k-rate `AudioParam`s: `threshold`, `knee`, `ratio`, `attack`, `release`. `reduction` is a read-only float. Created with `ctx.createDynamicsCompressor()` or the `DynamicsCompressorNode` constructor. Baseline widely available.
+- Gotcha: it is a limiter-like safety net only. It does not replace the gain cap computed in `plan.ts`; the cap is enforced by the gain values. Default parameter values were not confirmed on the page, so the adapter should set `threshold`, `ratio`, `attack` and `release` explicitly if it needs a specific behaviour.
+- Source: https://developer.mozilla.org/en-US/docs/Web/API/DynamicsCompressorNode
+
+### AudioBuffer and `createBuffer` (for `noise.ts`, task 3.2)
+
+- `ctx.createBuffer(numberOfChannels, length, sampleRate)`. `length` is in sample frames: seconds times `sampleRate`. All browsers must support at least 1 to 32 channels and 8000 to 96000 Hz. Throws `NotSupportedError` for negative or invalid values and `RangeError` if memory cannot be allocated.
+- `buffer.getChannelData(channel)` returns a `Float32Array` of the live sample data. Samples are 32-bit floats, nominal range -1 to 1. `copyToChannel` also exists. Buffers are meant for short sounds (about 45 seconds or less).
+- Gotchas: use `Math.round(seconds * ctx.sampleRate)` (length must be an integer), use `ctx.sampleRate` as the third argument, and guard against `seconds <= 0` or non-finite values before calling (zero length behaviour is not stated on the page, so it is not relied on). Fill with values in [-1, 1].
+- Sources: https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createBuffer , https://developer.mozilla.org/en-US/docs/Web/API/AudioBuffer
+
+### `window.matchMedia('(prefers-reduced-motion: reduce)')`
+
+- `matchMedia(query)` returns a `MediaQueryList`. Feature expressions must be in parentheses. `mql.matches` is the instant answer; the `change` event fires when the result flips, and its event object has `matches`.
+- Use `mql.addEventListener('change', cb)` and `removeEventListener`. `addListener` and `removeListener` are deprecated aliases for old browsers where `MediaQueryList` was not an `EventTarget`. **Do not use `addListener`.** `MediaQueryList` is Baseline widely available (July 2015).
+- Gotcha: `window.matchMedia` is absent in jsdom, and the adapter must also handle a missing function (design: returns false). The `prefers-reduced-motion` media feature itself was not separately fetched; it is the same string design.md already uses in CSS.
+- Sources: https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia , https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryList , https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryList/addListener
+
+### ResizeObserver
+
+- `new ResizeObserver(callback)`, with `observe(element)`, `unobserve(element)` and `disconnect()`. The callback gets an array of entries; use `entry.contentBoxSize[0]` (`inlineSize`, `blockSize`) and fall back to `entry.contentRect` if `contentBoxSize` is missing. The callback runs before paint. A callback that resizes what it observes can loop; the browser then fires a window `error` event with "ResizeObserver loop completed with undelivered notifications". Setting only size-independent state, or deferring with `requestAnimationFrame`, avoids it.
+- Support (BCD): Chrome 64, Firefox 69, Safari 13.1, Edge follows Chrome. Not in jsdom.
+- Gotcha: `HauntStage` should call `disconnect()` in its cleanup, and feature-detect `typeof ResizeObserver !== 'undefined'` (design: fallback is a 65ch estimate).
+- Sources: https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver , https://raw.githubusercontent.com/mdn/browser-compat-data/main/api/ResizeObserver.json
+
+### `storage` event
+
+- Fires on `window` when another document sharing the same storage area changes it. It does **not** fire in the document that made the change. For `localStorage` it fires in all other browsing contexts of the same origin (other tabs included). For `sessionStorage` only in same-tab frames. It does not bubble and cannot be cancelled. The event is a `StorageEvent`. Baseline widely available (April 2017).
+- Gotcha: `refreshVolumeCap()` on the `storage` event only reacts to changes from another tab. Same-tab writes must call `refreshVolumeCap()` directly (design: "There is no function in this spec that writes `rod_volume_cap`", so no same-tab path exists today). Filter on `event.key === 'rod_volume_cap'` or `event.key === null` (null for `clear()`; not stated on the page, so treat as a safe extra case rather than a documented one).
+- Source: https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event
+
+### Test environment check (jsdom)
+
+- `vite.config.ts`: `test.environment: 'jsdom'`, `globals: true`, `setupFiles: ['src/test/setup.ts']`. `src/test/setup.ts` only imports `@testing-library/jest-dom/vitest`. It defines no audio, `matchMedia` or `ResizeObserver` stubs. jsdom version 31.0.1.
+- Checked by constructing a `JSDOM` window in node: `AudioContext` undefined, `webkitAudioContext` undefined, `ResizeObserver` undefined, `matchMedia` undefined, `MediaQueryList` undefined, `Element.prototype.animate` undefined. `StorageEvent` and `localStorage` are defined.
+- Consequence for task 3.3: the fakes must supply a fake `AudioContext` (nodes, `AudioParam` automation recording, `state`, `currentTime`, `resume`, `close`, `destination`), a fake `matchMedia` (`matches`, `addEventListener('change')`, `removeEventListener`), and a fake or stubbed `ResizeObserver` for any component test. They must be passed in through the `GateDeps` factories, not installed on `window`, so the "unavailable" paths in design.md stay testable too.
+
+### Discrepancies with design.md
+
+1. design.md (audio adapter paragraph and Property 14) says gains change "with `linearRampToValueAtTime` from the current value". MDN confirms the ramp starts at the previous event, so the adapter must anchor with `cancelScheduledValues(now)` plus `setValueAtTime(current, now)`. Reading "current" from `param.value` mid-ramp is unconfirmed, so the adapter should compute it from its own schedule. design.md does not state either point. No design.md edit made; flagged for the orchestrator.
+2. design.md says the unlock "creates the context if needed and calls `resume()`". It does not mention the `interrupted` state, or that `resume()` can reject. The adapter should treat "ready" as `state === 'running'` and catch the rejection. Same for creation failure: wrap the constructor in try/catch (design already says "cannot be created" gives not ready).
+3. design.md and the haunt-safety steering file use `pointerdown` and `keydown` as the unlock gestures. The Chrome article recommends `click` and says the gesture list is not consistent across browsers. Not a conflict with the docs, but a `resume()` that does not reach `running` after the first `pointerdown` or `keydown` should not be treated as final; the `once` option on the listener would then leave audio locked. This is a risk to confirm by hand in Safari and Firefox.
+4. design.md's "storage event" mention in `refreshVolumeCap` is correct for other tabs only. The event never fires in the writing tab.
+5. No other mismatch found for `matchMedia` (design already uses a `change` subscription and a false fallback) or `ResizeObserver` (design already has the missing-API fallback).
+
+## haunt-feature, task 3.3: fakes sanity test expectation corrected
+The sanity test in `src/haunts/engine/__tests__/fakes.unit.test.ts` had a wrong expectation. It expected 0.4 for `maxValueOver(1, 3)` after a jump down at t=1. The correct value is 0.1, because the 0.4 left limit is approached from t < 1, outside [1, 3]. The fake was correct. The expectation was corrected and the test renamed to "maxValueOver includes the left limit only when the interval starts before the jump". Approved by the user. The preceding `maxValueOver(0, 3)` assertion (0.4) covers the left-limit case. Not a counterexample against code under test.
+### Open items flagged in 3.3
+- `GateDeps` is not yet in code. The fakes follow the shapes in `types.ts` and `reducedMotion.ts`.
+- The fake throws `TypeError` for negative times in all three automation methods. The spec may use `RangeError` for `cancelScheduledValues`.
+- `createBuffer` with length < 1 throws in the fake. This is unconfirmed in the docs.
+- design.md mentions `port.fadeOut`, which is not in `GatePort`. To be decided with the user.
+
+## haunt-feature, task 3.6 rework: `GatePort.fadeOut` and restricted audio context
+Two decisions approved by the user.
+1. `GatePort.fadeOut(ms)` added in `types.ts`. It fades only that port's audio and visuals to 0 over `planFadeOut(ms)` (at most 800 ms in every mode), then the port ignores further audio and visual requests. It does not release the port; `close()` does. In `gate.ts`, `fadeOutAll` and `port.fadeOut` share `fadePort` and `replanAfterFade`. This resolves the open item "design.md mentions `port.fadeOut`" from task 3.3. `createFakeGate` ports now record `fadeOut(ms)` in `port.fadeOuts` and in `gate.calls` (`{ type: 'fadeOut', hauntId, ms }`).
+2. `AudioOut.whenReady` now calls `cb(ctx: HauntAudioContext)` instead of `cb(ctx: AudioContext, input: AudioNode)`. Types are in `engine/hauntAudio.ts`; the wrappers are built in `engine/gate/restrictedAudio.ts`. Haunts get wrapper objects only (buffer source, biquad filter, stereo panner), never a real node, so no `.context` or `destination` is reachable. `connect` accepts only a wrapper of the same port or `ctx.input`, and throws `TypeError` otherwise. `ctx.input` has no `connect`. `noise.ts` is unchanged and works with `ctx.createBuffer` and `ctx.sampleRate`. `audioAdapter.ts` passes `rec.restricted` (created in `attach` in `audioGraph.ts`). The static scan (task 5.4) will allow `.destination` in `audioAdapter.ts` and `audioGraph.ts`.
+3. New test `engine/__tests__/restrictedAudio.unit.test.ts` (3 tests, real audio adapter on the fake `AudioContext`): no `destination`, `context` or routing factories on the context or any wrapper (own and inherited properties and reachable values walked); connecting to a raw node, `destination`, another port's wrapper or input, or a non-node throws; the chain source, filter, panner, input has exactly one path to `destination` through channel gain, master gain and compressor. No counterexamples. No change to `fakes.ts` was needed for this test.
+4. Fake changes in `fakes.ts` (interface changes only): `FakeGatePort.fadeOuts`, `fadeOut`, `GateCall` variant `fadeOut`, and `fireReady(ctx: HauntAudioContext)` / `readyCallbacks` typed with the new callback.
+## haunt-feature, task 4.3: coverage fix in p08 and Property 20 added
+### p08 coverage test: gentle share (input shaping only)
+- Failure seen once: `levelLogic.p08.prop.test.ts`, "gentle at least 25%". Gentle was weighted 7:3 (30%) with a 25% to 40% band and 300 runs.
+- Before (7:3, 300 runs, 3000 batches measured with a throwaway script outside `src/`): mean 30.0%, SD 2.67%. The lower edge was 1.87 SD away, the upper edge 3.73 SD away. 74 of 3000 batches (2.5%) fell outside the band.
+- After (27:13 = 32.5%, coverage test at 1000 runs, 3000 batches): mean 32.5%, SD 1.46%, 5.13 SD from 25% and 5.12 SD from 40%. 0 of 3000 batches outside the band.
+- Changed: the weights and a new `COVERAGE_RUNS = 1000` used only by the coverage test. The other two p08 tests still use 300. No assertion, floor or band changed. The throwaway script was deleted.
+### Property 20 (`engine.p20.prop.test.ts`, helper `engineScript.ts`)
+- Real `createHauntEngine`, real `createSettingsStore` over a fake storage, fake haunts, fake gate, fake clock and scheduler. 200 scripts for the property, 1000 for the coverage check.
+- Model decisions: arming is one-way (the notice is dismissed once, Req 8.3), so "not armed" only happens before arming. Time moves through `scheduler.advance` and `fireNext`, so timers fire on time. A retiring haunt (running but neither lead nor companion) may only appear when `present` arrives or when gentle turns on (then only the previous companion). It must be gone 800 ms later, or 50 ms after a new look-away begins.
+- Mutation check (copies under a throwaway directory, deleted): removing the flush on a new look-away, removing the restart flush, skipping retiring haunts in `closeAll`, keeping the timer on `stop()`, and skipping the retire of the companion on gentle-on were each caught by the test.
+- Counterexamples: none.
+
+## haunt-feature, task 4.5: summary of tasks 3 and 4
+
+### Run
+`npx vitest --run src/haunts`: first run 21 files, 104 passed, 1 failed (the p07 coverage check, see below). After the input fix, a second full run: 21 files, 105 tests, all passed. Task 3.7 and task 4.4 (optional unit tests) are not written.
+
+### Property 20 added
+- File: `src/haunts/engine/__tests__/engine.p20.prop.test.ts` (helper `engineScript.ts`). Two `fc.assert` blocks: the property at 200 scripts (`NUM_RUNS`) and the coverage check at 1000 scripts (`COVERAGE_RUNS`). Total 1,200 cases. Read from the file.
+- Counterexamples: none. The existing task 4.3 entry records none, and none were seen in the runs for this entry. No seed or shrunk input exists to record.
+- Model and mutation details: see "task 4.3: coverage fix in p08 and Property 20 added".
+
+### Task 3.1 findings (summary; full detail in "task 3.1: API documentation findings")
+- Do not use `cancelAndHoldAtTime` (no Firefox support), `MediaQueryList.addListener`, or `webkitAudioContext`.
+- A ramp starts at the previous event, so each ramp needs `cancelScheduledValues`, `setValueAtTime`, then `linearRampToValueAtTime`. Reading `param.value` mid-ramp is not confirmed in the docs, so the adapter tracks its own schedule.
+- "Ready" means `state === 'running'`; `resume()` can reject; `interrupted` is a state; `new AudioContext()` can throw.
+- jsdom has no `AudioContext`, `matchMedia` or `ResizeObserver`, so the fakes supply them.
+- Five discrepancies with design.md are listed at the end of that entry.
+
+### Later task 3 and 4 decisions
+- 3.3 fakes expectation: `maxValueOver(1, 3)` expected 0.1, not 0.4. The fake was right and the test was wrong. See "task 3.3: fakes sanity test expectation corrected".
+- 3.6 user decisions: (1) `GatePort.fadeOut(ms)`, at most 800 ms; (2) a restricted `HauntAudioContext` with wrappers, tested by `restrictedAudio.unit.test.ts`. The static scan (task 5.4) stays as a second guard and allows `.destination` only in `audioAdapter.ts` and `audioGraph.ts`. See "task 3.6 rework".
+- 3.4 unlock listener: the listener on `pointerdown` and `keydown` (capture) is not `once`. It stays attached until `dispose`, and a failed `resume()` or a failed context creation leaves the audio locked and tries again on the next gesture (`audioAdapter.ts`, `unlock`, `arm`). This follows discrepancy 3 in the task 3.1 entry. Compressor settings (`audioTypes.ts`, `LIMITER`): threshold -6 dB, knee 6, ratio 20, attack 0.003 s, release 0.25 s, set with `setValueAtTime`. Cap change ramps in 50 ms and sound off in 150 ms.
+- 3.5 SVG: `gate/svgMarkup.ts` parses the string as `image/svg+xml` with `DOMParser` (no `innerHTML`) and copies only allow-listed elements and attributes into the stage. Event-handler attributes, external references (`http:`, `data:`, `javascript:`, `//`) and non-fragment `href` values are dropped; a rejected string gives `null`.
+- 4.1 engine choices (`engine.ts`, `engineRoster.ts`): `running` includes retiring haunts; retiring haunts are flushed in two steps (a retiring instance of an id is stopped before that id starts again, and a new look-away shortens every remaining fade to 50 ms, `FLUSH_MS`); a haunt whose start or `setLevel` failed is not retried within the same look-away (`failed` set, cleared on the next look-away).
+- 4.2 p08 flake and 4.3 p08 fix: the gentle share check failed once (30% gentle, band 25% to 40%, 300 runs; 2.5% of batches missed). The fix: gentle weighted 27:13 (32.5%), coverage check at 1000 runs, 0 of 3000 batches outside the band. See "task 4.3: coverage fix in p08".
+- 4.3 mutation check: five mutants. The property test catches four (no flush on a new look-away, no restart flush, retiring haunts skipped in `closeAll`, timer kept on `stop()`). The mutant that skips retiring the companion on gentle-on is caught only by the coverage check (user-supplied; see discrepancies).
+- Arming is modelled one-way only (the notice is dismissed once, Req 8.3).
+
+### Coverage input fix found in this run (input shaping only)
+`levelLogic.p07.prop.test.ts`, "the generated inputs reach every level and both gentle settings", failed once on the level 2 floor (10%): level 2 was 26 of 300 (8.7%); l0 87, l1 123, l3 64, gentle 113, companion 49. Seed not captured. Cause: the three elapsed ranges were equally weighted, but gentle mode (about 37%) and empty haunt lists remove cases from level 2. Fix: `elapsedArb` weights 2:4:3 for levels 1:2:3 (was equal). No assertion or floor changed; `levelLogic.ts` and `arbitraries.ts` untouched. After the fix: 25 solo runs of the file all passed, then the full `src/haunts` run passed. No share measurement with a throwaway script was made this time, so the margin over the floor is not quantified.
+
+### Open items for later tasks
+- No tests exercise the real gate's `port.fadeOut` or close semantics (task 3.7 is optional and skipped).
+- Manual check in Safari and Firefox of the retrying unlock listener (not done).
+- `HauntParam` has no `setTargetAtTime` or exponential ramps. Adding them would be an engine edit.
+- `fakes.ts` is 939 lines (large).
+- The stage stylesheet with `@keyframes`, `.is-sweeping` and `.is-guttering` belongs to task 6.1.
+- Disarm (`noticeSeen` going back to false) is not tested.
+
+### Discrepancies between the request and the existing entries
+- Before this entry there was no log entry for 3.4 (unlock retry, compressor settings), 3.5 (SVG allow-list), 4.1 choices, or the 4.2 flake as a separate item. These were written above from the code (`audioAdapter.ts`, `audioTypes.ts`, `svgMarkup.ts`, `engine.ts`, `engineRoster.ts`), not from earlier entries. The 4.2 flake and 4.3 fix share the "task 4.3" entry.
+- The task 4.3 entry says all five mutants "were each caught by the test". It does not say that the gentle-on companion retire mutant is caught only by the coverage check. That detail comes from the request and was not re-run.
+- The 3.4 design change is recorded in the 3.1 entry only as a risk (discrepancy 3), not as a decision.
+- `fakes.ts` is 939 lines, not 929 as in the request.
+- The task 3.6 entry says the `HauntAudioContext` types are in `engine/hauntAudio.ts` and that `audioAdapter.ts` passes `rec.restricted`; not re-verified here.

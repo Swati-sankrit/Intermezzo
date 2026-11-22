@@ -388,6 +388,150 @@
         "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
         "timestamp": 1795352994657
       }
+    ],
+    "3.1 Fetch current documentation before writing adapter code": [
+      {
+        "executionId": "ad18e922-15a3-4250-b516-e2ac9ed7d9a3",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795353120181
+      },
+      {
+        "executionId": "ad18e922-15a3-4250-b516-e2ac9ed7d9a3",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795353382491
+      }
+    ],
+    "3.2 Implement `gate/reducedMotion.ts` and `engine/noise.ts`": [
+      {
+        "executionId": "ad18e922-15a3-4250-b516-e2ac9ed7d9a3",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795353382579
+      },
+      {
+        "executionId": "ad18e922-15a3-4250-b516-e2ac9ed7d9a3",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795353461166
+      }
+    ],
+    "3.3 Create fakes in `src/haunts/engine/__tests__/fakes.ts`": [
+      {
+        "executionId": "ad18e922-15a3-4250-b516-e2ac9ed7d9a3",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795353461963
+      },
+      {
+        "executionId": "07995e03-671c-41a8-ac53-f416e530838d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795354062841
+      }
+    ],
+    "3.4 Implement `gate/audioAdapter.ts`": [
+      {
+        "executionId": "07995e03-671c-41a8-ac53-f416e530838d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795354063195
+      },
+      {
+        "executionId": "07995e03-671c-41a8-ac53-f416e530838d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795354301637
+      }
+    ],
+    "3.5 Implement `gate/visualAdapter.ts`": [
+      {
+        "executionId": "07995e03-671c-41a8-ac53-f416e530838d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795354302252
+      },
+      {
+        "executionId": "07995e03-671c-41a8-ac53-f416e530838d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795354471307
+      }
+    ],
+    "3.6 Implement `gate/gate.ts` (`createGate`)": [
+      {
+        "executionId": "07995e03-671c-41a8-ac53-f416e530838d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795354471422
+      },
+      {
+        "executionId": "07995e03-671c-41a8-ac53-f416e530838d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795354748416
+      },
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795354819563
+      },
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795355168214
+      }
+    ],
+    "3. Implement the Safety_Gate adapters": [
+      {
+        "executionId": "07995e03-671c-41a8-ac53-f416e530838d",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795354748494
+      }
+    ],
+    "4.1 Implement `src/haunts/engine/engine.ts` (`createHauntEngine`)": [
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795355168280
+      },
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795356932284
+      }
+    ],
+    "4.2 Create the public surface `src/haunts/engine/index.ts`": [
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795356932384
+      },
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795357118281
+      }
+    ],
+    "4.3 Write property test for engine behaviour over any script": [
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795357118392
+      },
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795357874599
+      }
+    ],
+    "4.5 Report results in `docs/BUILD_LOG.md`": [
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795357874704
+      },
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795358057474
+      }
+    ],
+    "4. Implement the engine": [
+      {
+        "executionId": "3c7361a1-abec-40dd-bc07-f5b1d1f89954",
+        "chatSessionId": "sess_954fbeb3-3e39-4a2f-a20d-abcdfa82d3ec",
+        "timestamp": 1795358057545
+      }
     ]
   }
 }
