@@ -359,6 +359,16 @@
         "executionId": "6f927c96-db38-4cd9-9571-d861f71b1f37",
         "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
         "timestamp": 1795318736645
+      },
+      {
+        "executionId": "0e659d1e-71b0-4ee3-a94e-8e8f015cea2d",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321018962
+      },
+      {
+        "executionId": "0e659d1e-71b0-4ee3-a94e-8e8f015cea2d",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321097322
       }
     ],
     "2.3 Write the MediaPipe spike page": [
@@ -371,6 +381,16 @@
         "executionId": "6f927c96-db38-4cd9-9571-d861f71b1f37",
         "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
         "timestamp": 1795318948125
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320149549
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320278171
       }
     ],
     "2.6 Implement `rateGate.ts`": [
@@ -395,6 +415,16 @@
         "executionId": "6f927c96-db38-4cd9-9571-d861f71b1f37",
         "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
         "timestamp": 1795319037859
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320149436
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320278090
       }
     ],
     "2.5 Write property test for pose extraction": [
@@ -419,6 +449,83 @@
         "executionId": "6f927c96-db38-4cd9-9571-d861f71b1f37",
         "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
         "timestamp": 1795319116810
+      }
+    ],
+    "2.8 Implement `detectorAdapter.ts`": [
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320281469
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320349614
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320476067
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320541203
+      }
+    ],
+    "2.9 Implement `cameraAdapter.ts`": [
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320281868
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320350135
+      }
+    ],
+    "2.10 Write unit tests for the adapters": [
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320358793
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320475913
+      }
+    ],
+    "2.11 Write smoke tests for privacy and origin rules": [
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320359138
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320476018
+      }
+    ],
+    "2.12 Report results in `docs/BUILD_LOG.md`": [
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320541734
+      },
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320625065
+      }
+    ],
+    "2. Implement the camera adapter (includes the MediaPipe spike)": [
+      {
+        "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795320625137
       }
     ]
   }

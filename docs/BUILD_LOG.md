@@ -180,3 +180,42 @@ No packages were installed and no adapter code was written. Sources: Context7 `/
 - `face_landmarker.task` model license (design item, outside this task).
 ### Follow-ups for the spec
 - design.md ("Not confirmed" table and the `readMatrix4` text) says the docs' example shows nested 4x4 arrays. That is now wrong: the type is `{ rows, columns, data: number[] }`. design.md and tasks 2.3 and 2.8 should be updated to read `data`. This task did not edit them.
+## attention-signal: Task 2.3 spike results
+Manual check by the user on Chrome, MacBook Air. This resolves the open items from Task 2.1 (row or column order, CPU runtime, detached video, relative basePath).
+- `Matrix.data` is column-major. The translation is at indices 12 to 14 (about -50 on z). `readMatrix4` reads `matrix.data` and checks `rows === 4`, `columns === 4`, length 16.
+- Yaw, read column-major: straight 1.5, left +25.9, right -46.9. Left is positive.
+- Pitch, read column-major: straight -0.8, slight down +16.6, up -38.9. Down is positive.
+- Looking far down at the keyboard loses the face (`faceFound` false).
+- GPU delegate works. CPU delegate works with the same signs (left +43.5).
+- wasm loads from the same-origin `/mediapipe/wasm` (200, then 304). No other origin was contacted.
+- A detached video works (`isConnected` false, `faceFound` true).
+- Console: only a Chrome extension `runtime.lastError` message and MediaPipe startup info and warnings. No errors from our code.
+- `design.md` and `tasks.md` (2.4, 2.8) were updated to column-major and to `matrix.data`.
+## npm audit (no dependency changes made)
+`npm audit` reports 2 vulnerabilities (1 high, 1 moderate), both one chain: `@xmldom/xmldom` (installed 0.7.13, affected <=0.8.14, high) pulled in by `epubjs@0.3.93` (affected 0.3.89 to 0.3.93, moderate, only because it depends on xmldom). The advisories are 15 xmldom ones (XML serialization injection, ReDoS and quadratic time or memory in parsing, for example GHSA-wh4c-j3r5-mjhp, GHSA-2v35-w6hq-6mfw, GHSA-x4fp-j954-r2f4). Path: `intermezzo > epubjs > @xmldom/xmldom`.
+`npm audit --omit=dev` gives the same result, because `epubjs` is a runtime dependency (`package.json` line 18), not a dev one. The code is imported in `src/reader/parser.ts` and is bundled into `dist/assets/src-*.js`, so it can reach production. It parses EPUB files the user opens in their own browser, so the exposure is a crafted EPUB causing a slow parse or odd markup in that user's own session. No server parses it. The only offered fix is `npm audit fix --force`, which installs epubjs@0.4.2 (a breaking change). Not run. Decision pending.
+### Outcome (override applied)
+`npm audit` lists affected versions as <=0.8.14, so the fixed releases are 0.8.15 (lts tag) and 0.9.12 (latest, MIT licence). I added `"overrides": {"@xmldom/xmldom": "0.9.12"}` to `package.json` and ran `npm install`. `npm ls` shows `@xmldom/xmldom@0.9.12 overridden` under epubjs, and `npm audit` reports 0 vulnerabilities. `npx vitest --run src/reader`: 13 files, 69 tests, all passed. epubjs 0.3.93 only uses `DOMParser` from xmldom (`utils/core.js`, `section.js`), and a direct `DOMParser` parse with 0.9.12 works. I did not test an EPUB open in a real browser; do that once manually. If it misbehaves, fall back to 0.8.15, whose API is closer to 0.7.13. epubjs was not upgraded.
+### Wasm build
+Added a `prebuild` script (`node scripts/copy-mediapipe.mjs`, `postinstall` kept). `public/mediapipe/wasm` is now in `.gitignore` and its four files were untracked with `git rm --cached` (they had been committed). Check: deleted `public/mediapipe/wasm` and `dist`, ran `npm run build`; `dist/mediapipe/wasm` has all four files and `dist/models/face_landmarker.task` is present.
+
+## attention-signal, tasks 2.5 and 2.7: property tests for pose extraction and the detection rate gate
+The spike outcome (column-major `Matrix.data`, yaw positive when looking left, pitch positive when looking down) is in "attention-signal: Task 2.3 spike results" above and is not repeated here.
+### Run
+`npx vitest run src/attention/__tests__/pose.p16.prop.test.ts src/attention/__tests__/rateGate.p15.prop.test.ts`: 2 files, 12 tests, all passed.
+### Properties
+| Property | Name | File | Tests | Cases | Result |
+|---|---|---|---|---|---|
+| 16 | Pose extraction round trip | pose.p16.prop.test.ts | 5 property tests x 500 runs (`RUNS = 500`), plus 1 fixed example | 2,500 generated cases plus 1 fixed example | passed |
+| 15 | Detection rate gate | rateGate.p15.prop.test.ts | 5 property tests x 300 runs (`NUM_RUNS = 300`), plus 1 constant check (`MIN_DETECTION_GAP_MS` is 100) | 1,500 generated cases plus the constant check | passed |
+
+Property 16 builds its matrices column-major (`R[row][col] = m[col * 4 + row]`, translation at indices 12 to 14), as the spike showed. Its tests cover: yaw and pitch recovered under uniform scale and translation; recovered with independent positive column scales; non-finite entries, fewer than 16 numbers, and a zero-length rotation column all give `faceFound: false`; the fixed example (yaw 30, pitch -20).
+Property 15 covers: a hidden tab never allows detection; a visible tab with no previous start always allows it; with a previous start it is allowed if and only if the gap is at least 100 ms; the 99, 100, and 101 ms boundary; and a simulated frame-callback sequence where accepted starts are at least 100 ms apart and never happen while hidden.
+### Counterexamples
+None for either property.
+### Notes
+- The pose test was first written for a row-major matrix. After the spike showed the data is column-major, the test (and `pose.ts`) was changed to column-major. No assertion was weakened. The same recovery, non-finite, short-input, and zero-column checks remain.
+- Adapter unit tests (`adapters.unit.test.ts`, task 2.10): the task notes said 35+1 cases. The file reports 38 tests passing in a fresh run, so the earlier count is out of date or counted differently. Smoke tests (`smoke.unit.test.ts`, task 2.11): 7 tests passed.
+### Full attention suite
+- `npx vitest run src/attention`: 18 files, 111 tests, all passed.
+- `npx tsc -b`: exit 0, no errors.

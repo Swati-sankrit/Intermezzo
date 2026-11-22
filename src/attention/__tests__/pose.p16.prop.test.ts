@@ -9,7 +9,7 @@ import { poseFromMatrix16 } from '../pose';
 const DEG = Math.PI / 180;
 const RUNS = 500;
 
-/** Row-major 4x4 of R = Ry(yaw)·Rx(pitch), columns scaled, plus translation. */
+/** Column-major 4x4 of R = Ry(yaw)·Rx(pitch), columns scaled, plus translation. */
 function buildMatrix(
   yawDeg: number,
   pitchDeg: number,
@@ -26,11 +26,12 @@ function buildMatrix(
     [-sy, cy * sp, cy * cp],
   ];
   const [a, b, c] = scales;
+  // Column-major: each group of four is one column; translation at 12-14.
   return [
-    R[0][0] * a, R[0][1] * b, R[0][2] * c, t[0],
-    R[1][0] * a, R[1][1] * b, R[1][2] * c, t[1],
-    R[2][0] * a, R[2][1] * b, R[2][2] * c, t[2],
-    0, 0, 0, 1,
+    R[0][0] * a, R[1][0] * a, R[2][0] * a, 0,
+    R[0][1] * b, R[1][1] * b, R[2][1] * b, 0,
+    R[0][2] * c, R[1][2] * c, R[2][2] * c, 0,
+    t[0], t[1], t[2], 1,
   ];
 }
 
@@ -80,6 +81,26 @@ describe('Property 16: pose extraction round trip', () => {
     );
   });
 
+  it('reads a fixed realistic column-major matrix (yaw 30, pitch -20, translation at 12-14)', () => {
+    const yaw = 30;
+    const pitch = -20;
+    const cy = Math.cos(yaw * DEG);
+    const sy = Math.sin(yaw * DEG);
+    const cp = Math.cos(pitch * DEG);
+    const sp = Math.sin(pitch * DEG);
+    // Columns of R = Ry(yaw)·Rx(pitch), then translation (cm-scale values).
+    const m = [
+      cy, 0, -sy, 0,
+      sy * sp, cp, cy * sp, 0,
+      sy * cp, -sp, cy * cp, 0,
+      1.5, -2.25, -40, 1,
+    ];
+    const r = poseFromMatrix16(m);
+    expect(r.faceFound).toBe(true);
+    expect(r.yaw).toBeCloseTo(30, 6);
+    expect(r.pitch).toBeCloseTo(-20, 6);
+  });
+
   it('returns faceFound:false for fewer than 16 numbers', () => {
     fc.assert(
       fc.property(fc.array(arbFinite, { minLength: 0, maxLength: 15 }), (arr) => {
@@ -96,7 +117,7 @@ describe('Property 16: pose extraction round trip', () => {
         fc.integer({ min: 0, max: 2 }),
         (arr, col) => {
           const m = [...arr];
-          for (let row = 0; row < 3; row++) m[row * 4 + col] = 0;
+          for (let row = 0; row < 3; row++) m[col * 4 + row] = 0;
           expect(poseFromMatrix16(m).faceFound).toBe(false);
         },
       ),

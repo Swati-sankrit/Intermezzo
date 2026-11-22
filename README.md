@@ -21,8 +21,9 @@ A privacy-first, in-browser reading app. Book content never leaves the device.
 | fake-indexeddb | Apache-2.0 | In-memory IndexedDB for tests |
 | @testing-library/user-event | MIT | Simulated user input in component tests |
 | @mediapipe/tasks-vision (1.2.3) | Apache-2.0 | On-device face detection for the attention signal; wasm copied to `public/mediapipe/wasm/` by `scripts/copy-mediapipe.mjs` |
-| face_landmarker.task (model file, `public/models/`) | Apache-2.0 | Face Landmarker model bundle; license per the [model card](https://huggingface.co/litert-community/MediaPipe-FaceLandmarker) linked from Google's Face Landmarker page |
+| face_landmarker.task (model file, `public/models/`) | Apache-2.0 | Face Landmarker model bundle; license sources: the [Hugging Face model card](https://huggingface.co/litert-community/MediaPipe-FaceLandmarker) (Google's Face Landmarker page links to it) and Google's [BlazeFace model card](https://storage.googleapis.com/mediapipe-assets/MediaPipe%20BlazeFace%20Model%20Card%20(Short%20Range).pdf) (Apache-2.0) |
 
+| @xmldom/xmldom (0.9.12, transitive override) | MIT | Pulled in by epubjs; pinned with `overrides` in `package.json` because the 0.7.13 that epubjs asks for has 15 security advisories (fixed in 0.8.15 and 0.9.x) |
 | @fontsource/literata | OFL-1.1 | Reading text font (bundled, self-hosted) |
 | @fontsource/cormorant-garamond | OFL-1.1 | Headings and titles font (bundled, self-hosted) |
 > `epubjs` uses the BSD-2-Clause license (also known as the "FreeBSD" license).

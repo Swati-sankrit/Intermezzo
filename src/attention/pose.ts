@@ -8,13 +8,14 @@ const NOT_FOUND: PoseReading = { faceFound: false, yaw: 0, pitch: 0 };
 const RAD_TO_DEG = 180 / Math.PI;
 
 /**
- * LAYOUT ASSUMPTION (unverified until the spike, task 2.3, is confirmed):
- * the 16 numbers are a ROW-MAJOR 4x4 matrix, so element (row, col) is at
- * index `row * 4 + col`. If the spike shows MediaPipe's `Matrix.data` is
- * column-major, change only this function to `col * 4 + row`.
+ * LAYOUT (confirmed by the manual Chrome spike, task 2.3): MediaPipe's
+ * `Matrix.data` is COLUMN-MAJOR, so translation sits at indices 12-14 and
+ * element (row, col) is at index `col * 4 + row`.
+ * Spike signs with this layout: yaw left +25.9 / right -46.9;
+ * pitch down +16.6 / up -38.9 (left = positive yaw, down = positive pitch).
  */
 function at(m: ArrayLike<number>, row: number, col: number): number {
-  return m[row * 4 + col];
+  return m[col * 4 + row];
 }
 
 /** Rotation column `col` (upper-left 3x3), scaled to unit length, or null. */
@@ -28,7 +29,7 @@ function unitColumn(m: ArrayLike<number>, col: number): [number, number, number]
 }
 
 /**
- * Returns yaw and pitch in degrees from a row-major 4x4 matrix.
+ * Returns yaw and pitch in degrees from a column-major 4x4 matrix.
  * Fewer than 16 numbers, a non-finite entry, or a zero-length rotation
  * column gives `faceFound: false` with yaw and pitch 0.
  */

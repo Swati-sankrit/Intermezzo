@@ -111,7 +111,7 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - Append a section for tasks 1.4 to 1.17: properties added (1 to 11, 14, 21), cases run per property, and any counterexample with seed and shrunk input. If a property fails, stop and report it; never weaken the assertion
     - _Requirements: none (testing rule)_
 
-- [~] 2. Implement the camera adapter (includes the MediaPipe spike)
+- [x] 2. Implement the camera adapter (includes the MediaPipe spike)
   - [x] 2.1 Fetch the current MediaPipe tasks-vision documentation through Context7 and confirm the open items
     - Load `tool::context7::resolve-library-id` then `tool::context7::query-docs` for the MediaPipe Face Landmarker (web, `@mediapipe/tasks-vision`) before writing any camera or detector code; do not rely on remembered APIs
     - Confirm or correct each item in the design's "Not confirmed in the docs" table: runtime type of each matrix entry, `delegate` values (`"CPU"` valid or not), `detectForVideo` argument types, `forVisionTasks` with a same-origin path, `close()` on the landmarker
@@ -132,7 +132,7 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - _Requirements: 7.4, 7.6_
 
   - [x] 2.4 Implement `pose.ts`
-    - `poseFromMatrix16(m)`: row-major 4x4, normalize the three rotation columns, `pitch = asin(clamp(-R[1][2], -1, 1))`, `yaw = atan2(R[0][2], R[2][2])`, both in degrees. Adjust the convention only if the spike (2.3) shows a different axis layout
+    - `poseFromMatrix16(m)`: column-major 4x4 (`R[row][col] = m[col * 4 + row]`, translation at indices 12 to 14), normalize the three rotation columns, `pitch = asin(clamp(-R[1][2], -1, 1))`, `yaw = atan2(R[0][2], R[2][2])`, both in degrees. The spike (2.3) confirmed column-major order, yaw positive for looking left and pitch positive for looking down
     - Non-finite entries, a zero-length column, or fewer than 16 numbers return `faceFound: false`
     - `PoseReading` stays internal to the module
     - _Requirements: 4.2, 4.12_
@@ -151,30 +151,30 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - **Property 15: Detection rate gate**
     - **Validates: Requirements 11.1, 11.2, 11.6**
 
-  - [ ] 2.8 Implement `detectorAdapter.ts`
+  - [x] 2.8 Implement `detectorAdapter.ts`
     - Dynamic `import('@mediapipe/tasks-vision')` only (never a static import); `FilesetResolver.forVisionTasks('/mediapipe/wasm')`; `FaceLandmarker.createFromOptions` with `modelAssetPath: '/models/face_landmarker.task'`, `runningMode: 'VIDEO'`, `numFaces: 1`, `outputFaceBlendshapes: false`, `outputFacialTransformationMatrixes: true`, GPU delegate first and a single CPU retry only if 2.1 confirmed it
-    - `readMatrix4` is the only place that reads the matrix, checked against the installed `.d.ts`; everything downstream gets `number[]` of length 16
+    - `readMatrix4` is the only place that reads the matrix. It reads `matrix.data` (a flat `number[]`), checks `rows === 4`, `columns === 4` and `data.length === 16`, and the layout is column-major; everything downstream gets `number[]` of length 16
     - `detect(video, t)` uses a strictly increasing timestamp, returns `faceFound: false` for empty `faceLandmarks` or a missing matrix, and returns only `PoseReading`. The MediaPipe result object and landmarks are not assigned to any longer-lived variable. `close()` calls the documented `close()`
     - No `console.*`, `fetch`, or storage use
     - _Requirements: 4.2, 7.1, 7.2, 7.3, 7.4, 7.5, 9.4_
 
-  - [ ] 2.9 Implement `cameraAdapter.ts`
+  - [x] 2.9 Implement `cameraAdapter.ts`
     - `open()` calls `navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })`; this is the only file in the app that calls `getUserMedia`
     - Map `NotAllowedError` and `SecurityError` to `denied`, anything else to `unavailable`; listen for `ended` on every track; `stop()` stops every track and rethrows if a track stop throws
     - The `<video>` is `muted`, `playsInline`, and never inserted into a visible container (mounted with `display: none` only if the spike shows a detached element will not play)
     - _Requirements: 2.6, 5.6, 7.5, 7.6_
 
-  - [ ]* 2.10 Write unit tests for the adapters
+  - [x]* 2.10 Write unit tests for the adapters
     - File: `src/attention/__tests__/adapters.unit.test.ts`, using a fake `navigator.mediaDevices` and a fake landmarker module (the adapters under test are real, only the browser and MediaPipe boundary is faked)
     - Denial and other rejection names map correctly; `ended` fires the callback; `stop()` rethrows; empty `faceLandmarks` gives `faceFound: false`; timestamps are strictly increasing; `close()` is called
     - _Requirements: 2.6, 7.5_
 
-  - [ ]* 2.11 Write smoke tests for privacy and origin rules
+  - [x]* 2.11 Write smoke tests for privacy and origin rules
     - File: `src/attention/__tests__/smoke.unit.test.ts`
     - Source scan of non-test files under `src/attention/`: `getUserMedia` appears only in `cameraAdapter.ts`; `@mediapipe/tasks-vision` is only imported with `import()`; no `cdn.jsdelivr.net` or `storage.googleapis.com` string and no external host in `src/attention/`; no `console.`, `fetch(`, `XMLHttpRequest`, `sendBeacon` in `src/attention/`; `src/attention/` imports nothing from `src/reader/`
     - _Requirements: 5.6, 7.1, 7.3, 7.4_
 
-  - [ ] 2.12 Report results in `docs/BUILD_LOG.md`
+  - [x] 2.12 Report results in `docs/BUILD_LOG.md`
     - Append a section for tasks 2.5 and 2.7: properties added (15, 16), cases run, and any counterexample. Also record the spike outcome from 2.3
     - _Requirements: none (testing rule)_
 
