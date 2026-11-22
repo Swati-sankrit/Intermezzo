@@ -6,8 +6,7 @@
  * No frame is read, stored, or sent from here; the element is handed to the
  * detector, which returns only a pose reading.
  */
-
-export type CameraErrorKind = 'denied' | 'unavailable';
+import type { CameraAdapter, CameraErrorKind, CameraHandle } from './types';
 
 /** Rejection value of `open()`. `kind` is the only thing callers branch on. */
 export class CameraError extends Error {
@@ -20,18 +19,6 @@ export class CameraError extends Error {
   }
 }
 
-export interface CameraHandle {
-  /** Stops every track. Stops all of them even if one throws, then rethrows the first error. */
-  stop(): void;
-  /** Registers a callback fired once when any track ends on its own. */
-  onEnded(cb: () => void): void;
-  readonly video: HTMLVideoElement;
-}
-
-export interface CameraAdapter {
-  open(): Promise<CameraHandle>;
-}
-
 /** NotAllowedError and SecurityError mean denied; every other failure means unavailable. */
 export function classifyCameraError(err: unknown): CameraErrorKind {
   const name =
@@ -41,21 +28,30 @@ export function classifyCameraError(err: unknown): CameraErrorKind {
   return name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'unavailable';
 }
 
-/** Stops every track, then rethrows the first failure (if any). */
-function stopAllTracks(tracks: readonly MediaStreamTrack[]): void {
-  let failed = false;
-  let firstError: unknown;
-  for (const track of tracks) {
-    try {
-      track.stop();
-    } catch (err) {
-      if (!failed) {
-        failed = true;
-        firstError = err;
+/**
+ * Returns a function that stops every track, then rethrows the first failure
+ * (if any). Safe to call again after a failure: tracks that stopped are
+ * remembered and skipped, and tracks that threw are tried again.
+ */
+export function createTrackStopper(tracks: readonly MediaStreamTrack[]): () => void {
+  const stopped = new Set<MediaStreamTrack>();
+  return () => {
+    let failed = false;
+    let firstError: unknown;
+    for (const track of tracks) {
+      if (stopped.has(track)) continue;
+      try {
+        track.stop();
+        stopped.add(track);
+      } catch (err) {
+        if (!failed) {
+          failed = true;
+          firstError = err;
+        }
       }
     }
-  }
-  if (failed) throw firstError;
+    if (failed) throw firstError;
+  };
 }
 
 function createVideo(stream: MediaStream): HTMLVideoElement {
@@ -81,13 +77,14 @@ export function createCameraAdapter(): CameraAdapter {
 
       const tracks = stream.getTracks();
       const video = createVideo(stream);
+      const stopTracks = createTrackStopper(tracks);
 
       try {
         await video.play();
       } catch {
         // Release the camera before reporting; a stop failure here is secondary.
         try {
-          stopAllTracks(tracks);
+          stopTracks();
         } catch {
           // The original failure (playback) is what the caller needs to hear about.
         }
@@ -113,7 +110,7 @@ export function createCameraAdapter(): CameraAdapter {
           for (const track of tracks) track.removeEventListener('ended', handleEnded);
           video.pause();
           video.srcObject = null;
-          stopAllTracks(tracks);
+          stopTracks();
         },
       };
     },

@@ -178,41 +178,41 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - Append a section for tasks 2.5 and 2.7: properties added (15, 16), cases run, and any counterexample. Also record the spike outcome from 2.3
     - _Requirements: none (testing rule)_
 
-- [ ] 3. Implement the fallback adapter and the controller (signal works end to end without UI)
-  - [ ] 3.1 Implement `signalBus.ts`
+- [x] 3. Implement the fallback adapter and the controller (signal works end to end without UI)
+  - [x] 3.1 Implement `signalBus.ts`
     - `createSignalBus(initial)` with `subscribe` (delivers the current signal once, to that subscriber only), `publish` (no-op if the value is unchanged; clamps the timestamp up to the current one), `current`, `clear`
     - Wrap each callback in `try/catch` so a throwing subscriber neither stops the others nor changes the value
     - No timers; delivery is synchronous
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.8, 5.10, 5.11_
 
-  - [ ] 3.2 Write property test for signal bus delivery
+  - [x] 3.2 Write property test for signal bus delivery
     - File: `src/attention/__tests__/signalBus.p12.prop.test.ts`, at least 300 runs
     - **Property 12: Signal bus delivery rules**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.8, 5.10, 5.11**
 
-  - [ ] 3.3 Implement the fallback adapter `pageEvents.ts`
+  - [x] 3.3 Implement the fallback adapter `pageEvents.ts`
     - Listen for `visibilitychange`, window `focus` and `blur`, and passive `keydown`, `pointerdown`, `pointermove`, `touchstart`, `wheel`, `scroll`
     - Expose `{ tabActive(), lastInputT(), onChange(cb), dispose() }`; `tabActive = document.visibilityState === 'visible' && document.hasFocus()`. Input listeners record only a timestamp, no payload
     - `dispose()` removes every listener
     - _Requirements: 4.19, 6.1, 6.3_
 
-  - [ ] 3.4 Implement `notices.ts`
+  - [x] 3.4 Implement `notices.ts`
     - Add the `Notice` type (`kind` and `text`) to `types.ts`
     - `raiseNotice(state, kind)` returns `{ state, notice }`, with a non-null notice at most once per kind per Session; wording for `denied`, `camera-lost`, `detector-failed`, and `cameraOffFailed` lives here
     - _Requirements: 1.7, 6.6, 7.7_
 
-  - [ ] 3.5 Write property test for notices
+  - [x] 3.5 Write property test for notices
     - File: `src/attention/__tests__/notices.p20.prop.test.ts`
     - **Property 20: At most one notice per cause per Session**
     - **Validates: Requirements 1.7, 6.6, 7.7**
 
-  - [ ] 3.6 Define the status and port types and create the `fakePorts()` test helper
+  - [x] 3.6 Define the status and port types and create the `fakePorts()` test helper
     - In `types.ts` add `AttentionStatus`, `CalibrationProgress`, `AttentionMode`, `AttentionPorts`, `CameraHandle`, `Detector`, and `PageEvents` exactly as in the design (internal to the module, not re-exported from `index.ts`)
     - Create `src/attention/__tests__/fakes.ts` with `fakePorts()`:
     - Manual clock, interval scheduler driven by `advance(ms)`, fake camera (resolve, reject with a chosen error name, end later, `stop()` that can throw), fake detector with scripted `PoseReading`s, fake page-event source, and an in-memory store that can be made to throw
     - _Requirements: none (test infrastructure)_
 
-  - [ ] 3.7 Implement `controller.ts` in Fallback_Mode with `pause()`, `resume()`, and `setIdleLimit`
+  - [x] 3.7 Implement `controller.ts` in Fallback_Mode with `pause()`, `resume()`, and `setIdleLimit`
     - `createAttention(ports?)` with injected `now`, `setInterval`, `clearInterval`, `camera`, `detector`, `page`, `store`; default ports use `performance.timeOrigin + performance.now()`
     - `start()`: create the bus with `{ present, now() }`, enter Fallback_Mode for now (the camera path and recorded choice come in 3.8 and 5.2). `stop()`: leave Paused_State, clear the interval, dispose page listeners, `bus.clear()`; idempotent
     - Tick every 250 ms and on every page-event change: build a `FallbackSample`, run `stepFallback`, publish. A Tab_Active change feeds a sample immediately
@@ -222,7 +222,7 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - Split into helper files if `controller.ts` would pass 200 lines (for example `controllerState.ts`)
     - _Requirements: 4.19, 5.5, 6.1, 6.3, 6.8, 6.9, 6.10, 6.11, 6.12, 6.13, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.10_
 
-  - [ ] 3.8 Add Camera_Mode orchestration to the controller
+  - [x] 3.8 Add Camera_Mode orchestration to the controller
     - `openCamera()`: `camera.open()` and `detector.create()` in parallel, never blocking the reading view. On success set `mode: 'camera'`, `cameraOn: true`, start the detection loop. On `denied`: one notice via `notices`, `cameraAvailable: false`, Fallback_Mode within 1000 ms, no retry this Session. On any other error: one `camera-lost` notice and fallback
     - Detection loop: `requestVideoFrameCallback` when available, otherwise `requestAnimationFrame`. Every callback asks `canStartDetection(now, lastStart, tabVisible)`; when false it skips and reschedules (10 Hz cap). When the tab is hidden, stop scheduling (zero detection calls) and restart on `visibilitychange` within 200 ms with `faceFound` treated as false until the first new detection completes
     - Send the Decision_Function a sample at least every 250 ms (heartbeat repeating the latest pose with a fresh timestamp and current Tab_Active), and on every Tab_Active change, even while detection is stopped. The idle limit is not used in Camera_Mode
@@ -231,42 +231,42 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - Put the camera path in a helper file (for example `controllerCamera.ts`) so every file stays under 200 lines
     - _Requirements: 2.6, 4.19, 6.6, 6.13, 7.1, 7.2, 7.5, 7.7, 11.1, 11.2, 11.3, 11.4, 11.5_
 
-  - [ ] 3.9 Implement `index.ts`
+  - [x] 3.9 Implement `index.ts`
     - Export `createAttention` and the `Attention`, `AttentionControls`, `AttentionSignal`, `AttentionStatus` types. Do not export `PoseReading`, `CameraHandle`, `PoseSample`, or any pose, landmark, or frame type
     - Top-of-file comment: the haunt engine must treat every `present` signal as a reset to haunt level 0
     - _Requirements: 5.1, 5.6, 5.7, 10.4_
 
-  - [ ] 3.10 Write property test for pause and resume
+  - [x] 3.10 Write property test for pause and resume
     - File: `src/attention/__tests__/controller.p13.prop.test.ts`, at least 300 runs, using `fakePorts()` and the real controller (the controller is never mocked)
     - Generator `arbControllerScript`: operations `start`, `stop`, `pause`, `resume`, `sample`, `advance(ms)`, `hide`, `show`
     - **Property 13: Pause suppresses away, and resume resets the accumulator**
     - **Validates: Requirements 8.1, 8.2, 8.4, 8.5, 8.9, 8.10**
 
-  - [ ]* 3.11 Write controller example tests
+  - [x]* 3.11 Write controller example tests
     - File: `src/attention/__tests__/controller.unit.test.ts`
     - `setIdleLimit` default 60 s, below-minimum clamp, non-finite ignored; camera-mode result is independent of idle time; `stop()` from Paused_State shuts down; no detector call while hidden; detection restarts within 200 ms of `show`; face treated as not found until the first detection after returning; camera `ended` and detector failure give exactly one notice and Fallback_Mode with the last signal kept; `stop()` clears timers and subscribers
     - _Requirements: 6.6, 6.9, 6.13, 7.5, 7.7, 8.8, 11.2, 11.3_
 
-  - [ ] 3.12 Report results in `docs/BUILD_LOG.md`
+  - [x] 3.12 Report results in `docs/BUILD_LOG.md`
     - Append a section for tasks 3.2, 3.5, 3.10: properties added (12, 13, 20), cases run, and any counterexample
     - _Requirements: none (testing rule)_
 
-- [ ] 4. Checkpoint - Core signal logic and controller
+- [x] 4. Checkpoint - Core signal logic and controller
   - Run `npx vitest --run src/attention/`. Ensure all tests pass, ask the user if questions arise. Remind the user that the manual MediaPipe spike (2.3) must be confirmed before the camera adapter is accepted.
 
-- [ ] 5. Implement the Camera_Consent_Dialog
-  - [ ] 5.1 Implement the choice storage in `storage.ts`
+- [x] 5. Implement the Camera_Consent_Dialog
+  - [x] 5.1 Implement the choice storage in `storage.ts`
     - `loadChoice`, `saveChoice` using key `rod_attention_choice` with values `'camera'` or `'no-camera'`; every `localStorage` call in `try/catch`; any other stored value or unreadable storage returns `null`; `saveChoice` returns `false` when the write fails
     - Follow the pattern of `src/reader/storage.ts`. Write only this metadata, never pose or frame data
     - _Requirements: 1.4, 1.5, 1.6, 1.8, 7.3_
 
-  - [ ] 5.2 Add the consent flow to the controller
+  - [x] 5.2 Add the consent flow to the controller
     - `start()` reads the choice: `null` sets `status.choice = 'unanswered'` and nothing else happens (no `camera.open`); `'camera'` calls `openCamera()`; `'no-camera'` stays in Fallback_Mode
     - `chooseCamera(true)`: save the choice, then `openCamera()`. `chooseCamera(false)`: save the choice, enter Fallback_Mode, never call `camera.open`. If `saveChoice` returns `false`, still apply the choice in memory for the Session
     - After a denial, `start()` and `chooseCamera` make no second `camera.open` call this Session; only `setCameraOn(true)` (task 10) retries
     - _Requirements: 1.1, 1.4, 1.5, 1.6, 1.7, 1.8_
 
-  - [ ] 5.3 Implement `ConsentDialog.tsx`, `ConsentDialog.css`, and `useFocusTrap.ts`
+  - [x] 5.3 Implement `ConsentDialog.tsx`, `ConsentDialog.css`, and `useFocusTrap.ts`
     - `role="dialog"`, `aria-modal="true"`, labelled by its heading. Text states: the camera only tells whether you are facing the screen, processing stays on this device, no picture is stored or sent. Exactly two buttons: "Turn on camera" and "Read without camera"
     - On open, focus moves to the first button; Tab and Shift+Tab stay inside; Enter and Space activate; Escape does not close; on close, focus returns to the element focused before it opened (`useFocusTrap` is a small shared hook reused by the calibration view)
     - Colours only from `src/ui/theme.css` variables, visible `--accent` focus ring, 4.5:1 contrast, fade of about 200 ms removed under `prefers-reduced-motion`, nothing flashes. Each file under 200 lines
@@ -278,19 +278,19 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - Dialog: the three statements, two buttons, initial focus, Tab wrap, Escape does not close, focus return, Enter and Space activate
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10_
 
-- [ ] 6. Implement the Camera_Indicator and notice banner
-  - [ ] 6.1 Add camera-off control and error path to the controller
+- [x] 6. Implement the Camera_Indicator and notice banner
+  - [x] 6.1 Add camera-off control and error path to the controller
     - `setCameraOn(false)`: `releaseCamera()`, switch to Fallback_Mode with `initialFallbackState(now(), bus.current())`, indicator state removed within 500 ms. If a track `stop()` throws: keep `cameraOn: true`, set `cameraOffError` ("The camera could not be turned off. You can turn it off in your browser's site settings."), leave everything else unchanged
     - `setCameraOn(true)` re-runs `openCamera()`; it is the only retry path after denial
     - _Requirements: 2.3, 2.6, 2.7, 7.5, 9.2, 9.6_
 
-  - [ ] 6.2 Implement `CameraIndicator.tsx` and `CameraIndicator.css`
+  - [x] 6.2 Implement `CameraIndicator.tsx` and `CameraIndicator.css`
     - Shown while `status.cameraOn`; a small dot icon (inline SVG, `currentColor`) with the text "Camera on" and a "Turn camera off" button. Accessible names state that the camera is on and that the button turns it off
     - Stays at 100% opacity when the top bar fades (add an exception for `.camera-indicator` in the bar's fade rule); also shown while paused and while the tab is hidden; appears from `cameraOn` directly, so within 500 ms
     - Keyboard reachable, visible `--accent` focus ring, Enter and Space activate. Under 200 lines
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 7.8, 8.11, 11.4_
 
-  - [ ] 6.3 Implement `NoticeBanner.tsx` and `NoticeBanner.css`
+  - [x] 6.3 Implement `NoticeBanner.tsx` and `NoticeBanner.css`
     - Single `role="status"` line showing `status.notice.text` or `status.cameraOffError`, with a "Dismiss" button. Reuse the visual style of `ErrorBanner`; use `--danger` only for `cameraOffError`
     - Texts come from `notices.ts` (for example "Camera access was not allowed. Reading continues without the camera." and "Face detection stopped. Reading continues.")
     - _Requirements: 1.7, 2.7, 6.6, 7.7_
@@ -301,17 +301,17 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - UI: accessible names, keyboard activation, indicator opacity unchanged when the bar is faded, indicator visible while paused and while hidden, banner text and dismiss
     - _Requirements: 2.1, 2.3, 2.4, 2.5, 2.6, 2.7, 8.11, 11.4_
 
-- [ ] 7. Wire the attention module into the reading view with a temporary label
-  - [ ] 7.1 Implement `src/ui/useAttention.ts`
+- [x] 7. Wire the attention module into the reading view with a temporary label
+  - [x] 7.1 Implement `src/ui/useAttention.ts`
     - Lazily create one controller (module-level singleton), call `start()` when the reading view mounts (deferred so first paint is not delayed) and `stop()` when it unmounts or the reader returns to the library
     - Subscribe to `AttentionStatus` with `useSyncExternalStore`; expose the commands (`chooseCamera`, `setCameraOn`, and later calibration and debounce commands)
     - _Requirements: 8.6, 8.7, 9.4_
 
-  - [ ] 7.2 Implement `TempAttentionLabel.tsx`
+  - [x] 7.2 Implement `TempAttentionLabel.tsx`
     - A small fixed label "Attention: present" or "Attention: away" fed by `attention.subscribe`, marked with a `// TEMPORARY` comment, to be removed when the haunt engine consumes the signal. It sits outside the reading column, never over the current paragraph, and does not take focus
     - _Requirements: 5.1, 5.2, 9.5_
 
-  - [ ] 7.3 Mount the pieces in `ReaderView.tsx` and `ReaderView.css`
+  - [x] 7.3 Mount the pieces in `ReaderView.tsx` and `ReaderView.css`
     - Render `ConsentDialog`, `CameraIndicator` (inside the top bar), `NoticeBanner`, and `TempAttentionLabel`
     - Call `setIdleLimit(3 * suggestedSecs * 1000)` whenever the suggested time changes (the controller clamps it to at least 60 s)
     - Keep `ReaderView.tsx` under 200 lines; move the attention parts into a small `AttentionLayer.tsx` if needed. Do not change reading behavior; reading stays fully usable with the camera off and the consent dialog answered either way

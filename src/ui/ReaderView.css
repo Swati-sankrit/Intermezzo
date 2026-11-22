@@ -14,7 +14,8 @@
 }
 
 /* Fade the controls, not the bar, so the background stays solid. */
-.reader__bar > * {
+/* The camera indicator is exempt: it stays at full opacity. */
+.reader__bar > *:not(.camera-indicator) {
   opacity: 0.35;
   transition: opacity 600ms ease;
 }

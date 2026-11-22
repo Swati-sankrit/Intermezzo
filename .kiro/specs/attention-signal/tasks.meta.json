@@ -51,6 +51,18 @@
     "1.17 Write property test for mode switch keeping the signal": {
       "status": "passed",
       "lastRunTimestamp": 1795293177966
+    },
+    "3.2 Write property test for signal bus delivery": {
+      "status": "passed",
+      "lastRunTimestamp": 1795321581065
+    },
+    "3.5 Write property test for notices": {
+      "status": "passed",
+      "lastRunTimestamp": 1795321769734
+    },
+    "3.10 Write property test for pause and resume": {
+      "status": "passed",
+      "lastRunTimestamp": 1795322646290
     }
   },
   "executionHistory": {
@@ -526,6 +538,323 @@
         "executionId": "4302fcd2-2635-42c1-9066-827c68355228",
         "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
         "timestamp": 1795320625137
+      }
+    ],
+    "3.1 Implement `signalBus.ts`": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321373155
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321457395
+      }
+    ],
+    "3.2 Write property test for signal bus delivery": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321468218
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321602637
+      }
+    ],
+    "3.3 Implement the fallback adapter `pageEvents.ts`": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321602830
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321685142
+      }
+    ],
+    "3.4 Implement `notices.ts`": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321685548
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321741282
+      }
+    ],
+    "3.5 Write property test for notices": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321741512
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321792612
+      }
+    ],
+    "3.6 Define the status and port types and create the `fakePorts()` test helper": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321792865
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321962916
+      }
+    ],
+    "3.7 Implement `controller.ts` in Fallback_Mode with `pause()`, `resume()`, and `setIdleLimit`": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795321963038
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322137768
+      }
+    ],
+    "3.8 Add Camera_Mode orchestration to the controller": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322137896
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322395198
+      }
+    ],
+    "3.9 Implement `index.ts`": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322395656
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322526224
+      }
+    ],
+    "3.10 Write property test for pause and resume": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322526629
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322808514
+      },
+      {
+        "executionId": "2e504eea-542c-4f33-ad4c-c0f91b8eb470",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325392349
+      },
+      {
+        "executionId": "2e504eea-542c-4f33-ad4c-c0f91b8eb470",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325462790
+      }
+    ],
+    "3.11 Write controller example tests": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322808913
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322982455
+      }
+    ],
+    "3.12 Report results in `docs/BUILD_LOG.md`": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795322983045
+      },
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795323202418
+      },
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795323343330
+      },
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795323389480
+      }
+    ],
+    "3. Implement the fallback adapter and the controller (signal works end to end without UI)": [
+      {
+        "executionId": "a69f8bbd-b408-454f-a36e-c89f2fc1febc",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795323202510
+      }
+    ],
+    "5.1 Implement the choice storage in `storage.ts`": [
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795323343416
+      },
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795323389776
+      }
+    ],
+    "4. Checkpoint - Core signal logic and controller": [
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795323390530
+      }
+    ],
+    "5.2 Add the consent flow to the controller": [
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795323395815
+      },
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325148224
+      }
+    ],
+    "5.3 Implement `ConsentDialog.tsx`, `ConsentDialog.css`, and `useFocusTrap.ts`": [
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795323395870
+      },
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325148304
+      }
+    ],
+    "5. Implement the Camera_Consent_Dialog": [
+      {
+        "executionId": "37e77af6-069a-408e-bbf0-8da69711d671",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325148354
+      }
+    ],
+    "6.1 Add camera-off control and error path to the controller": [
+      {
+        "executionId": "2e504eea-542c-4f33-ad4c-c0f91b8eb470",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325470115
+      },
+      {
+        "executionId": "2e504eea-542c-4f33-ad4c-c0f91b8eb470",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325685106
+      },
+      {
+        "executionId": "0ef1f6b3-fe2e-402f-b559-14050f42bc6a",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795328052296
+      },
+      {
+        "executionId": "0ef1f6b3-fe2e-402f-b559-14050f42bc6a",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795328212525
+      }
+    ],
+    "6.2 Implement `CameraIndicator.tsx` and `CameraIndicator.css`": [
+      {
+        "executionId": "2e504eea-542c-4f33-ad4c-c0f91b8eb470",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325685190
+      },
+      {
+        "executionId": "2e504eea-542c-4f33-ad4c-c0f91b8eb470",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325750619
+      }
+    ],
+    "6.3 Implement `NoticeBanner.tsx` and `NoticeBanner.css`": [
+      {
+        "executionId": "2e504eea-542c-4f33-ad4c-c0f91b8eb470",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795325751044
+      },
+      {
+        "executionId": "2e504eea-542c-4f33-ad4c-c0f91b8eb470",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795326275801
+      }
+    ],
+    "6. Implement the Camera_Indicator and notice banner": [
+      {
+        "executionId": "2e504eea-542c-4f33-ad4c-c0f91b8eb470",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795326275863
+      }
+    ],
+    "7.1 Implement `src/ui/useAttention.ts`": [
+      {
+        "executionId": "0ef1f6b3-fe2e-402f-b559-14050f42bc6a",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795328213030
+      },
+      {
+        "executionId": "0ef1f6b3-fe2e-402f-b559-14050f42bc6a",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795328299515
+      }
+    ],
+    "7.2 Implement `TempAttentionLabel.tsx`": [
+      {
+        "executionId": "0ef1f6b3-fe2e-402f-b559-14050f42bc6a",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795328300346
+      },
+      {
+        "executionId": "0ef1f6b3-fe2e-402f-b559-14050f42bc6a",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795328367383
+      }
+    ],
+    "7.3 Mount the pieces in `ReaderView.tsx` and `ReaderView.css`": [
+      {
+        "executionId": "0ef1f6b3-fe2e-402f-b559-14050f42bc6a",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795328366747
+      },
+      {
+        "executionId": "0ef1f6b3-fe2e-402f-b559-14050f42bc6a",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795329384397
+      }
+    ],
+    "7. Wire the attention module into the reading view with a temporary label": [
+      {
+        "executionId": "0ef1f6b3-fe2e-402f-b559-14050f42bc6a",
+        "chatSessionId": "sess_8da3257f-4e15-4644-a725-30c86dffcf41",
+        "timestamp": 1795329384448
       }
     ]
   }

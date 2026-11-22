@@ -1,0 +1,16 @@
+/* TEMPORARY: removed together with TempAttentionLabel.tsx.
+   Contrast (approx.): --text-dim on --bg 4.8:1, above the 4.5:1 AA minimum.
+   Fixed bottom-left corner, outside the reading column. No animation. */
+.temp-attention-label {
+  position: fixed;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  color: var(--text-dim);
+  background: var(--bg);
+  border-radius: 4px;
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;
+  pointer-events: none;
+  user-select: none;
+}

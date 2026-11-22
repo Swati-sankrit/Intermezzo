@@ -219,3 +219,43 @@ None for either property.
 ### Full attention suite
 - `npx vitest run src/attention`: 18 files, 111 tests, all passed.
 - `npx tsc -b`: exit 0, no errors.
+## attention-signal, tasks 3.2, 3.5, 3.10: property tests for the signal bus, notices, and pause and resume
+### Run
+`npx vitest --run src/attention/__tests__/signalBus.p12.prop.test.ts src/attention/__tests__/controller.p13.prop.test.ts src/attention/__tests__/notices.p20.prop.test.ts`: 3 files, 13 tests, all passed.
+### Properties
+| Property | Name | File | Tests | Cases | Result |
+|---|---|---|---|---|---|
+| 12 | Signal bus delivery rules | signalBus.p12.prop.test.ts | 8 property tests x 500 runs (`NUM_RUNS = 500`) | 4,000 generated cases | passed |
+| 13 | Pause suppresses away, and resume resets the accumulator | controller.p13.prop.test.ts | 1 property test x 400 runs (`NUM_RUNS = 400`), plus 1 fixed example (`stop` from Paused_State) | 400 generated scripts plus 1 example | passed |
+| 20 | At most one notice per cause per Session | notices.p20.prop.test.ts | 3 property tests x 300 runs | 900 generated cases | passed |
+Property 12 covers: a reference-model comparison over any interleaving of subscribe, unsubscribe, publish, clear, and throwing subscribers; one delivery of the current signal to a new subscriber only; unchanged publish is a no-op; one notification per change in subscription order; timestamps never decrease; a throwing subscriber does not affect others or the value; `clear()` and unsubscribe stop delivery; a reentrant publish keeps the same sequence for every subscriber.
+Property 13 runs the real controller (not mocked) with `fakePorts()` over scripts of `start`, `stop`, `pause`, `resume`, `sample`, `advance`, `hide`, `show`.
+Property 20 covers: a notice only on the first raise of each kind, with non-empty text; the input state is not mutated; a fresh gate starts a new Session.
+### Counterexamples
+None for any of the three properties.
+### Design decisions flagged during task 3
+- A reentrant `publish` (called from inside a subscriber) is queued and delivered after the current delivery finishes, so all subscribers see the same order.
+- Publishing an unchanged value keeps the existing timestamp and notifies nobody.
+- The bus is created lazily in `start()`, not in `createAttention()`.
+- The camera-lost wording in `notices.ts` is new text, not taken from the design.
+- `AttentionPorts` was extended with `frames` and `visibility`, beyond the design's list, for the detection loop and the hidden-tab rule.
+- The `AttentionStore` shape is defined in `types.ts`.
+- `chooseCamera`, `setCameraOn`, `startCalibration`, and `setDebounce` are still placeholders that throw. They get real bodies in these tasks (from `.kiro/specs/attention-signal/tasks.md`): `chooseCamera` in 5.2; `setCameraOn` in 6.1; `startCalibration` and `cancelCalibration` in 9.6 (UI wiring in 9.10); `setDebounce` in 10.1 (UI in 10.2).
+### Full attention suite
+- `npx vitest --run src/attention`: 24 files, 152 tests, all passed.
+- `npx tsc -b`: exit 0, no errors.
+
+### Property 13 one-off failure: not reproducible
+
+The one-off Property 13 failure seen during the parallel 5.2/5.3 run could not be reproduced (30 solo runs, 3 full-suite runs, plus one 10,000-run pass). Treated as a concurrent-edit artifact. The 10,000-run pass executed exactly 10,000 cases in about 191 ms (about 0.5 s total with startup), with no counterexample.
+
+## attention-signal, task 6.1 follow-up: camera-off after a failed track stop
+### Fix
+- A failed `handle.stop()` no longer drops the camera session. The handle is kept (`src/attention/retainedHandle.ts`); `cameraOn` stays true until every track has stopped. Repeating `setCameraOn(false)` retries the kept handle; success sets `cameraOn` false, Fallback_Mode, and clears `cameraOffError`.
+- `setCameraOn(true)` and `openCamera()` do nothing while a handle is kept, so a second camera is never opened.
+- While a handle is kept, the detector is closed and the detection loop is gone. The mode switches to Fallback_Mode, so the signal keeps updating from page events and idle time (it does not freeze). `cameraOn` stays true as the indicator.
+- The camera-lost and detector-failed path, `chooseCamera(false)`, and `stop()` use the same logic: if the stop throws, `cameraOn` stays true until a later stop succeeds.
+- `cameraAdapter.ts`: `createTrackStopper` remembers tracks that stopped and skips them on a repeat `stop()`; tracks that threw are tried again; still stops every track and rethrows the first error.
+- Tests: `cameraOff.unit.test.ts`, `trackStopper.unit.test.ts`. `fakes.ts` extended additively (`setTrackCount`, `setTrackFails`, per-track state).
+### To check later
+- Property 13's generated scripts look very short (10,000 runs in about 191 ms). Check whether the generator should produce longer sequences.

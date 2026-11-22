@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AttentionLayer } from './AttentionLayer';
 import { ErrorBanner } from './ErrorBanner';
 import { LibraryScreen } from './LibraryScreen';
 import { PaceTimer } from './PaceTimer';
@@ -40,51 +41,57 @@ export function ReaderView() {
   }
 
   const chapter = r.book.chapters[r.chapterIndex];
+  const bookTitle = r.book.title;
 
   return (
-    <div className="reader" onMouseMove={wake} onFocus={wake}>
-      <header className={`reader__bar${awake ? ' reader__bar--awake' : ''}`}>
-        <button type="button" className="reader__button" onClick={r.closeBook}>
-          Back to library
-        </button>
-        <div className="reader__progress">
-          <ProgressBar progress={r.progress} />
-        </div>
-        <PaceTimer enabled={r.paceGuideEnabled} suggestedSeconds={r.suggestedSecs} />
-        <button
-          type="button"
-          className="reader__button"
-          aria-pressed={r.paceGuideEnabled}
-          onClick={r.togglePaceGuide}
-        >
-          Pace Guide: {r.paceGuideEnabled ? 'on' : 'off'}
-        </button>
-      </header>
+    <AttentionLayer suggestedSecs={r.suggestedSecs}>
+      {(cameraIndicator) => (
+        <div className="reader" onMouseMove={wake} onFocus={wake}>
+          <header className={`reader__bar${awake ? ' reader__bar--awake' : ''}`}>
+            <button type="button" className="reader__button" onClick={r.closeBook}>
+              Back to library
+            </button>
+            <div className="reader__progress">
+              <ProgressBar progress={r.progress} />
+            </div>
+            <PaceTimer enabled={r.paceGuideEnabled} suggestedSeconds={r.suggestedSecs} />
+            <button
+              type="button"
+              className="reader__button"
+              aria-pressed={r.paceGuideEnabled}
+              onClick={r.togglePaceGuide}
+            >
+              Pace Guide: {r.paceGuideEnabled ? 'on' : 'off'}
+            </button>
+            {cameraIndicator}
+          </header>
 
-      <main className="reader__page">
-        <p className="reader__book">{r.book.title}</p>
-        {chapter?.title ? <h1 className="reader__chapter">{chapter.title}</h1> : null}
-        <ErrorBanner error={r.error} />
-        <ParagraphList
-          paragraphs={r.paragraphs}
-          activeIndex={r.paragraphIndex}
-          onAdvance={r.advance}
-          disabled={r.chapterComplete}
-        />
-        {r.chapterComplete && (
-          <section className="reader__complete" role="status">
-            <p className="reader__complete-text">
-              {r.hasNextChapter ? 'Chapter complete.' : 'You have reached the end of the book.'}
-            </p>
-            {r.hasNextChapter && (
-              <button type="button" className="reader__button reader__button--primary" onClick={r.nextChapter}>
-                Next chapter
-              </button>
+          <main className="reader__page">
+            <p className="reader__book">{bookTitle}</p>
+            {chapter?.title ? <h1 className="reader__chapter">{chapter.title}</h1> : null}
+            <ErrorBanner error={r.error} />
+            <ParagraphList
+              paragraphs={r.paragraphs}
+              activeIndex={r.paragraphIndex}
+              onAdvance={r.advance}
+              disabled={r.chapterComplete}
+            />
+            {r.chapterComplete && (
+              <section className="reader__complete" role="status">
+                <p className="reader__complete-text">
+                  {r.hasNextChapter ? 'Chapter complete.' : 'You have reached the end of the book.'}
+                </p>
+                {r.hasNextChapter && (
+                  <button type="button" className="reader__button reader__button--primary" onClick={r.nextChapter}>
+                    Next chapter
+                  </button>
+                )}
+              </section>
             )}
-          </section>
-        )}
-      </main>
-    </div>
+          </main>
+        </div>
+      )}
+    </AttentionLayer>
   );
 }
 

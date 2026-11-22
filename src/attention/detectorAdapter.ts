@@ -7,16 +7,11 @@
  * result object is kept beyond a single detect() call.
  */
 import { poseFromMatrix16 } from './pose';
-import type { PoseReading } from './types';
+import type { Detector, PoseReading } from './types';
 
 type Vision = typeof import('@mediapipe/tasks-vision');
 type Landmarker = Awaited<ReturnType<Vision['FaceLandmarker']['createFromOptions']>>;
 type Resolved = Awaited<ReturnType<Vision['FilesetResolver']['forVisionTasks']>>;
-
-export interface Detector {
-  detect(video: HTMLVideoElement, t: number): PoseReading;
-  close(): void;
-}
 
 const WASM_PATH = '/mediapipe/wasm';
 const MODEL_PATH = '/models/face_landmarker.task';
