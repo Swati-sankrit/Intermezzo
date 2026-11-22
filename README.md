@@ -19,6 +19,9 @@ A privacy-first, in-browser reading app. Book content never leaves the device.
 | @testing-library/jest-dom | MIT | DOM assertion matchers |
 | fast-check | MIT | Property-based testing |
 | fake-indexeddb | Apache-2.0 | In-memory IndexedDB for tests |
+| @testing-library/user-event | MIT | Simulated user input in component tests |
+| @mediapipe/tasks-vision (1.2.3) | Apache-2.0 | On-device face detection for the attention signal; wasm copied to `public/mediapipe/wasm/` by `scripts/copy-mediapipe.mjs` |
+| face_landmarker.task (model file, `public/models/`) | Apache-2.0 | Face Landmarker model bundle; license per the [model card](https://huggingface.co/litert-community/MediaPipe-FaceLandmarker) linked from Google's Face Landmarker page |
 
 | @fontsource/literata | OFL-1.1 | Reading text font (bundled, self-hosted) |
 | @fontsource/cormorant-garamond | OFL-1.1 | Headings and titles font (bundled, self-hosted) |

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MediaPipe spike (throwaway, not shipped)</title>
+    <style>
+      body { font: 16px/1.5 system-ui, sans-serif; margin: 2rem; max-width: 46rem; }
+      pre { font: 14px/1.4 ui-monospace, monospace; background: #eee; padding: 0.75rem; }
+      button, select { font: inherit; }
+      .row { margin: 0.5rem 0; }
+    </style>
+  </head>
+  <body>
+    <h1>MediaPipe spike</h1>
+    <p>Throwaway page. No video is shown. Only numbers and text are printed.</p>
+    <div class="row">
+      <label>Delegate
+        <select id="delegate">
+          <option value="gpu">GPU</option>
+          <option value="cpu">CPU</option>
+        </select>
+      </label>
+      <button id="start" type="button">Start camera</button>
+      <button id="stop" type="button" disabled>Stop camera</button>
+    </div>
+    <pre id="out">Not started.</pre>
+    <script type="module" src="./mediapipe-spike.ts"></script>
+  </body>
+</html>

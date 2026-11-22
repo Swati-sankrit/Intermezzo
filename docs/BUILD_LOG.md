@@ -156,3 +156,27 @@ The file has 10 tests, `numRuns` 300 per fc.assert. No counterexamples.
 One full `npx vitest --run` run hung for 900 s with no output. The rerun finished in about 4 s. The cause is unknown and it was not reproduced.
 ### e. Results at the time
 As reported by the earlier runs: full `npx vitest --run`, 31 files, 144 tests passed. `npx tsc -p tsconfig.app.json --noEmit` was clean. These were not re-run for this documentation edit.
+
+## attention-signal: Task 2.1, MediaPipe docs check (Requirement 7.4)
+No packages were installed and no adapter code was written. Sources: Context7 `/websites/developers_google_edge_mediapipe` (Face Landmarker guide), Context7 `/google-ai-edge/mediapipe` (`face_landmarker_result.d.ts`, `vision_task_options.d.ts`), and the published `vision.d.ts` of `@mediapipe/tasks-vision` latest (npm 1.2.3, Apache-2.0), downloaded to /tmp only and read, from `https://unpkg.com/@mediapipe/tasks-vision/vision.d.ts`. The Context7 snippets did not show every type, so the `.d.ts` is the source for items marked "d.ts".
+### Items from design.md "Not confirmed in the docs"
+1. Runtime type of each matrix entry. CONFIRMED, and it corrects the design. `facialTransformationMatrixes` is `Matrix[]` (Context7, `face_landmarker_result.d.ts`). `Matrix` is `{ rows: number; columns: number; data: number[] }` with `data` a flattened one-dimensional array (d.ts, 1.2.3). It is NOT nested 4x4 arrays. `readMatrix4` must read `matrix.data` and check `rows === 4`, `columns === 4`, `data.length === 16`.
+2. Element order of `data` (row-major or column-major). NOT CONFIRMED. Neither the guide nor the `.d.ts` says. Context7 shows no statement either way. `pose.ts` assumes row-major, so the spike (look left, right, up, down) must decide this. If the order is column-major, `poseFromMatrix16` must transpose first. Do not assume.
+3. Axis orientation, sign convention, scale in the rotation. NOT CONFIRMED in the docs (the guide says only "4x4 facial transformation matrix from canonical face coordinates to the detected face"). The spike remains required.
+4. `delegate: "CPU"`. CONFIRMED. `BaseOptions.delegate` is typed `"CPU" | "GPU" | undefined` (d.ts 1.2.3). The guide's Face Landmarker sample uses `"GPU"` only. The interactive segmenter page lists `{CPU, GPU}` with default CPU. The design's single CPU retry after a GPU creation failure is allowed by the types. Whether CPU actually works for Face Landmarker at runtime is not shown in the docs, so check it in the spike.
+5. `detectForVideo` argument types. CONFIRMED (d.ts). `detectForVideo(videoFrame: ImageSource, timestamp: number, imageProcessingOptions?: ImageProcessingOptions): FaceLandmarkerResult`. `ImageSource` is a deprecated alias of `TexImageSource`, which includes `HTMLVideoElement`. `timestamp` is in ms. The guide says timestamps must be monotonic. Whether a detached (never attached) `<video>` is accepted is NOT CONFIRMED in the docs. The guide's sample uses a `<video>` in the page. Keep the design's fallback (mount with `display: none`) and check in the spike.
+6. `forVisionTasks` with a same-origin path. PARTLY CONFIRMED. Signature: `static forVisionTasks(basePath?: string, useModule?: boolean): Promise<WasmFileset>`. The doc comment says `basePath` is "the directory the Wasm files should be loaded from", and if omitted they load from the host's root directory. The docs' samples use a jsdelivr URL only. A relative path such as `/mediapipe/wasm` is consistent with the description but no sample shows it, so it stays a spike check. Note that the `.d.ts` also has an optional `useModule` flag, which the design did not mention.
+7. `close()` on the landmarker. CONFIRMED (d.ts). `FaceLandmarker extends VisionTaskRunner`, which declares `close(): void` ("Closes and cleans up the resources held by this task"). Context7 snippets for other classes (`MPMask`) also describe `close()`. Create the task once and close it once.
+### Also confirmed
+- `FaceLandmarker.createFromOptions(wasmFileset, options): Promise<FaceLandmarker>`.
+- `runningMode: 'IMAGE' | 'VIDEO'` (default IMAGE). `outputFacialTransformationMatrixes` defaults to `false`, and the Context7 guide's live sample reads `video.readyState >= 2` and changes of `video.currentTime` before calling `detectForVideo(video, performance.now())`.
+- Version note: npm latest is 1.2.3 (Apache-2.0). One unpkg fetch pinned to `0.10.35` returned a different, small file and was ignored.
+### Not confirmed in docs (open for the spike in task 2.3)
+- Row-major or column-major order of `Matrix.data`.
+- Axis and sign convention of the pose rotation, and whether it includes scale.
+- Whether `delegate: "CPU"` runs Face Landmarker successfully in a browser.
+- Whether a detached `<video>` works with `detectForVideo`.
+- Whether a relative same-origin `basePath` works with `forVisionTasks`.
+- `face_landmarker.task` model license (design item, outside this task).
+### Follow-ups for the spec
+- design.md ("Not confirmed" table and the `readMatrix4` text) says the docs' example shows nested 4x4 arrays. That is now wrong: the type is `{ rows, columns, data: number[] }`. design.md and tasks 2.3 and 2.8 should be updated to read `data`. This task did not edit them.

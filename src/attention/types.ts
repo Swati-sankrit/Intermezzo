@@ -11,6 +11,19 @@ export interface AttentionSignal {
   readonly timestamp: number;
 }
 
+/**
+ * Internal to the attention module (not exported from index.ts). One head
+ * pose reading from the detector. Angles are degrees; both are 0 when
+ * `faceFound` is false.
+ */
+export interface PoseReading {
+  readonly faceFound: boolean;
+  /** Degrees. */
+  readonly yaw: number;
+  /** Degrees. */
+  readonly pitch: number;
+}
+
 export interface PoseSample {
   /** Milliseconds, monotonic clock supplied by the adapter. */
   readonly t: number;

@@ -111,14 +111,14 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - Append a section for tasks 1.4 to 1.17: properties added (1 to 11, 14, 21), cases run per property, and any counterexample with seed and shrunk input. If a property fails, stop and report it; never weaken the assertion
     - _Requirements: none (testing rule)_
 
-- [ ] 2. Implement the camera adapter (includes the MediaPipe spike)
-  - [ ] 2.1 Fetch the current MediaPipe tasks-vision documentation through Context7 and confirm the open items
+- [~] 2. Implement the camera adapter (includes the MediaPipe spike)
+  - [x] 2.1 Fetch the current MediaPipe tasks-vision documentation through Context7 and confirm the open items
     - Load `tool::context7::resolve-library-id` then `tool::context7::query-docs` for the MediaPipe Face Landmarker (web, `@mediapipe/tasks-vision`) before writing any camera or detector code; do not rely on remembered APIs
     - Confirm or correct each item in the design's "Not confirmed in the docs" table: runtime type of each matrix entry, `delegate` values (`"CPU"` valid or not), `detectForVideo` argument types, `forVisionTasks` with a same-origin path, `close()` on the landmarker
     - Record findings and any API that could not be confirmed in `docs/BUILD_LOG.md`; if a method cannot be confirmed, say so and do not invent it
     - _Requirements: 7.4 (and the design and implementation note in the Introduction)_
 
-  - [ ] 2.2 Add the dependency and same-origin assets
+  - [x] 2.2 Add the dependency and same-origin assets
     - Install `@mediapipe/tasks-vision` pinned to an exact version. License: Apache-2.0 (confirm in the installed package's `package.json`); add a row to the `Dependency Licenses` table in `README.md`
     - Add `scripts/copy-mediapipe.mjs` that copies `node_modules/@mediapipe/tasks-vision/wasm` to `public/mediapipe/wasm/`, run from a `postinstall` script; fail with a clear message if the source folder is missing
     - Fetch the `face_landmarker.task` model card and check its license before committing the file to `public/models/`. If the license cannot be confirmed, stop and ask the user; do not commit the file
@@ -126,27 +126,27 @@ All decision logic is pure and property-tested with fast-check. Adapters and the
     - No other dependency is added
     - _Requirements: 7.4_
 
-  - [ ] 2.3 Write the MediaPipe spike page
+  - [x] 2.3 Write the MediaPipe spike page
     - Create a throwaway `spike/mediapipe-spike.html` and `spike/mediapipe-spike.ts` (not imported by the app, not shipped) that opens the camera with a detached `<video>`, runs `detectForVideo` with `outputFacialTransformationMatrixes: true`, and prints only `faceFound`, `yaw`, and `pitch` as text on the page. It never renders the video, never stores or logs a frame, and never calls `console.*` with pose or frame data
     - Report to the user the exact steps for the manual check (look left, right, up, down; confirm yaw and pitch axes and signs, GPU and CPU delegate, same-origin wasm path, detached video element) and record the outcome in `docs/BUILD_LOG.md` once the user confirms. The adapter in 2.6 is not accepted until the user confirms
     - _Requirements: 7.4, 7.6_
 
-  - [ ] 2.4 Implement `pose.ts`
+  - [x] 2.4 Implement `pose.ts`
     - `poseFromMatrix16(m)`: row-major 4x4, normalize the three rotation columns, `pitch = asin(clamp(-R[1][2], -1, 1))`, `yaw = atan2(R[0][2], R[2][2])`, both in degrees. Adjust the convention only if the spike (2.3) shows a different axis layout
     - Non-finite entries, a zero-length column, or fewer than 16 numbers return `faceFound: false`
     - `PoseReading` stays internal to the module
     - _Requirements: 4.2, 4.12_
 
-  - [ ] 2.5 Write property test for pose extraction
+  - [x] 2.5 Write property test for pose extraction
     - File: `src/attention/__tests__/pose.p16.prop.test.ts`
     - **Property 16: Pose extraction round trip**
     - **Validates: Requirements 4.2, 4.12**
 
-  - [ ] 2.6 Implement `rateGate.ts`
+  - [x] 2.6 Implement `rateGate.ts`
     - `MIN_DETECTION_GAP_MS = 100` and `canStartDetection(nowMs, lastStartMs, tabVisible)`: true only when the tab is visible and (`lastStartMs === null` or `nowMs - lastStartMs >= 100`)
     - _Requirements: 11.1, 11.2, 11.6_
 
-  - [ ] 2.7 Write property test for the detection rate gate
+  - [x] 2.7 Write property test for the detection rate gate
     - File: `src/attention/__tests__/rateGate.p15.prop.test.ts`
     - **Property 15: Detection rate gate**
     - **Validates: Requirements 11.1, 11.2, 11.6**
