@@ -24,6 +24,10 @@ These rules apply to every haunt, sound, and animation, in every haunt mode.
 - Every sound fades in over at least 300 ms, except a jump sound.
 - A jump sound may start fast, with an attack of at least 20 ms, and never
   goes above the volume cap. Jump sounds play only during the return moment.
+- Pulses inside a running sound layer (a footstep, a breath, a knock) may
+  use an attack as short as 20 ms, since the layer itself already faded in.
+  A pulse never exceeds the layer's current gain target, and that target
+  stays at or below the volume cap.
 - Ambience is instrumental only. No lyrics or speech while reading, except a
   word meaning read aloud because the reader asked for it.
 - Speech (word meanings, visitor replies) obeys the same volume cap and can
@@ -41,6 +45,13 @@ These rules apply to every haunt, sound, and animation, in every haunt mode.
   it, and the reading text keeps WCAG AA contrast at every haunt level.
 - During the return moment (at most 3 seconds) effects may cover the text.
   When it ends, the text is fully readable again.
+- The spoiler card (ghost-dread) may stay after the return moment ends,
+  without the ghost figure, for up to 10 seconds. It never covers the active
+  paragraph: it sits beside the reading column. The reader can dismiss it at
+  any time, by button or Escape key.
+  If the free space beside the column is under 160 px, the card shows only
+  during the return moment (it may cover the text then) and is hidden when
+  the return moment ends.
 
 ## Jumpscares and glitches
 
