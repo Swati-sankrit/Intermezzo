@@ -73,37 +73,37 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     - `src/haunts/engine/ghost/__tests__/arbitraries.ts`: unit fractions built from `fc.integer({ min: 0, max: 999_999 })`, `ReturnRolls`, `ReturnInput` per mode (with `awayMs` at 0, 9999, 10000, 20000, 20001, 59999, 60000 and very large), paragraphs of 0 to 40 words with irregular whitespace, message pools including messages longer than the paragraph, chapter sentence lists, look-away and chapter scripts
     - _Requirements: 11.1_
 
-- [ ] 2. Ghost pure helpers (Ghost_Distance, art, spatial specs, pulses)
-  - [ ] 2.1 Implement `ghost/ghostDistance.ts` and `engine/awayCounter.ts`
+- [x] 2. Ghost pure helpers (Ghost_Distance, art, spatial specs, pulses)
+  - [x] 2.1 Implement `ghost/ghostDistance.ts` and `engine/awayCounter.ts`
     - `ghostDistance(count)` returns an integer 0 to 4, `min(count, 4)` for counts of 0 or more, 0 for `NaN` and negatives; `startLookAway(counter, chapterKey)` resets on a new chapter key
     - _Requirements: 2.3, 2.4, 2.5, 11.15_
 
-  - [ ] 2.2 Write property tests for Ghost_Distance and the away counter
+  - [x] 2.2 Write property tests for Ghost_Distance and the away counter
     - Files: `ghost/__tests__/ghostDistance.gd03.prop.test.ts`, `awayCounter.gd04.prop.test.ts`
     - **Property 3: Ghost_Distance is bounded and non-decreasing**
     - **Property 4: Look-away counter follows the chapter**
     - **Validates: Requirements 2.3, 2.4, 2.5, 11.15**
 
-  - [ ] 2.3 Implement `ghost/ghostArt.ts`
+  - [x] 2.3 Implement `ghost/ghostArt.ts`
     - `ghostArt(step)` returns SVG markup, `heightUnits` and `detailCount`, both strictly increasing with the step; faint eyes at constant opacity; colours only `var(--...)`; no `<image>`, no `href`, no animation. `ghostBox(step, region)` keeps the aspect ratio inside the region and returns `null` under 48 px wide
     - _Requirements: 2.1, 2.2, 2.6, 2.7, 2.8, 5.9_
 
-  - [ ] 2.4 Write property test for Ghost art
+  - [x] 2.4 Write property test for Ghost art
     - File: `ghost/__tests__/ghostArt.gd05.prop.test.ts`
     - **Property 5: Ghost art grows with the step and stays safe and inside its region**
     - **Validates: Requirements 2.2, 2.6, 2.7, 2.8, 5.9**
 
-  - [ ] 2.5 Implement `ghost/spatial.ts` and `ghost/pulses.ts`
+  - [x] 2.5 Implement `ghost/spatial.ts` and `ghost/pulses.ts`
     - `footstepSpec`, `breathingSpec`, `azimuthToPosition`, `buildPulseTrain` (linear attack of at least 20 ms, peak at most 1, seeded, no `Math.random`)
     - _Requirements: 1.1, 1.2, 1.9, 5.10_
 
-  - [ ] 2.6 Write property tests for spatial specs and pulses
+  - [x] 2.6 Write property tests for spatial specs and pulses
     - Files: `ghost/__tests__/spatial.gd06.prop.test.ts`, `pulses.gd07.prop.test.ts`
     - **Property 6: Footstep and breathing specs**
     - **Property 7: Pulses have a slow enough attack and never exceed 1**
     - **Validates: Requirements 1.1, 1.2, 1.9, 5.10**
 
-  - [ ] 2.7 Report results in `docs/BUILD_LOG.md`
+  - [x] 2.7 Report results in `docs/BUILD_LOG.md`
     - Append a section for tasks 1 and 2: properties 1 to 7 and 22, cases run per property, any counterexample with seed and shrunk input. If a property fails, stop and report it; never weaken the assertion
     - _Requirements: none (testing rule)_
 

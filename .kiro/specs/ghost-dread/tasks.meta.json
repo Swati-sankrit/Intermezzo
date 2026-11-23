@@ -11,6 +11,19 @@
     "1.9 Write property test for the registry and extend the static scan": {
       "status": "passed",
       "lastRunTimestamp": 1795421893271
+    },
+    "2.2 Write property tests for Ghost_Distance and the away counter": {
+      "status": "passed",
+      "lastRunTimestamp": 1795423114994
+    },
+    "2.4 Write property test for Ghost art": {
+      "status": "passed",
+      "lastRunTimestamp": 1795423378678
+    },
+    "2.6 Write property tests for spatial specs and pulses": {
+      "status": "failed",
+      "failingExample": "Property 6 (spatial.gd06): (1) azimuthToPosition: seed -972014049, path \"172:11:0:1:0:0:1:2:3:3:5:0:1:1:1:0:0:2:0:3:0:0:1:1:3:0:1\", shrunk [-5.722234971514057e+307, 0] -> {x: NaN, y: 0, z: NaN} because az*PI overflows to -Infinity and sin(-Infinity) is NaN; breaks the documented \"never NaN\". (2) footstepSpec out-of-range level: seed -221489107, path \"3:1\", shrunk [Infinity, 1] -> footstepSpec(Infinity) gives level-1 row (6 m, 20 deg/s) while the test reference clamps Infinity to level 3 (2.5 m); also makes footstepSpec(3) vs footstepSpec(Infinity) non-monotone. Property 7 (pulses.gd07): passes.",
+      "lastRunTimestamp": 1795425482034
     }
   },
   "executionHistory": {
@@ -159,6 +172,97 @@
         "executionId": "2f66e653-32b4-4f33-a9dd-b5695b835689",
         "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
         "timestamp": 1795422119631
+      }
+    ],
+    "2.1 Implement `ghost/ghostDistance.ts` and `engine/awayCounter.ts`": [
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795422359805
+      },
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795422478803
+      }
+    ],
+    "2.2 Write property tests for Ghost_Distance and the away counter": [
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795422483535
+      },
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795423132896
+      }
+    ],
+    "2.3 Implement `ghost/ghostArt.ts`": [
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795423136399
+      },
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795423246093
+      }
+    ],
+    "2.4 Write property test for Ghost art": [
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795423249512
+      },
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795423402207
+      }
+    ],
+    "2.5 Implement `ghost/spatial.ts` and `ghost/pulses.ts`": [
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795423402877
+      },
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795423535821
+      }
+    ],
+    "2.6 Write property tests for spatial specs and pulses": [
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795423535861
+      },
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795425801295
+      }
+    ],
+    "2.7 Report results in `docs/BUILD_LOG.md`": [
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795425801352
+      },
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795426265044
+      }
+    ],
+    "2. Ghost pure helpers (Ghost_Distance, art, spatial specs, pulses)": [
+      {
+        "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795426265099
       }
     ]
   }

@@ -875,3 +875,55 @@ The task 1.26 table gave P7 as 1,200 cases and P8 as 900, total 24,500 for tasks
 - An intermediate attempt widened the `bad modes` coverage counter to also count invalid arrays. I reverted it so the counter keeps its original meaning, and met the floor by shaping instead.
 - Measurement: 10 batches of 300 cases (3,000 total), using a temporary file that was deleted in the same command. Per-batch minimum against floor: haunt 143/120, effect 135/120, both 147/120, neither 154/120, bad role 115/45, bad modes 74/45, bad minLevel 123/45, duplicate id 104/90, valid modes 179/120.
 - Result: `registry.gd22`, `registry.p17` and `staticScan` give 3 files and 22 tests, all passing on 3 consecutive runs. Counterexamples: none.
+## ghost-dread task 1.10: ghost generators, coverage fix (25 to 40 word paragraph branch)
+- This entry was written afterwards from the code. The original failure was not logged when it happened, so only what the files show is recorded here.
+- Files: `src/haunts/engine/ghost/__tests__/arbitraries.ts`, `textArbitraries.ts`, `scriptArbitraries.ts`, `arbitraries.unit.test.ts`.
+- What failed: long paragraphs were too rare. `paragraphArb` first drew every paragraph from one `fc.array(wordArb, { minLength: 0, maxLength: 40 })`. fast-check biases array length toward short arrays, so paragraphs near the 40-word limit almost never appeared. The check that exercises this is in `arbitraries.unit.test.ts`: "paragraphs include empty, irregular-whitespace and 40-word cases". It samples 2000 paragraphs and expects at least one with 30 or more words. The code does not record which assertion failed, the observed value, or the seed. They were not recorded.
+- The fix, input shaping only: `paragraphArb` in `textArbitraries.ts` now uses `fc.oneof` with two branches. Weight 3 is the original 0 to 40 word array. Weight 1 is an array of 25 to 40 words, with a code comment explaining why. The assertion (`>= 30` words in 2000 samples) and the other checks in that test were not changed, and no floor was lowered. About a quarter of paragraphs now come from the 25 to 40 word branch, from the weights.
+- Measurement: none is recorded in the code or comments. No seed, share or standard deviation was kept.
+- Counterexamples: none recorded.
+
+## ghost-dread tasks 1 and 2: results
+- Properties 1 to 7 and 22 are in place. Case counts below are read from the test files: `fc.assert` blocks times `numRuns`. Coverage tests that use `fc.sample` are listed separately because they are not `fc.assert` runs.
+- The 1.10 entry above (ghost generators, 25 to 40 word paragraph fix) belongs to this group too.
+
+| Property | Name | File | fc.assert blocks x cases | Total cases | Result |
+|---|---|---|---|---|---|
+| 1 | Haunt mode resolution and settings round trip | `src/haunts/engine/__tests__/settings.gd01.prop.test.ts` | 4 x 300 | 1,200 | pass |
+| 2 | Level_Logic with modes | `src/haunts/engine/__tests__/levelLogic.gd02.prop.test.ts` | 3 x 300 + 1 x 1000 | 1,900 | pass |
+| 3 | Ghost_Distance is bounded and non-decreasing | `src/haunts/engine/ghost/__tests__/ghostDistance.gd03.prop.test.ts` | 3 x 300 + 1 x 1000 | 1,900 | pass (one counterexample, fixed) |
+| 4 | Look-away counter follows the chapter | `src/haunts/engine/ghost/__tests__/awayCounter.gd04.prop.test.ts` | 2 x 300 + 1 x 1000 | 1,600 | pass |
+| 5 | Ghost art grows with the step and stays safe and inside its region | `src/haunts/engine/ghost/__tests__/ghostArt.gd05.prop.test.ts` | 7 x 300 + 1 x 1000 | 3,100 | pass |
+| 6 | Footstep and breathing specs | `src/haunts/engine/ghost/__tests__/spatial.gd06.prop.test.ts` | 5 x 300 | 1,500 (plus a 1000-sample coverage test) | pass (two counterexamples, fixed) |
+| 7 | Pulses have a slow enough attack and never exceed 1 | `src/haunts/engine/ghost/__tests__/pulses.gd07.prop.test.ts` | 3 x 300 + 1 x 100 | 1,000 (plus a 1000-sample coverage test) | pass (timeout fixed, no counterexample) |
+| 22 | The registry accepts the extended contract and still rejects bad files | `src/haunts/engine/__tests__/registry.gd22.prop.test.ts` | 6 x 300 | 1,800 | pass |
+
+### Task 2 counterexamples and fixes
+- Property 3: `ghostDistance(-0)` returned `-0`. Seeds 209695058, -1098211662 and -1175637769, shrunk to `[-0]`. The code was fixed (the guard in `ghostDistance.ts` is now `!(count >= 1)`). The assertion is unchanged. An explicit example test was added ("-0, NaN and values in (-1, 1) give +0, never -0").
+- Property 6, counterexample (a): `azimuthToPosition(-5.722234971514057e+307, 0)` gave NaN. Seed -972014049, path "172:11:0:1:0:0:1:2:3:3:5:0:1:1:1:0:0:2:0:3:0:0:1:1:3:0:1". Fixed by taking `az % 360` first.
+- Property 6, counterexample (b): `footstepSpec(Infinity)` returned the level-1 row. Seed -221489107, path "3:1", shrunk to `[Infinity, 1]`. Fixed so +Infinity clamps to level 3, -Infinity to level 1, and NaN to level 1. The assertions are unchanged. The user approved both code fixes.
+- Property 7: the first pulses test hit vitest's 5 s limit because it called `expect` for every sample. It now counts failures and asserts once, and three tests have a 300 s timeout. The checks are the same. No counterexample against the code.
+
+### Notes and design choices
+- Property 4: `startLookAway` only sees the chapter key at look-away start. Leaving chapter A and returning to A with no look-away in between does not reset the count. The design is silent on this. The helper `awayReference.ts` holds the reference model.
+- Task 2.3 and 2.5 choices:
+  - `ghostBox` caps at 1 px per viewBox unit. A region 48 px or wider but very short gives a small non-null box, and zero height gives 0 x 0.
+  - The pulse waveform is a seeded-sign envelope with no noise carrier, so each pulse has a DC offset. Filters have to shape the timbre.
+  - `stepsPerSec` 1.4, 1.7 and 2.0 and gains 0.35, 0.55 and 0.75 for levels 1 to 3 are implementer choices, not in the design.
+  - `INITIAL_AWAY_COUNTER` was added.
+  - The design calls the art function `ghostMarkup` in one place and `ghostArt` elsewhere. The code uses `ghostArt`.
+
+### Coverage measurements (per-batch minimum against floor, as reported by the task runs)
+- Task 2.2, 10 batches of 1000.
+  - `ghostDistance`: NaN 1.5% (floor 1%), negative 31.2% (2%), infinite 3.6% (2%), fraction 38.3%, above 4 19.7%, step 0 56.7%, step 1 5.0%, step 2 3.4%, step 3 5.2%, step 4 22.7% (floors for the steps 2%).
+  - `awayCounter`: chapter change 46.6% (30%), return to earlier chapter 21.8% (10%), earlier count above 4 30.3% (15%), step 4 reached 41.5% (25%), single look-away 6.7% (3%).
+  - The shared script generator gave only 0.8% return to an earlier chapter. Fixed by input shaping (a local `busyScriptArb`).
+- Task 2.4, 10 batches of 1000 (shares): width under 48 0.405 (floor 0.10), non-finite 0.073 (0.05), negative 0.117 (0.03), width 47 to 49 0.113 (0.05), width-limited 0.211 (0.05; it was 0.03 at first and was fixed by shaping), height-limited 0.239 (0.05), capped 0.078 (0.05), zero height 0.060 (0.01), width 48+ but box under 48 0.225 (0.02), non-integer step 0.281 (0.05), out-of-range step 0.191 (0.05), steps 0 to 4 minimum 0.445, 0.099, 0.103, 0.112, 0.164 (0.05 each).
+- Task 2.6, 10 batches of 1000 (shares): level 1 0.450 (0.10), level 2 0.204, level 3 0.282 (0.10); side left 0.470, right 0.497 (0.35); roll under 0.05 0.498 (0.08), roll 0.95 or more 0.213 (0.08), roll non-finite 0.056 (0.05, the thinnest margin), azimuth non-finite 0.191 (0.05), distance non-finite 0.090 (0.05), negative 0.195 (0.05), valid 0.637 (0.40); kinds 0.223, 0.229, 0.229, 0.232 (0.15); attack near 20 ms 0.473 (0.20); bad rate 0.152, bad duration 0.171 (0.05); peak 0 0.078 (0.03), peak 1 0.058 (0.03), peak above 1 0.224 (0.05); fully valid pulse 0.367 (0.30).
+
+### Full run
+- `npx vitest --run`: 83 test files passed, 532 tests passed, 0 failed (11.89 s).
+- `npx tsc -b`: exit 0, no errors.
+- `npm run lint` (oxlint): exit 0.
+- `npm run build` (vite build): exit 0.
+- No counterexamples and no coverage misses in this run. No code or assertions were changed during it.
