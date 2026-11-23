@@ -1,6 +1,7 @@
 /** Dependencies of `createGate`. Everything outside the pure plan is injected so tests can fake it. */
 import type { AudioAdapterDeps } from './audioTypes';
 import type { ReducedMotionAdapter } from './reducedMotion';
+import type { TickScheduler } from './tickHost';
 import type { VisualHosts } from './visualTypes';
 
 /** The slice of `window` used to hear Volume_Cap changes made in another tab. */
@@ -20,5 +21,10 @@ export interface GateDeps {
   readonly storageEvents: StorageEventTarget | null;
   /** `prefers-reduced-motion` source. */
   readonly reducedMotion: ReducedMotionAdapter;
+  /**
+   * Timer source for `AudioOut.onTick`. Optional: without it `onTick` returns a no-op
+   * cancel and never calls back.
+   */
+  readonly scheduler?: TickScheduler;
   readonly warn?: (msg: string) => void;
 }

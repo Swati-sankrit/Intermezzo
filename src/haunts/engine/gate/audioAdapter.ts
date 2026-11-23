@@ -12,7 +12,7 @@ import type { AudioAdapter, AudioAdapterDeps, UnlockEvent } from './audioTypes';
 
 export { CAP_RAMP_MS, SOUND_OFF_RAMP_MS, LIMITER } from './audioTypes';
 export type {
-  AudioAdapter, AudioAdapterDeps, AudioChannel, GainRamp, RampKind, ReadyCallback, UnlockTarget,
+  AudioAdapter, AudioAdapterDeps, AudioChannel, GainRamp, OpenChannelOptions, RampKind, ReadyCallback, UnlockTarget,
 } from './audioTypes';
 
 const UNLOCK_EVENTS: readonly UnlockEvent[] = ['pointerdown', 'keydown'];
@@ -88,11 +88,13 @@ export function createAudioAdapter(deps: AudioAdapterDeps): AudioAdapter {
   arm();
 
   return {
-    openChannel() {
-      const rec = newRecord();
+    openChannel(opts) {
+      const jumpSound = opts?.jumpSound === true;
+      const rec = newRecord(jumpSound);
       channels.add(rec);
       if (graph !== null) attach(graph, rec);
       return {
+        jumpSound,
         whenReady(cb) {
           if (rec.closed) return () => {};
           rec.waiters.add(cb);

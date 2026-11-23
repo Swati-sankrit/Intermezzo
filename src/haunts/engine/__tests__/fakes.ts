@@ -682,6 +682,7 @@ export type FakeNodeKind =
   | 'bufferSource'
   | 'biquad'
   | 'stereoPanner'
+  | 'panner'
   | 'destination';
 
 export type AudioLogEntry =
@@ -748,6 +749,70 @@ export class FakeStereoPannerNode extends FakeAudioNode {
     super('stereoPanner', ctx);
   }
 }
+/** A 3D PannerNode. Settings start at the documented defaults. `positionX/Y/Z` are absent in the no-params variant. */
+export class FakePannerNode extends FakeAudioNode {
+  panningModel = 'equalpower';
+  distanceModel = 'inverse';
+  refDistance = 1;
+  rolloffFactor = 1;
+  coneInnerAngle = 360;
+  coneOuterAngle = 360;
+  coneOuterGain = 0;
+  readonly positionX?: FakeAudioParam;
+  readonly positionY?: FakeAudioParam;
+  readonly positionZ?: FakeAudioParam;
+  /** Every `setPosition(x, y, z)` call, in order. */
+  readonly setPositionCalls: [number, number, number][] = [];
+  constructor(ctx: FakeAudioContext, withPositionParams: boolean) {
+    super('panner', ctx);
+    if (withPositionParams) {
+      this.positionX = this.param('positionX', 0);
+      this.positionY = this.param('positionY', 0);
+      this.positionZ = this.param('positionZ', 0);
+    }
+  }
+  setPosition(x: number, y: number, z: number): void {
+    this.setPositionCalls.push([x, y, z]);
+  }
+}
+
+/**
+ * AudioListener. Its params keep their own call lists and do not feed `ctx.automation`.
+ * Without params (Firefox) only `setPosition` and `setOrientation` exist.
+ */
+export class FakeListener {
+  readonly positionX?: FakeAudioParam;
+  readonly positionY?: FakeAudioParam;
+  readonly positionZ?: FakeAudioParam;
+  readonly forwardX?: FakeAudioParam;
+  readonly forwardY?: FakeAudioParam;
+  readonly forwardZ?: FakeAudioParam;
+  readonly upX?: FakeAudioParam;
+  readonly upY?: FakeAudioParam;
+  readonly upZ?: FakeAudioParam;
+  readonly setPositionCalls: [number, number, number][] = [];
+  readonly setOrientationCalls: [number, number, number, number, number, number][] = [];
+  constructor(withParams: boolean, now: () => number) {
+    if (!withParams) return;
+    const mk = (name: string, def: number): FakeAudioParam => new FakeAudioParam(`listener.${name}`, def, now, () => undefined);
+    this.positionX = mk('positionX', 0);
+    this.positionY = mk('positionY', 0);
+    this.positionZ = mk('positionZ', 0);
+    this.forwardX = mk('forwardX', 0);
+    this.forwardY = mk('forwardY', 0);
+    this.forwardZ = mk('forwardZ', -1);
+    this.upX = mk('upX', 0);
+    this.upY = mk('upY', 1);
+    this.upZ = mk('upZ', 0);
+  }
+  setPosition(x: number, y: number, z: number): void {
+    this.setPositionCalls.push([x, y, z]);
+  }
+  setOrientation(x: number, y: number, z: number, xUp: number, yUp: number, zUp: number): void {
+    this.setOrientationCalls.push([x, y, z, xUp, yUp, zUp]);
+  }
+}
+
 export class FakeBufferSourceNode extends FakeAudioNode {
   buffer: FakeAudioBuffer | null = null;
   loop = false;
@@ -806,6 +871,12 @@ export interface FakeAudioContextOptions {
   resumeRejects?: boolean;
   /** The constructor throws (`InvalidStateError`). */
   constructorThrows?: boolean;
+  /** `createPanner` throws (`NotSupportedError`). */
+  createPannerThrows?: boolean;
+  /** Panners have no `positionX/Y/Z` (old Safari); only `setPosition` moves them. */
+  pannerWithoutPositionParams?: boolean;
+  /** The listener has no AudioParams (Firefox); only `setPosition` and `setOrientation` exist. */
+  listenerWithoutParams?: boolean;
 }
 
 export class FakeAudioContext {
@@ -820,6 +891,7 @@ export class FakeAudioContext {
   /** Every AudioParam automation call from every node, in call order. */
   readonly automation: AutomationCall[] = [];
   readonly resumeCalls: number[] = [];
+  readonly listener: FakeListener;
   resumeRejects: boolean;
   private stateValue: FakeAudioState = 'suspended';
   private time = 0;
@@ -834,6 +906,7 @@ export class FakeAudioContext {
     this.sampleRate = options.sampleRate ?? 48000;
     this.resumeRejects = options.resumeRejects ?? false;
     this.destination = new FakeDestinationNode(this);
+    this.listener = new FakeListener(!(options.listenerWithoutParams ?? false), () => this.time);
     // Time moves with the fake clock, but only while the context is running.
     options.clock.onAdvance((deltaMs) => {
       if (this.stateValue === 'running') this.time += deltaMs / 1000;
@@ -882,6 +955,10 @@ export class FakeAudioContext {
   }
   createStereoPanner(): FakeStereoPannerNode {
     return this.track(new FakeStereoPannerNode(this));
+  }
+  createPanner(): FakePannerNode {
+    if (this.options.createPannerThrows) throw namedError('NotSupportedError', 'fake createPanner: not supported');
+    return this.track(new FakePannerNode(this, !(this.options.pannerWithoutPositionParams ?? false)));
   }
   createBufferSource(): FakeBufferSourceNode {
     return this.track(new FakeBufferSourceNode(this));

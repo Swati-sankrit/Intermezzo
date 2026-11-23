@@ -24,6 +24,20 @@
       "status": "failed",
       "failingExample": "Property 6 (spatial.gd06): (1) azimuthToPosition: seed -972014049, path \"172:11:0:1:0:0:1:2:3:3:5:0:1:1:1:0:0:2:0:3:0:0:1:1:3:0:1\", shrunk [-5.722234971514057e+307, 0] -> {x: NaN, y: 0, z: NaN} because az*PI overflows to -Infinity and sin(-Infinity) is NaN; breaks the documented \"never NaN\". (2) footstepSpec out-of-range level: seed -221489107, path \"3:1\", shrunk [Infinity, 1] -> footstepSpec(Infinity) gives level-1 row (6 m, 20 deg/s) while the test reference clamps Infinity to level 3 (2.5 m); also makes footstepSpec(3) vs footstepSpec(Infinity) non-monotone. Property 7 (pulses.gd07): passes.",
       "lastRunTimestamp": 1795425482034
+    },
+    "3.3 Write property test for fade floors": {
+      "status": "passed",
+      "lastRunTimestamp": 1795428499773
+    },
+    "3.8 Write property test for the cap with spatial layers and a jump channel": {
+      "status": "failed",
+      "failingExample": "seed -1775563803, failed after 92 tests: capText \"0.02\", soundOn false, steps: open; setGain(0,1); panner(0) dt150; sound on; open dt299; fade(0, undefined); rOpen(jump:false); fade(0); rOpen; sound on; rBegin; rOpen(jump:false) dt301; appReduced on. Channel 0 still at 0.00468 at ctx 1.249 s, 0.800 s after its fade-out at 0.449 s (reaches 0 at 1.55 s).",
+      "lastRunTimestamp": 1795432876565
+    },
+    "3.9 Write property test for return-only features": {
+      "status": "failed",
+      "failingExample": "After the gate fix (hard deadline at begin+3000), the strict test and the main property pass in 3 runs. The coverage test fails: \"scripts with: guardWithEffects: expected 0 to be greater than or equal to 180\" (gateReturn.gd24.prop.test.ts:140, floor 0.45 at line 150). guardWithEffects is set in gateReturnWorld.ts syncModel only when effects are still present when 3000 ms passes, which the fixed gate now makes impossible. This is not a counterexample to the property; the coverage flag encodes the old timing.",
+      "lastRunTimestamp": 1795438978313
     }
   },
   "executionHistory": {
@@ -196,6 +210,16 @@
         "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795423132896
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795426667442
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795427051937
       }
     ],
     "2.3 Implement `ghost/ghostArt.ts`": [
@@ -244,6 +268,16 @@
         "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795425801295
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795426667508
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795427052104
       }
     ],
     "2.7 Report results in `docs/BUILD_LOG.md`": [
@@ -256,6 +290,16 @@
         "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795426265044
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795427052172
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795427231693
       }
     ],
     "2. Ghost pure helpers (Ghost_Distance, art, spatial specs, pulses)": [
@@ -263,6 +307,143 @@
         "executionId": "559b4fd6-4dd6-4f68-a491-0c5d36131dc9",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795426265099
+      }
+    ],
+    "3.1 Confirm the audio APIs in current documentation": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795427239279
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795427613643
+      }
+    ],
+    "3.2 Implement `gate/returnRules.ts`": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795427614038
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795427855566
+      }
+    ],
+    "3.3 Write property test for fade floors": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795427855652
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795428533525
+      }
+    ],
+    "3.4 Add the spatial panner wrapper and the listener": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795428533643
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795429266737
+      }
+    ],
+    "3.5 Add the jump channel to the gain plan and audio adapter": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795429266855
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795429757094
+      }
+    ],
+    "3.6 Add `onTick` and `setLabel`": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795429757733
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795429992884
+      }
+    ],
+    "3.7 Implement the Return_Moment state, ReturnPort and overlays": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795429993646
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795431643925
+      }
+    ],
+    "3.8 Write property test for the cap with spatial layers and a jump channel": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795431644059
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795436430480
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795441022465
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795442275118
+      }
+    ],
+    "3.9 Write property test for return-only features": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795436430844
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795443194545
+      }
+    ],
+    "3.10 Write unit tests for the gate extensions": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795443194637
+      },
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795447645705
+      }
+    ],
+    "3. Safety_Gate extensions (panner, jump channel, port tick, Return_Moment state, overlays)": [
+      {
+        "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795447645821
       }
     ]
   }

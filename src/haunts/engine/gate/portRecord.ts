@@ -2,6 +2,7 @@
 import type { Unsubscribe } from '../types';
 import type { AudioChannel } from './audioTypes';
 import type { PortVisual } from './gatePort';
+import type { PortTicks } from './tickHost';
 
 export interface PortRecord {
   readonly id: string;
@@ -14,7 +15,11 @@ export interface PortRecord {
   faded: boolean;
   /** Fade-out length this port was asked to use; falls of this port use it. */
   fadeMs?: number;
+  /** Audio-clock second by which this port's fall must be at 0: the earliest `now + fadeMs` over its fade-outs. */
+  fadeEndSec?: number;
   closed: boolean;
   /** Cancel functions of this port's `onAudibleChange` subscriptions. */
   readonly audibleOffs: Set<Unsubscribe>;
+  /** This port's `onTick` timers; cancelled on close and fade-out. */
+  readonly ticks: PortTicks;
 }

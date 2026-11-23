@@ -48,6 +48,10 @@ export function useHauntEngine(
       storage: getStorage(),
       storageEvents: hasWindow ? window : null,
       reducedMotion: createReducedMotion(),
+      scheduler: {
+        setTimeout: (fn, ms) => setTimeout(fn, ms),
+        clearTimeout: (id) => clearTimeout(id as ReturnType<typeof setTimeout>),
+      },
       warn,
     });
     gate.setSoundEnabled(getHauntSettingsStore().get().sound);

@@ -16,9 +16,20 @@
  *    pending (then it is kept, never extended). D is cleared once now >= D. While D is pending
  *    every fall, in any pass, ends by D. If D is very close the fall is abrupt but still
  *    downward; haunt-safety limits fade-in only.
+ * 5. A jump channel (opened with `jumpSound`) has its target set to min(target, jumpHeadroom(cap,
+ *    other channels' current gains)). When it rises, the rise is marked `jump` (attack from
+ *    planJumpAttack: 20 ms, 300 ms reduced) and every other rise in that pass is held: its target
+ *    for the pass is its current value, and it is planned again in the first pass after the jump
+ *    rise ends. Only one jump channel rises per pass (the first in port order); another one is
+ *    held like any other rise. Falls follow rules 3 and 4 (a jump rise does not count as a rise
+ *    for rule 3, because nothing else rises).
+ * 6. A port that was faded out keeps the deadline set when its fade began (`fadeEndSec`). Later
+ *    passes issue its fall with only the time left to that deadline (0 once passed), so a re-issue
+ *    never restarts the clock. This only shortens falls; rises and the cap are not affected.
  */
 import { CAP_RAMP_MS, SOUND_OFF_RAMP_MS, type RampKind, type GainRamp } from './audioTypes';
 import { planFadeIn, planFadeOut } from './plan';
+import { jumpHeadroom } from './returnRules';
 
 export interface PortGainView {
   readonly id: string;
@@ -32,6 +43,10 @@ export interface PortGainView {
   readonly inFlight: { readonly target: number; readonly endSec: number } | null;
   /** Fade-out length this port asked for, if it is fading out. */
   readonly fadeMs?: number;
+  /** Audio second by which a fading-out port must reach 0 (fixed when the fade began). */
+  readonly fadeEndSec?: number;
+  /** The channel was opened with `jumpSound`. */
+  readonly jump?: boolean;
 }
 
 export interface GainAction {
@@ -46,6 +61,8 @@ export interface GainPlanInput {
   readonly reduced: boolean;
   /** This pass is caused by a cap drop (new cap below the old one). */
   readonly capDropped: boolean;
+  /** The Volume_Cap in force; the jump headroom is computed from it. */
+  readonly cap: number;
   /** Pending deadline from earlier passes (audio seconds), or null. */
   readonly deadlineSec: number | null;
   readonly ports: readonly PortGainView[];
@@ -71,20 +88,37 @@ function ownFallMs(kind: RampKind, fadeMs: number | undefined): number {
   return kind === 'soundOff' ? SOUND_OFF_RAMP_MS : planFadeOut(fadeMs);
 }
 
+/** Rule 5, first part: a jump port's target is at most the headroom left by the other ports' current gains. */
+function limitJumpTargets(ports: readonly PortGainView[], cap: number): readonly PortGainView[] {
+  return ports.map((p) => {
+    if (p.jump !== true) return p;
+    const room = jumpHeadroom(cap, ports.filter((o) => o.id !== p.id).map((o) => o.current));
+    return { ...p, target: Math.min(p.target, room) };
+  });
+}
+
 export function planGains(input: GainPlanInput): GainPlan {
   const { nowSec, kind, reduced } = input;
   const deadlineSec = nextDeadline(input.deadlineSec, nowSec, input.capDropped);
-  const moving = input.ports.filter((p) => p.inFlight !== null || p.target !== p.sent);
-  const hasRise = moving.some((p) => p.target > p.current);
+  const ports = limitJumpTargets(input.ports, input.cap);
+  const moving = ports.filter((p) => p.inFlight !== null || p.target !== p.sent);
+  const jumpRiser = moving.find((p) => p.jump === true && p.target > p.current);
+  const hasRise = jumpRiser === undefined && moving.some((p) => p.target > p.current);
   const riseMs = planFadeIn(undefined, reduced);
   const actions: GainAction[] = [];
   for (const p of moving) {
+    if (p === jumpRiser) {
+      actions.push({ id: p.id, target: p.target, ramp: { kind, reduced, jump: true } });
+      continue;
+    }
     if (p.target > p.current) {
-      actions.push({ id: p.id, target: p.target, ramp: { kind, reduced } });
+      if (jumpRiser === undefined) actions.push({ id: p.id, target: p.target, ramp: { kind, reduced } });
+      else actions.push({ id: p.id, target: p.current, ramp: { kind, reduced, fallMs: 0 } }); // held (rule 5)
       continue;
     }
     let fallMs = ownFallMs(kind, p.fadeMs);
     if (hasRise) fallMs = Math.min(fallMs, riseMs);
+    if (p.fadeEndSec !== undefined) fallMs = Math.min(fallMs, (p.fadeEndSec - nowSec) * 1000); // original deadline (rule 6)
     if (deadlineSec !== null) fallMs = Math.min(fallMs, (deadlineSec - nowSec) * 1000);
     actions.push({ id: p.id, target: p.target, ramp: { kind, reduced, fallMs: Math.max(0, fallMs) } });
   }

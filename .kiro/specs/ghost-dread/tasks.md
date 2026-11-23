@@ -75,7 +75,7 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
 
 - [x] 2. Ghost pure helpers (Ghost_Distance, art, spatial specs, pulses)
   - [x] 2.1 Implement `ghost/ghostDistance.ts` and `engine/awayCounter.ts`
-    - `ghostDistance(count)` returns an integer 0 to 4, `min(count, 4)` for counts of 0 or more, 0 for `NaN` and negatives; `startLookAway(counter, chapterKey)` resets on a new chapter key
+    - `ghostDistance(count)` returns an integer 0 to 4, `min(count, 4)` for counts of 0 or more, 0 for `NaN` and negatives; `startLookAway(counter, chapterKey)` resets on a new chapter key, and `onChapterChange(counter, chapterKey)` resets on any change of key
     - _Requirements: 2.3, 2.4, 2.5, 11.15_
 
   - [x] 2.2 Write property tests for Ghost_Distance and the away counter
@@ -107,49 +107,49 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     - Append a section for tasks 1 and 2: properties 1 to 7 and 22, cases run per property, any counterexample with seed and shrunk input. If a property fails, stop and report it; never weaken the assertion
     - _Requirements: none (testing rule)_
 
-- [ ] 3. Safety_Gate extensions (panner, jump channel, port tick, Return_Moment state, overlays)
-  - [ ] 3.1 Confirm the audio APIs in current documentation
+- [x] 3. Safety_Gate extensions (panner, jump channel, port tick, Return_Moment state, overlays)
+  - [x] 3.1 Confirm the audio APIs in current documentation
     - Use Context7 or MDN for `PannerNode` (`panningModel`, position `AudioParam`s, `setPosition` fallback), `AudioListener` (`positionX`, `forwardX`, `setPosition`, `setOrientation`) and default listener values, which the design marks as unconfirmed
     - Record findings and anything unconfirmed in `docs/BUILD_LOG.md`; do not use a method that cannot be confirmed
     - _Requirements: 1.5, 13.6_
 
-  - [ ] 3.2 Implement `gate/returnRules.ts`
+  - [x] 3.2 Implement `gate/returnRules.ts`
     - `RETURN_MAX_MS`, `JUMP_ATTACK_MIN_MS`, `JUMP_ATTACK_REDUCED_MS`, `planJumpAttack`, `jumpHeadroom`, `FadeKind`, `planOverlayFade`; pure, non-finite input handled
     - _Requirements: 2.9, 5.10, 5.12, 9.7, 9.10_
 
-  - [ ] 3.3 Write property test for fade floors
+  - [x] 3.3 Write property test for fade floors
     - File: `src/haunts/engine/__tests__/returnRules.gd26.prop.test.ts`
     - **Property 26: Fade floors under reduced motion**
     - **Validates: Requirements 2.9, 3.10, 5.12, 7.17, 9.10**
 
-  - [ ] 3.4 Add the spatial panner wrapper and the listener
+  - [x] 3.4 Add the spatial panner wrapper and the listener
     - `hauntAudio.ts`: `HauntSpatialPanner`, `createSpatialPanner`; `restrictedAudio.ts`: wrapper fixing HRTF, inverse distance, `refDistance` 0.5, omnidirectional cone, exposing only the three position params, with the `setPosition` shim when `positionX` is missing; `audioGraph.ts`: set the listener once; extend the fake `AudioContext` in `fakes.ts` to record panners and listener calls
     - _Requirements: 1.5, 1.6, 1.15, 13.6, 13.7_
 
-  - [ ] 3.5 Add the jump channel to the gain plan and audio adapter
+  - [x] 3.5 Add the jump channel to the gain plan and audio adapter
     - `gainPlan.ts` rule 5: a jump channel rises with `planJumpAttack`, its target is `min(scaled target, jumpHeadroom)`, and other rises are held in that pass; `audioAdapter.ts` marks channels opened with `jumpSound`
     - _Requirements: 5.10, 9.4, 9.7_
 
-  - [ ] 3.6 Add `onTick` and `setLabel`
+  - [x] 3.6 Add `onTick` and `setLabel`
     - `gate.ts` and `audioAdapter.ts`: gate-owned `onTick(cb, periodMs)` on the injected scheduler (period at least 100 ms), cancelled on port close, fade-out and dispose; a throwing callback goes to `warn`. `visualAdapter.ts`: `setLabel` sets `role="img"` and `aria-label`; layers get `aria-hidden` unless labelled
     - _Requirements: 1.1, 2.12_
 
-  - [ ] 3.7 Implement the Return_Moment state, ReturnPort and overlays
+  - [x] 3.7 Implement the Return_Moment state, ReturnPort and overlays
     - `gate/gateReturn.ts`, `gate/returnVisual.ts` and `gate.ts` wiring: `beginReturnMoment` (3000 ms guard timer), `endReturnMoment(fadeMs)` (closes ports, removes overlays and jump channels within 100 ms, safe twice), `openReturn` returning `null` outside a Return_Moment, `createOverlay` for `'ghost'`, `'jumpscare'` and `'card-hand'`; keep every file under 200 lines
     - _Requirements: 3.2, 3.4, 5.11, 5.13, 9.7, 9.8_
 
-  - [ ] 3.8 Write property test for the cap with spatial layers and a jump channel
+  - [x] 3.8 Write property test for the cap with spatial layers and a jump channel
     - File: `src/haunts/engine/__tests__/gateCap.gd23.prop.test.ts` (500 cases)
     - Real gate and audio adapter against the fake `AudioContext`
     - **Property 23: Combined gain stays at or below the cap with spatial layers and a jump channel**
     - **Validates: Requirements 1.7, 1.8, 1.12, 1.16, 5.10, 9.4, 9.5, 9.6, 9.7, 13.7**
 
-  - [ ] 3.9 Write property test for return-only features
+  - [x] 3.9 Write property test for return-only features
     - File: `src/haunts/engine/__tests__/gateReturn.gd24.prop.test.ts`
     - **Property 24: Return-only features exist only inside a Return_Moment**
     - **Validates: Requirements 5.11, 6.9, 9.7, 9.8**
 
-  - [ ] 3.10 Write unit tests for the gate extensions
+  - [x] 3.10 Write unit tests for the gate extensions
     - File: `src/haunts/engine/__tests__/gateReturn.unit.test.ts`
     - Overlays are gone within 100 ms of `endReturnMoment`; the 3000 ms guard ends the state; a throwing `onTick` callback is reported and does not stop others; `setLabel` sets the label and unlabelled layers are `aria-hidden`; ticks stop at port close
     - _Requirements: 2.12, 3.2, 5.13, 9.8_
@@ -225,7 +225,7 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     - _Requirements: 3.1, 3.3, 3.5, 3.6, 3.7, 3.9, 3.11, 5.3, 5.13, 8.10, 9.8_
 
   - [ ] 5.8 Wire the engine
-    - `engine/engineSelect.ts` (`selectByMode`, `layersToRun`); `engineRoster.ts` (`StartInfo` as fourth `start` argument, `retireAll(ms)`, `retireWhere`, a started layer is not restarted within a look-away); `engine.ts` (new deps `reading`, `evidence`, `spoiler`, `reducedMotion`; `startLookAway` on `away`; `begin` on `present` after a look-away with `recompute()` fallback; `abort('away')` on a new `away`; mode change handling; `stop` aborts everything). Keep each file under 200 lines
+    - `engine/engineSelect.ts` (`selectByMode`, `layersToRun`); `engineRoster.ts` (`StartInfo` as fourth `start` argument, `retireAll(ms)`, `retireWhere`, a started layer is not restarted within a look-away); `engine.ts` (new deps `reading`, `evidence`, `spoiler`, `reducedMotion`; `startLookAway` on `away`, and `onChapterChange(counter, key)` whenever `reading.chapterKey()` changes, so a return to an earlier chapter resets Ghost_Distance; `begin` on `present` after a look-away with `recompute()` fallback; `abort('away')` on a new `away`; mode change handling; `stop` aborts everything). Keep each file under 200 lines
     - _Requirements: 1.3, 1.12, 1.14, 2.3, 2.4, 2.13, 3.1, 3.6, 3.7, 3.9, 3.11, 8.10, 9.9, 9.13, 9.15_
 
   - [ ] 5.9 Write property test for engine behaviour over any script

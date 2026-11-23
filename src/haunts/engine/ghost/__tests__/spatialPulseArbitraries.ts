@@ -8,6 +8,7 @@ export const rollArb: fc.Arbitrary<number> = fc.oneof(
   { weight: 2, arbitrary: fc.double({ min: 0.95, max: 1, noNaN: true }) },
   { weight: 2, arbitrary: fc.constantFrom(0, -0, 1, 0.5, 1 - Number.EPSILON, Number.MIN_VALUE) },
   { weight: 2, arbitrary: fc.constantFrom(NaN, Infinity, -Infinity, -1, 2, 1e300, -1e300) },
+  { weight: 2, arbitrary: fc.constantFrom(NaN, Infinity, -Infinity) },
   { weight: 1, arbitrary: fc.double() },
 );
 export const sideArb: fc.Arbitrary<'left' | 'right'> = fc.constantFrom('left', 'right');
@@ -56,7 +57,7 @@ export const attackArb: fc.Arbitrary<number> = fc.oneof(
 );
 export const peakArb: fc.Arbitrary<number> = fc.oneof(
   { weight: 3, arbitrary: fc.double({ min: 0.001, max: 1, noNaN: true }) },
-  { weight: 2, arbitrary: fc.constantFrom(0, 1, 0.5, 0.001) },
+  { weight: 3, arbitrary: fc.constantFrom(0, 1, 0.5, 0.001) },
   { weight: 2, arbitrary: fc.constantFrom(1.0001, 2, 10, 1e9) },
   { weight: 1, arbitrary: fc.constantFrom(-0, -1, NaN, Infinity, -Infinity) },
 );

@@ -8,7 +8,7 @@ import type { HauntMode } from './ghost/mode';
 import type { ReturnPort } from './returnTypes';
 
 export type {
-  HauntAudioContext, HauntBufferSource, HauntFilter, HauntNode, HauntPanner, HauntParam, HauntSink,
+  HauntAudioContext, HauntBufferSource, HauntFilter, HauntNode, HauntPanner, HauntParam, HauntSink, HauntSpatialPanner,
 } from './hauntAudio';
 
 export type HauntLevel = 1 | 2 | 3;

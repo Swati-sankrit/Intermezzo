@@ -8,22 +8,9 @@
  * Event callbacks are called without the event, because `event.target` would be the real node.
  */
 import type {
-  HauntAudioContext, HauntBufferSource, HauntFilter, HauntNode, HauntPanner, HauntParam, HauntSink,
+  HauntAudioContext, HauntBufferSource, HauntFilter, HauntNode, HauntPanner, HauntSink, HauntSpatialPanner,
 } from '../hauntAudio';
-
-function wrapParam(p: AudioParam): HauntParam {
-  return {
-    setValueAtTime(value, time) {
-      p.setValueAtTime(value, time);
-    },
-    linearRampToValueAtTime(value, time) {
-      p.linearRampToValueAtTime(value, time);
-    },
-    cancelScheduledValues(time) {
-      p.cancelScheduledValues(time);
-    },
-  };
-}
+import { applyFixedSettings, positionParams, wrapParam } from './spatialParams';
 
 /** `input` is the port's channel gain node: the only node a haunt chain may end at. */
 export function createRestrictedContext(ctx: AudioContext, input: AudioNode): HauntAudioContext {
@@ -110,6 +97,19 @@ export function createRestrictedContext(ctx: AudioContext, input: AudioNode): Ha
     createStereoPanner() {
       const n = ctx.createStereoPanner();
       const w: HauntPanner = { ...nodeBase(n), pan: wrapParam(n.pan) };
+      return register(w, n);
+    },
+    createSpatialPanner() {
+      // Any failure (no createPanner, HRTF refused) gives null; haunts then fall back (Req 1.15).
+      let n: PannerNode;
+      try {
+        n = ctx.createPanner();
+        applyFixedSettings(n);
+      } catch {
+        return null;
+      }
+      const p = positionParams(n);
+      const w: HauntSpatialPanner = { ...nodeBase(n), positionX: p.x, positionY: p.y, positionZ: p.z };
       return register(w, n);
     },
   };

@@ -13,11 +13,17 @@ const NUM_RUNS = 300;
 
 /**
  * The shared fadeMsArb has few values inside the bounds (about 1 in 100), so it is
- * mixed with an in-range integer to make "within the bounds" a common case.
+ * mixed with an in-range integer to make "within the bounds" a common case. Three more
+ * small branches keep the rarer regions (a request at the edges of the fade-in range for the
+ * two reduced-motion settings, NaN, and below the fade-out minimum) well above the coverage
+ * floor in every batch.
  */
 const requestedArb: fc.Arbitrary<number | undefined> = fc.oneof(
-  { weight: 3, arbitrary: fadeMsArb },
+  { weight: 6, arbitrary: fadeMsArb },
   { weight: 1, arbitrary: fc.integer({ min: 50, max: 1000 }) },
+  { weight: 2, arbitrary: fc.constantFrom(300, 1000, 1700) },
+  { weight: 1, arbitrary: fc.constant(NaN) },
+  { weight: 1, arbitrary: fc.integer({ min: -100, max: 49 }) },
 );
 
 const inputArb = fc.tuple(requestedArb, fc.boolean());

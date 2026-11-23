@@ -892,7 +892,7 @@ The task 1.26 table gave P7 as 1,200 cases and P8 as 900, total 24,500 for tasks
 | 1 | Haunt mode resolution and settings round trip | `src/haunts/engine/__tests__/settings.gd01.prop.test.ts` | 4 x 300 | 1,200 | pass |
 | 2 | Level_Logic with modes | `src/haunts/engine/__tests__/levelLogic.gd02.prop.test.ts` | 3 x 300 + 1 x 1000 | 1,900 | pass |
 | 3 | Ghost_Distance is bounded and non-decreasing | `src/haunts/engine/ghost/__tests__/ghostDistance.gd03.prop.test.ts` | 3 x 300 + 1 x 1000 | 1,900 | pass (one counterexample, fixed) |
-| 4 | Look-away counter follows the chapter | `src/haunts/engine/ghost/__tests__/awayCounter.gd04.prop.test.ts` | 2 x 300 + 1 x 1000 | 1,600 | pass |
+| 4 | Look-away counter follows the chapter | `src/haunts/engine/ghost/__tests__/awayCounter.gd04.prop.test.ts` | 3 x 300 + 1 x 1000 | 1,900 | pass |
 | 5 | Ghost art grows with the step and stays safe and inside its region | `src/haunts/engine/ghost/__tests__/ghostArt.gd05.prop.test.ts` | 7 x 300 + 1 x 1000 | 3,100 | pass |
 | 6 | Footstep and breathing specs | `src/haunts/engine/ghost/__tests__/spatial.gd06.prop.test.ts` | 5 x 300 | 1,500 (plus a 1000-sample coverage test) | pass (two counterexamples, fixed) |
 | 7 | Pulses have a slow enough attack and never exceed 1 | `src/haunts/engine/ghost/__tests__/pulses.gd07.prop.test.ts` | 3 x 300 + 1 x 100 | 1,000 (plus a 1000-sample coverage test) | pass (timeout fixed, no counterexample) |
@@ -902,10 +902,10 @@ The task 1.26 table gave P7 as 1,200 cases and P8 as 900, total 24,500 for tasks
 - Property 3: `ghostDistance(-0)` returned `-0`. Seeds 209695058, -1098211662 and -1175637769, shrunk to `[-0]`. The code was fixed (the guard in `ghostDistance.ts` is now `!(count >= 1)`). The assertion is unchanged. An explicit example test was added ("-0, NaN and values in (-1, 1) give +0, never -0").
 - Property 6, counterexample (a): `azimuthToPosition(-5.722234971514057e+307, 0)` gave NaN. Seed -972014049, path "172:11:0:1:0:0:1:2:3:3:5:0:1:1:1:0:0:2:0:3:0:0:1:1:3:0:1". Fixed by taking `az % 360` first.
 - Property 6, counterexample (b): `footstepSpec(Infinity)` returned the level-1 row. Seed -221489107, path "3:1", shrunk to `[Infinity, 1]`. Fixed so +Infinity clamps to level 3, -Infinity to level 1, and NaN to level 1. The assertions are unchanged. The user approved both code fixes.
-- Property 7: the first pulses test hit vitest's 5 s limit because it called `expect` for every sample. It now counts failures and asserts once, and three tests have a 300 s timeout. The checks are the same. No counterexample against the code.
+- Property 7: the first pulses test hit vitest's 5 s limit because it called `expect` for every sample. It now counts failures and asserts once, and the tests were given a 300 s timeout at first. The generators cap seconds at 4 and the rate at 96000. In subtask 2.7 the timeout was lowered to 20 s: over 3 runs `pulses.gd07` took about 6.4 to 7.1 s in total. The slowest test, "identical samples", took 3.6 to 4.7 s (two buffers of 200k to 400k elements, `Array.from` and a deep `toEqual`), close to vitest's 5 s default. "Different kinds" took 1.4 to 2.0 s and the others under 0.4 s. The first version had taken 27 s and 50 s, which is why 300 s was set. No generator or assertion changed. No counterexample against the code.
 
 ### Notes and design choices
-- Property 4: `startLookAway` only sees the chapter key at look-away start. Leaving chapter A and returning to A with no look-away in between does not reset the count. The design is silent on this. The helper `awayReference.ts` holds the reference model.
+- Property 4: the counter used to reset only when a look-away started, so returning to an earlier chapter with no look-away in between did not reset it. This is fixed. `awayCounter.ts` now has `onChapterChange(counter, chapterKey)`, which resets on any key change and returns the same object for the same key. Engine task 5.8 must call it whenever `reading.chapterKey()` changes. Task 5.8, task 2.1 and `design.md` were updated. The first Property 4 test encoded the old rule, so it was rewritten to drive the real counter through the whole script against `referenceScriptTrace`, and it also asserts step 0 after any change. A new test covers `onChapterChange`. The file now has 4 tests: 3 x 300 cases and a 1000-case coverage test. New coverage floors: `roundTrip` 0.05 (measured 0.112 to 0.150, mean about 0.127; 0.10 was about 1 SD under the mean, so it was not used) and `sameKeyChange` 0.10 (measured 0.370 to 0.415). The helper `awayReference.ts` holds the reference model.
 - Task 2.3 and 2.5 choices:
   - `ghostBox` caps at 1 px per viewBox unit. A region 48 px or wider but very short gives a small non-null box, and zero height gives 0 x 0.
   - The pulse waveform is a seeded-sign envelope with no noise carrier, so each pulse has a DC offset. Filters have to shape the timbre.
@@ -919,7 +919,12 @@ The task 1.26 table gave P7 as 1,200 cases and P8 as 900, total 24,500 for tasks
   - `awayCounter`: chapter change 46.6% (30%), return to earlier chapter 21.8% (10%), earlier count above 4 30.3% (15%), step 4 reached 41.5% (25%), single look-away 6.7% (3%).
   - The shared script generator gave only 0.8% return to an earlier chapter. Fixed by input shaping (a local `busyScriptArb`).
 - Task 2.4, 10 batches of 1000 (shares): width under 48 0.405 (floor 0.10), non-finite 0.073 (0.05), negative 0.117 (0.03), width 47 to 49 0.113 (0.05), width-limited 0.211 (0.05; it was 0.03 at first and was fixed by shaping), height-limited 0.239 (0.05), capped 0.078 (0.05), zero height 0.060 (0.01), width 48+ but box under 48 0.225 (0.02), non-integer step 0.281 (0.05), out-of-range step 0.191 (0.05), steps 0 to 4 minimum 0.445, 0.099, 0.103, 0.112, 0.164 (0.05 each).
-- Task 2.6, 10 batches of 1000 (shares): level 1 0.450 (0.10), level 2 0.204, level 3 0.282 (0.10); side left 0.470, right 0.497 (0.35); roll under 0.05 0.498 (0.08), roll 0.95 or more 0.213 (0.08), roll non-finite 0.056 (0.05, the thinnest margin), azimuth non-finite 0.191 (0.05), distance non-finite 0.090 (0.05), negative 0.195 (0.05), valid 0.637 (0.40); kinds 0.223, 0.229, 0.229, 0.232 (0.15); attack near 20 ms 0.473 (0.20); bad rate 0.152, bad duration 0.171 (0.05); peak 0 0.078 (0.03), peak 1 0.058 (0.03), peak above 1 0.224 (0.05); fully valid pulse 0.367 (0.30).
+- Task 2.6, 10 batches of 1000 (shares): level 1 0.450 (0.10), level 2 0.204, level 3 0.282 (0.10); side left 0.470, right 0.497 (0.35); roll under 0.05 0.498 (0.08), roll 0.95 or more 0.213 (0.08), roll non-finite 0.177 after reshape (0.05), azimuth non-finite 0.191 (0.05), distance non-finite 0.090 (0.05), negative 0.195 (0.05), valid 0.637 (0.40); kinds 0.223, 0.229, 0.229, 0.232 (0.15); attack near 20 ms 0.473 (0.20); bad rate 0.152, bad duration 0.171 (0.05); peak 0 0.095 after reshape (0.03), peak 1 0.062 after reshape (0.03), peak above 1 0.224 (0.05); fully valid pulse 0.367 (0.30).
+- Task 2.7, spatial.gd06 generator reshape (inputs only, no floor or assertion changed): `rollArb` got a weight-2 `constantFrom(NaN, Infinity, -Infinity)`, and the weight of `constantFrom(0, 1, 0.5, 0.001)` in `peakArb` went from 2 to 3. Measured over 10 batches of 1000 (min / mean / SD):
+  - roll non-finite: before 0.057 / 0.0661 / 0.0047, after 0.177 / 0.1905 / 0.0097 (floor 0.05, 14.5 SD above).
+  - pulses peak 1: before 0.051 / 0.0659 / 0.0091, after 0.062 / 0.0817 / 0.0106 (floor 0.03, 4.9 SD).
+  - pulses peak 0: before 0.073 / 0.0876 / 0.0093, after 0.095 / 0.1074 / 0.0088 (floor 0.03, 8.8 SD).
+  - The earlier "roll non-finite is the thinnest margin" remark no longer applies. The rows above show the minimum after the reshape.
 
 ### Full run
 - `npx vitest --run`: 83 test files passed, 532 tests passed, 0 failed (11.89 s).
@@ -927,3 +932,87 @@ The task 1.26 table gave P7 as 1,200 cases and P8 as 900, total 24,500 for tasks
 - `npm run lint` (oxlint): exit 0.
 - `npm run build` (vite build): exit 0.
 - No counterexamples and no coverage misses in this run. No code or assertions were changed during it.
+
+## ghost-dread task 3.1: audio API findings
+
+No code was changed. Sources (paraphrased, no long quotes):
+- MDN [PannerNode](https://developer.mozilla.org/en-US/docs/Web/API/PannerNode) and [AudioListener](https://developer.mozilla.org/en-US/docs/Web/API/AudioListener)
+- W3C [Web Audio API spec](https://webaudio.github.io/web-audio-api/) (PannerNode, AudioListener, distance models, sound cones, AudioParam `linearRampToValueAtTime`)
+- MDN browser-compat-data: [PannerNode.json](https://github.com/mdn/browser-compat-data/blob/main/api/PannerNode.json), [AudioListener.json](https://github.com/mdn/browser-compat-data/blob/main/api/AudioListener.json)
+
+### Confirmed
+- `PannerNode` has `panningModel` (`"equalpower"` default, `"HRTF"`), `distanceModel` (`"linear"`, `"inverse"` default, `"exponential"`), `refDistance` (default 1, negative throws `RangeError`), `maxDistance`, `rolloffFactor` (default 1), `coneInnerAngle`, `coneOuterAngle` (both default 360), `coneOuterGain` (default 0, must be in [0, 1]). These are plain properties, not AudioParams. All exist since Chrome 14, Firefox 25, Safari 6, Edge 12.
+- `PannerNode.positionX/Y/Z` are read-only `AudioParam`s with default 0. Support: Chrome 52, Firefox 50, Safari 14.1. `PannerNode.setPosition(x, y, z)` exists everywhere but is deprecated (equivalent to setting `.value` on the three params).
+- `AudioListener` position params `positionX/Y/Z` default to (0, 0, 0). `forwardX/Y/Z` default to (0, 0, −1). `upX/Y/Z` default to (0, 1, 0). The method `setOrientation(x, y, z, xUp, yUp, zUp)` uses the same defaults. This confirms the values the design sets. Coordinate system is right-handed, so +X is right, −Z is ahead.
+- `AudioListener.setPosition` and `setOrientation` are deprecated but supported in all browsers (Chrome 14, Firefox 25, Safari 6).
+- `AudioListener.positionX/Y/Z`, `forwardX/Y/Z` and `upX/Y/Z`: Chrome 52, Safari 14.1, **Firefox: not supported** (no version added; MDN notes `setPosition`/`setOrientation` as the way to set them, and says the old methods are the only way in Firefox, bug 1283029). So on Firefox `listener.positionX` is `undefined`.
+- Distance formulas are in the spec. Inverse: `refDistance / (refDistance + rolloff * (max(d, refDistance) - refDistance))`. Distance is clamped below at `refDistance`, so the gain is at most 1 for every distance. With `refDistance = 0` the inverse gain is 0.
+- Cone gain: with `coneInnerAngle = 360` the half-angle is 180, and the angle between two vectors never exceeds 180, so the gain is always 1, whatever `coneOuterAngle` and the (default non-zero) orientation. The design's 360 / 0 / 0 is therefore omnidirectional. The spec only calls behaviour undefined for angles outside [0, 360]; 0 is inside.
+- With `panningModel = "HRTF"` the panner's AudioParams run at k-rate (one value per 128-frame render block), whatever `automationRate` says. Ramps still work; the position is just sampled per block.
+- Moving a panner with AudioParam automation is the right way. `setValueAtTime` and `linearRampToValueAtTime` are standard `AudioParam` methods. A linear ramp runs from the previous scheduled event to its end time. If there is no earlier event, it starts from the current value at the call time. Chaining ramps (each starting where the last ended) is continuous. Always schedule an anchor event (`setValueAtTime(current, now)`) before the first ramp so it starts where intended.
+
+### Not confirmed
+- Per-browser support of the `"HRTF"` value itself (the compat data lists `panningModel` as supported since Chrome 14, Firefox 25, Safari 6 but not per value). Design fallback stands: if `createPanner` or setting HRTF throws, use `createStereoPanner`, then no panner.
+- Real audible behaviour (loudness, HRTF quality) on any browser. Only the written specs and compat tables were read; nothing was played.
+- Safari 14.1 is from compat data; I did not test any browser.
+
+### design.md statements the docs contradict or refine (design.md NOT edited; no wrong API name found)
+1. Research findings, "Not confirmed" bullet and the `refDistance` paragraph say the attenuation formula and listener defaults were not confirmed. Both are now confirmed (see above). The design's choice to set the listener explicitly is still valid and harmless.
+2. The `refDistance = 0.5` rationale says sources at or beyond the reference distance "do not amplify". The spec shows the inverse model never exceeds gain 1 at any distance, since distance is clamped at `refDistance`. The value 0.5 is safe, but the reason is wrong. A value of 1 (the default) would be equally safe. The cap and compressor remain the real guarantee.
+3. "If `positionX` is missing on the real node (older Safari)": the panner case is right (Safari before 14.1). But the listener is the more important case: Firefox has no listener `positionX/forwardX/upX` at all. The listener feature check ("when they exist, else `setPosition` and `setOrientation`") handles it, but the shim must be chosen for the listener on Firefox, not only for older Safari. Panner `positionX` on Firefox 50+ is fine.
+4. The panner shim says "ramps then become steps". Same in any browser without the params; confirmed as a consequence, no contradiction.
+
+### Method use decision
+- `PannerNode.positionX/Y/Z` with `setValueAtTime` and `linearRampToValueAtTime`: confirmed, use.
+- `listener.positionX/forwardX/upX` with `setValueAtTime`: confirmed for Chrome and Safari 14.1+; use only behind a feature check.
+- `listener.setPosition` and `setOrientation`, `panner.setPosition`: confirmed present but deprecated; use only as the fallback, as the design says.
+## ghost-dread follow-ups to task 2, and task 3: results
+- Task 3.1 (audio API findings) is logged in its own section above ("ghost-dread task 3.1: audio API findings"). Not repeated here.
+- Case counts are read from the test files: `fc.assert` blocks times `numRuns`. `fc.sample` coverage tests are listed separately because they are not `fc.assert` runs.
+### Properties
+| Property | Name | File | fc.assert blocks x cases | Total cases | Result |
+|---|---|---|---|---|---|
+| 26 | Fade floors under reduced motion | `src/haunts/engine/__tests__/returnRules.gd26.prop.test.ts` | 5 x 400 | 2,000 (plus a coverage test that samples 5000 fade cases and 5000 attack cases) | pass |
+| 23 | Combined gain stays at or below the cap with spatial layers and a jump channel | `src/haunts/engine/__tests__/gateCap.gd23.prop.test.ts` | 1 x 500 scripts | 500 (plus a coverage test over the same 500 scripts, and 5 control tests) | pass (three counterexamples, see below) |
+| 24 | Return-only features exist only inside a Return_Moment | `src/haunts/engine/__tests__/gateReturn.gd24.prop.test.ts` | 2 x 400 scripts (the property, and the strict 3000 ms test) | 800 (plus a coverage test over the property's 400 scripts, and 6 control tests) | pass (two counterexamples, see below) |
+### Unit test files (tests per file, from the run)
+| File | Tests |
+|---|---|
+| `spatialPanner.unit.test.ts` | 7 |
+| `jumpChannel.unit.test.ts` | 14 |
+| `tickLabel.unit.test.ts` | 9 |
+| `gateReturnWiring.unit.test.ts` | 13 |
+| `fadeDeadline.unit.test.ts` | 3 |
+| `returnDeadline.unit.test.ts` | 5 |
+| `gateReturn.unit.test.ts` (task 3.10) | 18 |
+- `gateReturn.unit.test.ts` covers, through the public gate API: overlays of every kind gone within 100 ms of `endReturnMoment` for fades of undefined, 0, 1, 50, 80, 100, 5000 and NaN, with no timer left; the guard fade starts at 2920 ms (state still open), and at 3000 ms every overlay and the return channel are gone and `openReturn` is null; a normal port is not touched by the guard; a throwing `onTick` on a return port goes to `warn` and the other ticks go on (and a throwing tick on a normal port does not stop a return port's tick); ticks stop at `close()`, at `endReturnMoment` and at the guard; `setLabel` on overlays and on side layers of a return port gives `role="img"` and `aria-label`, and unlabelled ones stay `aria-hidden`. Overlap with `tickLabel`, `gateReturnWiring` and `returnDeadline` is kept to the return-port cases those files do not have. No counterexample, no code change.
+### Counterexamples and fixes
+Code was fixed with the user's approval each time. Assertions were not changed.
+- (a) Property 23, seed -1775563803. A fade-out's fall restarted at the full 800 ms on any later planning pass. An `appReduced on` at 0.75 s pushed the end from 1.249 s to about 1.55 s. The channel was still at 0.00468 at 1.249 s, with cap "0.02". Fix: a `fadeEndSec` deadline in `portRecord.ts` and in `gate.ts` `fadePort`, and `gainPlan.ts` rule 6. Regression test: `fadeDeadline.unit.test.ts`.
+- (b) Property 24, strict test. Seeds -454919899, 774080225, -781156449, -1258832889. Smallest case: begin, openReturn, advance 3000 ms, channel still connected. Effects lasted until begin+3079 (the guard plus an 80 ms fade) or begin+3098 (`endReturnMoment(100)` at 2998). Fix: the guard fade starts at 2920 ms, a hard deadline at 3000 ms closes everything, and end fades are cut at 3000 (`gateReturn.ts`, `returnVisual.ts` `fadeOut`). Regression test: `returnDeadline.unit.test.ts`. The coverage flag `guardWithEffects` became impossible under the new rule. With the orchestrator's approval it was redefined as `guardEndsWithEffects` (effects present at begin+2999 when the guard ends the moment). Its floor was not changed.
+- (c) Property 23, seed -2076144188, after (b): "new gain nodes match ports waiting for one: expected 1 to be 2". The test model was out of date: it still assumed the 3080 ms end. The gate was correct and no safety rule was affected. The model was fixed in `gateCapWorld.ts` (`finalizeAt = endAt`, and `min(endAt + fade, beginAt + 3000)`). The check is stricter than before. A unit test for the locked-then-unlocked case was added to `returnDeadline.unit.test.ts`.
+### Coverage shaping (inputs only, floors unchanged)
+- Only the figures given in the task reports for this round are recorded. Other per-flag min/mean/SD were not carried over and are not invented here.
+- `gateCap.gd23`: tails and weights of the script generators were reshaped. Several flags sit at 4.8 to 4.9 SD above their floor; that is the thinnest margin in the file.
+- `gateReturn.gd24`: generator shaping, including the `STALE_SWEEP` actions in `gateReturnScript.ts`. `staleLayerOp` went from 1.3 SD to 7.2 SD above its floor. `guardCross` is the thinnest at 4.3 SD.
+- `returnRules.gd26`: the coverage test samples 5000 cases per batch. Margins are at least 7.8 SD.
+- `plan.p11` (`requestedArb` reshaped): `withinIn` 1.6 SD to 5.6 SD, `nan` 2.3 to 5.2, `belowOut` 2.6 to 4.6, `aboveIn` 4.1 to 6.0. No earlier p11 shaping note existed, so this is the first record.
+### Timeouts
+- `gateReturn.gd24`: the two 400-script tests have an explicit 20 s timeout. Measured with `--reporter=verbose`: the property test 2.0 s alone and 5.7 s in the `src/haunts` run; the strict 3000 ms test 1.9 s alone and 4.7 s there.
+- `gateCap.gd23`: the 500-script property test now has an explicit 20 s timeout (`SLOW_TEST_MS`). It timed out at 5619 ms once in a full-folder run. Measured this round with `--reporter=verbose`: 1986 ms alone, 4347 ms in the `src/haunts` run (48 files, 359 tests). No case, assertion or generator changed.
+### Open decisions from tasks 3.2 to 3.7 (not decided; for the user)
+- `createSpatialPanner` returns `| null`; the design says non-null.
+- `setListenerOnce` swallows errors.
+- `GateDeps.scheduler` is optional, and `beginReturnMoment` refuses (with a warning) when there is no scheduler.
+- `planOverlayFade`, not reduced: a missing request gives 0, and there is no upper cap.
+- A non-finite gain counts as 0 in `jumpHeadroom`.
+- The headroom clamp applies on every planning pass.
+- `runGlitch` is a placeholder (grants 0 flickers) until task 8.3.
+- Overlays use inline styles only.
+- `fakes.ts` is over 1100 lines.
+### Follow-ups to task 2 done this round
+- Already logged in the "ghost-dread tasks 1 and 2: results" section (Task 2 counterexamples and notes): `onChapterChange` (Property 4), the roll non-finite reshape (`spatial.gd06`), and the Property 7 timeout lowered to 20 s.
+### Full run
+- `npx vitest --run`, twice: 93 test files and 624 tests passed both times, 0 failed (15.13 s and 14.21 s).
+- `npx tsc -b`: exit 0. `npm run lint` (oxlint): exit 0. `npm run build` (vite build): exit 0.
+- No counterexamples and no coverage misses in these runs. Nothing was changed during them. A temporary `.vitest/` folder made by a JSON-reporter run for the test counts was deleted.

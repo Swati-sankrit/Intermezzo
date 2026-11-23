@@ -84,8 +84,20 @@ export function createLayerRecord(ctx: LayerContext, key: string): LayerRecord {
       applyRate(allocated);
       ctx.changed();
     },
-    // Inert placeholder until ghost-dread task 3.
-    setLabel() {},
+    setLabel(text) {
+      if (removed) return;
+      const label = typeof text === 'string' ? text.trim() : '';
+      if (label === '') {
+        // An empty label is "no label": hide the layer from assistive technology again.
+        el.removeAttribute('role');
+        el.removeAttribute('aria-label');
+        el.setAttribute('aria-hidden', 'true');
+        return;
+      }
+      el.removeAttribute('aria-hidden');
+      el.setAttribute('role', 'img');
+      el.setAttribute('aria-label', label);
+    },
     remove() {
       destroy();
       ctx.changed();

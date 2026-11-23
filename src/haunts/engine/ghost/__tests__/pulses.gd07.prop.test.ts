@@ -14,7 +14,8 @@ import {
 
 // Buffers are large (up to 96000 Hz for a few seconds), so seconds are kept at 4 or less in the generators.
 const NUM_RUNS = 300;
-const TIMEOUT_MS = 300_000;
+// The slowest test takes 3.6 to 4.7 s, close to the 5 s default, so keep headroom for slower machines.
+const TIMEOUT_MS = 20_000;
 const MIN_ATTACK_S = 0.02;
 
 /** Sample rate the builder works at: design range 8000 to 96000; anything non-finite is a bad input. */

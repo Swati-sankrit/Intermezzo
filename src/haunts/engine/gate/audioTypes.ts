@@ -20,14 +20,18 @@ export interface GainRamp {
   readonly reduced?: boolean;
   /** Explicit length of a falling ramp, set by the gate's plan; overrides the length chosen by `kind`. */
   readonly fallMs?: number;
+  /** Set by the gate's plan (rule 5) on the rise of a jump channel: the rise uses `planJumpAttack`. Ignored by other channels. */
+  readonly jump?: boolean;
 }
 
 export type ReadyCallback = (ctx: HauntAudioContext) => void;
 
 export interface AudioChannel {
+  /** True only for a channel opened with `jumpSound: true`. Fixed at open. */
+  readonly jumpSound: boolean;
   /** Calls `cb` once when sound is possible, at once if it already is. */
   whenReady(cb: ReadyCallback): Unsubscribe;
-  /** `target` is the gate's final, capped gain. Rising ramps last at least 300 ms. */
+  /** `target` is the gate's final, capped gain. Rising ramps last at least 300 ms (a jump channel's plan-marked rise: at least 20 ms). */
   setGain(target: number, ramp: GainRamp): void;
   /** In-flight gain now, from the adapter's own schedule record (never `param.value`). 0 if not attached. */
   currentGain(): number;
@@ -52,8 +56,13 @@ export interface AudioAdapterDeps {
   warn?: (msg: string) => void;
 }
 
+export interface OpenChannelOptions {
+  /** A jump channel may rise with the short attack of `planJumpAttack`, and only when the gain plan asks for it. */
+  readonly jumpSound?: boolean;
+}
+
 export interface AudioAdapter {
-  openChannel(): AudioChannel;
+  openChannel(opts?: OpenChannelOptions): AudioChannel;
   /** What the unlock listener does on a gesture. Also called by `Gate.unlockAudio`. */
   unlock(): void;
   /** True only while the context state is `running`. */

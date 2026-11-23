@@ -447,9 +447,11 @@ export function ghostDistance(count: number): 0 | 1 | 2 | 3 | 4;
 export interface AwayCounter { readonly chapterKey: string | null; readonly count: number }
 /** Pure. Starting a look-away: returns the step to use now and the counter with this look-away added. A new chapterKey resets first. */
 export function startLookAway(c: AwayCounter, chapterKey: string): { step: 0 | 1 | 2 | 3 | 4; next: AwayCounter };
+/** Pure. Any chapter change, including a return to an earlier chapter: a different key gives count 0 and the new key; the same key gives `c` itself. */
+export function onChapterChange(c: AwayCounter, chapterKey: string): AwayCounter;
 ```
 
-The engine calls `reading.chapterKey()` when a look-away starts. A different key resets the count to 0 before the step is taken (Req 2.4).
+The engine calls `onChapterChange` whenever `reading.chapterKey()` changes, so a return to an earlier chapter with no look-away in between also resets the count to 0 (Req 2.4). It also calls `startLookAway(counter, reading.chapterKey())` when a look-away starts, which resets on a different key before the step is taken.
 
 ### Ghost art (`engine/ghost/ghostArt.ts`)
 
@@ -674,7 +676,7 @@ reducedMotion(): boolean;       // current preference, from the same adapter the
 Changes:
 
 - `gentle: boolean` becomes `mode: HauntMode`. A change of mode calls `recompute`, then `roster.retireWhere` with the 800 ms fade when the new mode no longer allows a running haunt, and `returnController.abort('gentle')` when the new mode is Gentle and a Return_Moment runs (Req 8.10).
-- On `away`, the engine calls `startLookAway(counter, reading.chapterKey())` to get the `ghostStep`, and passes `StartInfo` to every start.
+- When `reading.chapterKey()` changes, the engine calls `onChapterChange(counter, key)`, so a return to an earlier chapter resets the count too. On `away`, the engine calls `startLookAway(counter, reading.chapterKey())` to get the `ghostStep`, and passes `StartInfo` to every start.
 - `recompute(fadeMs = FADE_MS)` passes the fade to `roster.retireAll(fadeMs)` when the level is 0.
 - On `present` after a look-away, it computes `awayMs = signal.timestamp − awayStart`. If `mode !== 'gentle'` and the engine is armed, it calls `returnController.begin(args, (ms) => recompute(ms))`, so level 0 and the ambient fade happen inside `begin` at step 4. If `begin` returns `null` (Gentle, not armed, or one already running) the engine calls `recompute()` itself, which is the existing 600 ms fade (Req 3.9).
 - On `away` while a Return_Moment runs, it calls `returnController.abort('away')` before handling the new look-away (Req 3.7).

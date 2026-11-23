@@ -34,8 +34,7 @@ export function wrapVisual(inner: VisualOut): PortVisual {
         setSweep(periodMs) {
           if (!faded || periodMs === null) layer.setSweep(periodMs);
         },
-        // Inert placeholder until ghost-dread task 3.
-        setLabel: () => {},
+        setLabel: (text) => layer.setLabel(text),
         remove: () => layer.remove(),
       };
     },

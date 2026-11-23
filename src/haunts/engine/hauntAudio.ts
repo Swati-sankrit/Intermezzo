@@ -47,6 +47,16 @@ export interface HauntPanner extends HauntNode {
   readonly pan: HauntParam;
 }
 
+/**
+ * A 3D panner with fixed settings (HRTF, inverse distance, omnidirectional). A haunt can move it
+ * and nothing else: no setter for the model, distance or cone, and no way to the audio device.
+ */
+export interface HauntSpatialPanner extends HauntNode {
+  readonly positionX: HauntParam;
+  readonly positionY: HauntParam;
+  readonly positionZ: HauntParam;
+}
+
 export interface HauntAudioContext {
   /** This port's channel gain. Connect the last node of a chain here, and nowhere else. */
   readonly input: HauntSink;
@@ -57,4 +67,6 @@ export interface HauntAudioContext {
   createBufferSource(): HauntBufferSource;
   createBiquadFilter(): HauntFilter;
   createStereoPanner(): HauntPanner;
+  /** `null` when the browser cannot make the panner; the haunt then uses `createStereoPanner`, then none. */
+  createSpatialPanner(): HauntSpatialPanner | null;
 }
