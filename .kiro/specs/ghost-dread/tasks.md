@@ -21,7 +21,7 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
 
 ## Tasks
 
-- [ ] 1. Foundation: spec amendment, modes, settings migration, types, registry
+- [x] 1. Foundation: spec amendment, modes, settings migration, types, registry
   - [x] 1.1 Amend the haunt-feature spec
     - Edit `.kiro/specs/haunt-feature/requirements.md`, `design.md` and `tasks.md` as in the design table "Amendments to the haunt-feature spec": ambient fade within 800 ms and the Ghost may stay for the Return_Moment (13.1); the Ghost replaces the shadow haunt, remove task 9 and every `shadow.ts` mention (13.2); Return_Moment effects may cover the column and the column is identical within 100 ms after (13.3); `Gentle_Mode` becomes the Gentle value of a three-valued Haunt_Mode (13.4); the Safety_Notice describes ghosts and glitching, not a shadow (13.5)
     - Run `validate_spec_format` on each edited document
@@ -63,13 +63,13 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     - `engine/registry.ts`: classify Haunt, ReturnEffect or both; validate optional `role`, `modes`, `minLevel`, `jumpSound`; add `loadRegistry(warn)` returning `{ haunts, effects }`; keep `loadHaunts` and the glob unchanged
     - _Requirements: 1.14, 13.6_
 
-  - [ ] 1.9 Write property test for the registry and extend the static scan
+  - [x] 1.9 Write property test for the registry and extend the static scan
     - File: `src/haunts/engine/__tests__/registry.gd22.prop.test.ts`
     - Extend `staticScan.unit.test.ts`: allow the import prefix `./engine/ghost/`, scan every file in `engine/ghost/` with the pure-logic rules (no `document`, `window`, `Date`, `performance`, `setTimeout`, `Math.random`, `fetch`, `XMLHttpRequest`), and keep `.destination` limited to `audioAdapter.ts` and `audioGraph.ts`
     - **Property 22: The registry accepts the extended contract and still rejects bad files**
     - **Validates: Requirements 1.14**
 
-  - [ ] 1.10 Create the ghost generators
+  - [x] 1.10 Create the ghost generators
     - `src/haunts/engine/ghost/__tests__/arbitraries.ts`: unit fractions built from `fc.integer({ min: 0, max: 999_999 })`, `ReturnRolls`, `ReturnInput` per mode (with `awayMs` at 0, 9999, 10000, 20000, 20001, 59999, 60000 and very large), paragraphs of 0 to 40 words with irregular whitespace, message pools including messages longer than the paragraph, chapter sentence lists, look-away and chapter scripts
     - _Requirements: 11.1_
 

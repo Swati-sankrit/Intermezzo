@@ -7,6 +7,10 @@
     "1.6 Write property test for Level_Logic with modes and update existing level tests": {
       "status": "passed",
       "lastRunTimestamp": 1795417355018
+    },
+    "1.9 Write property test for the registry and extend the static scan": {
+      "status": "passed",
+      "lastRunTimestamp": 1795421893271
     }
   },
   "executionHistory": {
@@ -15,6 +19,11 @@
         "executionId": "c60b9258-c0aa-4b62-a4d8-ea777edafad6",
         "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
         "timestamp": 1795416455431
+      },
+      {
+        "executionId": "2f66e653-32b4-4f33-a9dd-b5695b835689",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795422119700
       }
     ],
     "1.1 Amend the haunt-feature spec": [
@@ -128,6 +137,28 @@
         "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
         "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
         "timestamp": 1795417618453
+      },
+      {
+        "executionId": "2f66e653-32b4-4f33-a9dd-b5695b835689",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795421358356
+      },
+      {
+        "executionId": "2f66e653-32b4-4f33-a9dd-b5695b835689",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795421964725
+      }
+    ],
+    "1.10 Create the ghost generators": [
+      {
+        "executionId": "2f66e653-32b4-4f33-a9dd-b5695b835689",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795421965038
+      },
+      {
+        "executionId": "2f66e653-32b4-4f33-a9dd-b5695b835689",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795422119631
       }
     ]
   }

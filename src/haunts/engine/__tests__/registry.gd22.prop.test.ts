@@ -75,12 +75,14 @@ const specArb = (idsArb: fc.Arbitrary<string>): fc.Arbitrary<Spec> =>
       fc.oneof(
         { weight: 4, arbitrary: fc.constant<Shape>('haunt') },
         { weight: 2, arbitrary: fc.constant<Shape>('effect') },
-        { weight: 2, arbitrary: fc.constant<Shape>('both') },
-        { weight: 1, arbitrary: fc.constant<Shape>('neither') },
+        { weight: 4, arbitrary: fc.constant<Shape>('both') },
+        { weight: 2, arbitrary: fc.constant<Shape>('neither') },
       ),
       fc.oneof(
-        { weight: 6, arbitrary: fc.constant<Flaw>('none') },
-        { weight: 1, arbitrary: fc.constantFrom<Flaw>('role', 'modes', 'minLevel') },
+        { weight: 5, arbitrary: fc.constant<Flaw>('none') },
+        { weight: 2, arbitrary: fc.constant<Flaw>('role') },
+        { weight: 2, arbitrary: fc.constant<Flaw>('modes') },
+        { weight: 2, arbitrary: fc.constant<Flaw>('minLevel') },
       ),
       idsArb,
       fc.tuple(optional(fc.constantFrom('lead', 'layer')), badRoleArb),
@@ -112,7 +114,7 @@ const entryArb = (idsArb: fc.Arbitrary<string>): fc.Arbitrary<Omit<Entry, 'path'
 const entriesArb: fc.Arbitrary<Entry[]> = fc
   .oneof(
     { weight: 1, arbitrary: fc.constant(0) },
-    { weight: 9, arbitrary: fc.integer({ min: 1, max: 8 }) },
+    { weight: 9, arbitrary: fc.integer({ min: 2, max: 10 }) },
   )
   .chain((n) => fc.uniqueArray(fc.stringMatching(/^[a-z]{1,6}$/), { minLength: n, maxLength: n }))
   .chain((names) =>
