@@ -23,7 +23,7 @@ import { createSettingsStore, KEYS } from '../settings';
 import type { AttentionSignalLike } from '../types';
 import { createFakeAudioContextFactory, createFakeMatchMedia, createFakeTime } from './fakes';
 
-const ALLOWED_KEYS: readonly string[] = [KEYS.sound, KEYS.gentle, KEYS.noticeSeen, KEYS.volumeCap];
+const ALLOWED_KEYS: readonly string[] = [KEYS.sound, KEYS.mode, KEYS.headphonesTipSeen, KEYS.noticeSeen, KEYS.volumeCap];
 
 interface Spies {
   /** One entry per forbidden call, e.g. `fetch`, `WebSocket`, `getUserMedia`. */
@@ -159,8 +159,8 @@ describe('network and storage spies (Req 16.6, 16.7)', () => {
     gate.setSoundEnabled(false);
     settings.set({ sound: true });
     gate.setSoundEnabled(true);
-    settings.set({ gentle: true });
-    settings.set({ gentle: false });
+    settings.set({ mode: 'gentle' });
+    settings.set({ mode: 'classic' });
     unlockTarget.dispatchEvent(new Event('pointerdown'));
     await flush();
     expect(audioFactory.contexts[0]?.state).toBe('running');
@@ -178,10 +178,10 @@ describe('network and storage spies (Req 16.6, 16.7)', () => {
     expect(audioFactory.contexts[0]?.automation.length).toBeGreaterThan(0);
 
     // Gentle while haunted, then off again.
-    settings.set({ gentle: true });
+    settings.set({ mode: 'gentle' });
     scheduler.advance(1_000);
     expect(observe().level).toBe(1);
-    settings.set({ gentle: false });
+    settings.set({ mode: 'classic' });
     scheduler.advance(100);
     observe();
 
@@ -213,7 +213,7 @@ describe('network and storage spies (Req 16.6, 16.7)', () => {
     expect(seen.size).toBeGreaterThanOrEqual(Math.min(2, registryIds.length));
     for (const id of seen) expect(registryIds).toContain(id);
     expect(spies.setItemKeys.length).toBeGreaterThan(0);
-    expect(spies.setItemKeys).toEqual(expect.arrayContaining([KEYS.sound, KEYS.gentle, KEYS.noticeSeen]));
+    expect(spies.setItemKeys).toEqual(expect.arrayContaining([KEYS.sound, KEYS.mode, KEYS.noticeSeen]));
 
     expect(spies.forbidden).toEqual([]);
     for (const key of spies.setItemKeys) expect(ALLOWED_KEYS).toContain(key);

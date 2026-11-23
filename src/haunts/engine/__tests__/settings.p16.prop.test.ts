@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { DEFAULT_SETTINGS, KEYS, createSettingsStore, parseSettings, serializeSettings } from '../settings';
+import type { HauntMode } from '../ghost/mode';
 import type { HauntSettings } from '../types';
 import { hauntSettingsArb, storageMapArb } from './arbitraries';
 
@@ -52,9 +53,9 @@ const shapedMapArb: fc.Arbitrary<{ map: Record<string, string | null>; shapes: S
   .map(([shapes, garbage, extra]) => {
     const map: Record<string, string | null> = {};
     for (const [k, v] of Object.entries(extra)) {
-      if (k !== KEYS.sound && k !== KEYS.gentle && k !== KEYS.noticeSeen) map[k] = v;
+      if (k !== KEYS.sound && k !== KEYS.headphonesTipSeen && k !== KEYS.noticeSeen) map[k] = v;
     }
-    [KEYS.sound, KEYS.gentle, KEYS.noticeSeen].forEach((key, i) => {
+    [KEYS.sound, KEYS.headphonesTipSeen, KEYS.noticeSeen].forEach((key, i) => {
       const s = shapes[i];
       if (s === 'true' || s === 'false') map[key] = s;
       else if (s === 'garbage') map[key] = garbage;
@@ -66,7 +67,12 @@ const shapedMapArb: fc.Arbitrary<{ map: Record<string, string | null>; shapes: S
 const anyMapArb = fc.oneof(storageMapArb, shapedMapArb.map((r) => r.map));
 
 const patchArb = fc.record(
-  { sound: fc.boolean(), gentle: fc.boolean(), noticeSeen: fc.boolean() },
+  {
+    sound: fc.boolean(),
+    mode: fc.constantFrom<HauntMode>('gentle', 'classic', 'nightmare'),
+    noticeSeen: fc.boolean(),
+    headphonesTipSeen: fc.boolean(),
+  },
   { requiredKeys: [] },
 );
 
@@ -85,13 +91,18 @@ describe('Settings: round trip and safe defaults', () => {
 
   // Feature: haunt-feature, Property 16: Settings round trip and safe defaults
   // **Validates: Requirements 9.4**
-  it('Property 16: serializeSettings writes only true/false for the three keys, never rod_volume_cap', () => {
+  it('Property 16: serializeSettings writes only the four settings keys, never rod_volume_cap or the legacy gentle key', () => {
     fc.assert(
       fc.property(hauntSettingsArb, (s) => {
         const ser = serializeSettings(s);
-        expect(Object.keys(ser).sort()).toEqual([KEYS.sound, KEYS.gentle, KEYS.noticeSeen].sort());
+        expect(Object.keys(ser).sort()).toEqual(
+          [KEYS.sound, KEYS.mode, KEYS.noticeSeen, KEYS.headphonesTipSeen].sort(),
+        );
         expect(KEYS.volumeCap in ser).toBe(false);
-        for (const v of Object.values(ser)) expect(['true', 'false']).toContain(v);
+        expect(KEYS.gentleLegacy in ser).toBe(false);
+        for (const k of [KEYS.sound, KEYS.noticeSeen, KEYS.headphonesTipSeen]) {
+          expect(['true', 'false']).toContain(ser[k]);
+        }
       }),
       { numRuns: NUM_RUNS },
     );
@@ -105,10 +116,12 @@ describe('Settings: round trip and safe defaults', () => {
         const read = readerOf(map);
         const out = parseSettings(read);
         expect(typeof out.sound).toBe('boolean');
-        expect(typeof out.gentle).toBe('boolean');
+        expect(typeof out.headphonesTipSeen).toBe('boolean');
         expect(typeof out.noticeSeen).toBe('boolean');
         expect(out.sound).toBe(expectedBool(read(KEYS.sound), DEFAULT_SETTINGS.sound));
-        expect(out.gentle).toBe(expectedBool(read(KEYS.gentle), DEFAULT_SETTINGS.gentle));
+        expect(out.headphonesTipSeen).toBe(
+          expectedBool(read(KEYS.headphonesTipSeen), DEFAULT_SETTINGS.headphonesTipSeen),
+        );
         expect(out.noticeSeen).toBe(expectedBool(read(KEYS.noticeSeen), DEFAULT_SETTINGS.noticeSeen));
       }),
       { numRuns: NUM_RUNS },
@@ -117,9 +130,10 @@ describe('Settings: round trip and safe defaults', () => {
 
   // Feature: haunt-feature, Property 16: Settings round trip and safe defaults
   // **Validates: Requirements 9.6**
-  it('Property 16: an empty storage gives sound on, gentle off, notice not seen', () => {
-    expect(parseSettings(() => null)).toEqual({ sound: true, gentle: false, noticeSeen: false });
-    expect(DEFAULT_SETTINGS).toEqual({ sound: true, gentle: false, noticeSeen: false });
+  it('Property 16: an empty storage gives sound on, Classic mode, notice and tip not seen', () => {
+    const empty = { sound: true, mode: 'classic', noticeSeen: false, headphonesTipSeen: false };
+    expect(parseSettings(() => null)).toEqual(empty);
+    expect(DEFAULT_SETTINGS).toEqual(empty);
   });
 
   // Feature: haunt-feature, Property 16: Settings round trip and safe defaults
@@ -208,9 +222,9 @@ describe('Settings: round trip and safe defaults', () => {
   it('Property 16: the generated inputs reach every region the property is about', () => {
     const seen = {
       runs: 0,
-      // per key (sound, gentle, notice): counts for each shape
+      // per key (sound, tip, notice): counts for each shape
       t: [0, 0, 0], f: [0, 0, 0], garbage: [0, 0, 0], nul: [0, 0, 0], missing: [0, 0, 0],
-      soundOn: 0, gentleOn: 0, noticeOn: 0, capKey: 0,
+      soundOn: 0, tipOn: 0, noticeOn: 0, capKey: 0,
     };
     fc.assert(
       fc.property(shapedMapArb, hauntSettingsArb, ({ map, shapes }, s) => {
@@ -223,7 +237,7 @@ describe('Settings: round trip and safe defaults', () => {
           else seen.missing[i]++;
         });
         if (s.sound) seen.soundOn++;
-        if (s.gentle) seen.gentleOn++;
+        if (s.headphonesTipSeen) seen.tipOn++;
         if (s.noticeSeen) seen.noticeOn++;
         if (KEYS.volumeCap in map) seen.capKey++;
         // keep the run meaningful: parse still agrees with the spec
@@ -245,7 +259,7 @@ describe('Settings: round trip and safe defaults', () => {
     }
     // Booleans are 50/50; floor 30% is about 7 SD below the mean.
     expect(seen.soundOn, `sound on: ${msg}`).toBeGreaterThanOrEqual(seen.runs * 0.3);
-    expect(seen.gentleOn, `gentle on: ${msg}`).toBeGreaterThanOrEqual(seen.runs * 0.3);
+    expect(seen.tipOn, `tip on: ${msg}`).toBeGreaterThanOrEqual(seen.runs * 0.3);
     expect(seen.noticeOn, `notice on: ${msg}`).toBeGreaterThanOrEqual(seen.runs * 0.3);
     expect(seen.runs - seen.soundOn, `sound off: ${msg}`).toBeGreaterThanOrEqual(seen.runs * 0.3);
   });

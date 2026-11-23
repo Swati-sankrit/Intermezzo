@@ -4,6 +4,8 @@
  * detector, video or `src/attention/` import.
  */
 import { createRoster } from './engineRoster';
+import { DEFAULT_MODE } from './ghost/mode';
+import type { HauntMode } from './ghost/mode';
 import { evaluate, nextChangeDelay } from './levelLogic';
 import type { LevelInput, LevelOutput } from './levelLogic';
 import type { AttentionSignalLike, EngineDeps, EngineState, HauntEngine, HauntLevel, Unsubscribe } from './types';
@@ -22,7 +24,7 @@ export function createHauntEngine(deps: EngineDeps): HauntEngine {
   let hasChangeTimer = false;
 
   let armed = false;
-  let gentle = false;
+  let mode: HauntMode = DEFAULT_MODE;
   /** Events since the last `present`, in delivery order. */
   let events: AttentionSignalLike[] = [];
   let lastValue: AttentionSignalLike['value'] | null = null;
@@ -61,7 +63,7 @@ export function createHauntEngine(deps: EngineDeps): HauntEngine {
   function recompute(): void {
     if (!started) return;
     clearChangeTimer();
-    const input: LevelInput = { events: armed ? events : [], now: deps.clock.now(), gentle, hauntIds, previousLeadId, rolls };
+    const input: LevelInput = { events: armed ? events : [], now: deps.clock.now(), mode, hauntIds, previousLeadId, rolls };
     output = armed ? evaluate(input) : CALM;
     if (output.leadId !== null) lastLeadId = output.leadId;
     reconcile(output);
@@ -94,14 +96,14 @@ export function createHauntEngine(deps: EngineDeps): HauntEngine {
     if (!started) return;
     const next = deps.settings.get();
     const wasArmed = armed;
-    const wasGentle = gentle;
+    const wasMode = mode;
     armed = next.noticeSeen;
-    gentle = next.gentle;
+    mode = next.mode;
     if (armed && !wasArmed && lastValue === 'away') {
       // Escalation starts at level 1 from now, not from the remembered away time.
       events = [{ value: 'away', timestamp: deps.clock.now() }];
     }
-    if (armed !== wasArmed || gentle !== wasGentle) recompute();
+    if (armed !== wasArmed || mode !== wasMode) recompute();
   }
 
   return {
@@ -110,7 +112,7 @@ export function createHauntEngine(deps: EngineDeps): HauntEngine {
       started = true;
       const initial = deps.settings.get();
       armed = initial.noticeSeen;
-      gentle = initial.gentle;
+      mode = initial.mode;
       unsubSettings = deps.settings.subscribe(onSettings);
       // The signal delivered at subscribe time is the first event (Req 11.4).
       unsubSignal = deps.subscribeSignal(onSignal);

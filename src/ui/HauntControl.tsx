@@ -18,10 +18,10 @@ export function HauntControl() {
       <button
         type="button"
         className="reader__button"
-        aria-pressed={settings.gentle}
-        onClick={() => update({ gentle: !settings.gentle })}
+        aria-pressed={settings.mode === 'gentle'}
+        onClick={() => update({ mode: settings.mode === 'gentle' ? 'classic' : 'gentle' })}
       >
-        Gentle mode: {settings.gentle ? 'on' : 'off'}
+        Gentle mode: {settings.mode === 'gentle' ? 'on' : 'off'}
       </button>
     </div>
   );

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { evaluate } from '../levelLogic';
 import type { LevelInput } from '../levelLogic';
-import { awayHistoryArb, hauntIdsArb, rollsArb } from './arbitraries';
+import { awayHistoryArb, hauntIdsArb, rollsArb, fullModeArb } from './arbitraries';
 
 const NUM_RUNS = 300;
 
@@ -21,8 +21,8 @@ function trailingAwayStart(events: LevelInput['events']): number {
 }
 
 const inputArb = fc
-  .tuple(awayHistoryArb, offsetArb, nonEmptyIdsArb, rollsArb)
-  .chain(([events, offset, hauntIds, rolls]) =>
+  .tuple(awayHistoryArb, offsetArb, nonEmptyIdsArb, rollsArb, fullModeArb)
+  .chain(([events, offset, hauntIds, rolls, mode]) =>
     fc
       .oneof(
         fc.constant<string | null>(null),
@@ -33,7 +33,7 @@ const inputArb = fc
         input: {
           events,
           now: trailingAwayStart(events) + offset,
-          gentle: false,
+          mode,
           hauntIds,
           previousLeadId,
           rolls,

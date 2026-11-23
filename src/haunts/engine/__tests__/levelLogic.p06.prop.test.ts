@@ -2,15 +2,12 @@ import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { evaluate } from '../levelLogic';
 import type { LevelInput, LevelOutput } from '../levelLogic';
-import { awayHistoryArb, eventHistoryArb, rollsArb } from './arbitraries';
+import { awayHistoryArb, eventHistoryArb, rollsArb, weightedModeArb } from './arbitraries';
 
 const NUM_RUNS = 300;
 
 /** Gentle mode on 42% of the time: about 4 SD above the 30% gentle floor, few enough to keep level 3 with companions common. */
-const gentleArb = fc.oneof(
-  { weight: 29, arbitrary: fc.constant(false) },
-  { weight: 21, arbitrary: fc.constant(true) },
-);
+const modeInputArb = weightedModeArb(21, 29);
 
 const idArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,7}$/);
 
@@ -35,7 +32,7 @@ const awayInputArb: fc.Arbitrary<LevelInput> = fc
   .record({
     events: awayHistoryArb,
     elapsed: elapsedArb,
-    gentle: gentleArb,
+    mode: modeInputArb,
     hauntIds: sizedIdsArb,
     rolls: rollsArb,
   })
@@ -51,7 +48,7 @@ const awayInputArb: fc.Arbitrary<LevelInput> = fc
         (previousLeadId): LevelInput => ({
           events: r.events,
           now: start + r.elapsed,
-          gentle: r.gentle,
+          mode: r.mode,
           hauntIds: r.hauntIds,
           previousLeadId,
           rolls: r.rolls,
@@ -64,14 +61,14 @@ const anyInputArb: fc.Arbitrary<LevelInput> = fc
   .record({
     events: eventHistoryArb,
     offset: fc.integer({ min: -2000, max: 30_000 }),
-    gentle: gentleArb,
+    mode: modeInputArb,
     hauntIds: sizedIdsArb,
     rolls: rollsArb,
   })
   .map((r) => ({
     events: r.events,
     now: (r.events.length > 0 ? r.events[r.events.length - 1].timestamp : 0) + r.offset,
-    gentle: r.gentle,
+    mode: r.mode,
     hauntIds: r.hauntIds,
     previousLeadId: r.hauntIds[0] ?? null,
     rolls: r.rolls,
@@ -137,7 +134,7 @@ describe('Level_Logic evaluate: companion rules', () => {
   it('Property 6: gentle mode never has a companion', () => {
     fc.assert(
       fc.property(inputArb, (input) => {
-        const out = evaluate({ ...input, gentle: true });
+        const out = evaluate({ ...input, mode: 'gentle' });
         expect(out.companionId).toBeNull();
       }),
       { numRuns: NUM_RUNS },
@@ -157,7 +154,7 @@ describe('Level_Logic evaluate: companion rules', () => {
         if (out.level === 2) seen.l2++;
         if (out.level === 1) seen.l1++;
         if (out.level === 0) seen.l0++;
-        if (input.gentle) seen.gentle++;
+        if (input.mode === 'gentle') seen.gentle++;
         if (out.companionId !== null) seen.companion++;
       }),
       { numRuns: NUM_RUNS },

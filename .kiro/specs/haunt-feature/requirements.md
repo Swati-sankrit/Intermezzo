@@ -6,7 +6,7 @@ The haunt feature turns the attention signal (`present` or `away`, from the atte
 
 At level 0 the reading view shows a calm, steady Candle_Glow around the Reading_Column, and the candle haunt dims and gutters that glow.
 
-The first three haunts are: the candle dims and gutters, whispers fade in from one side, and a shadow crosses the edge of the page. Every haunt supports levels 1 to 3 with increasing intensity.
+The first two haunts are: the candle dims and gutters, and whispers fade in from one side. The Ghost, defined in the ghost-dread spec, replaces the earlier shadow haunt; no shadow haunt is built. Every haunt supports levels 1 to 3 with increasing intensity.
 
 The level logic is a pure function. The engine reads the attention signal through `subscribeSignal` and never touches the camera. Sounds are generated with the Web Audio API, with no audio files. Visual effects use CSS and SVG, drawn around the reading column and never over the active paragraph.
 
@@ -15,7 +15,8 @@ Assumptions:
 - Escalation does not replace the running haunt. At level 2 and level 3 the engine raises the intensity of the running lead haunt. At level 3 the engine also starts a companion haunt that differs from the lead haunt, when at least two haunts are available.
 - The lead haunt is chosen once per look-away, at the moment the signal turns `away`. The "no repeat" rule compares the lead haunts of consecutive look-aways.
 - Total sound across all running haunts stays at or below the volume cap, and total flashing across all running haunts stays at or below 3 per second. The Safety_Gate enforces both on the combined output.
-- Reduced-motion fades that last at least 1 s apply to fade-in only. Fade-out after the signal becomes `present` lasts at most 800 ms in every mode, including reduced motion.
+- Reduced-motion fades that last at least 1 s apply to fade-in only. Ambient effects finish fading out within 800 ms after the signal becomes `present` in every mode, including reduced motion. The Ghost of the ghost-dread spec may stay for its Return_Moment of at most 3000 ms after the signal becomes `present`.
+- Haunt_Mode has exactly three values: Gentle, Classic (the default) and Nightmare. This spec's earlier Gentle_Mode is the Gentle value. Gentle limits haunts to level 1 with no Ghost figures, glitch effects or jumpscares.
 - The temporary present/away label (`TempAttentionLabel`) is removed once haunts are wired into the reading view.
 - The level-0 Candle_Glow is calm and steady. This is stricter than the "slow and subtle" ambient candle flicker in the visual design steering file: the glow may drift very slowly (at most 3 percent opacity change, no faster than one cycle per 8 s), and has no flicker at all under Reduced_Motion.
 - The Volume_Cap is read from local storage if present, otherwise 0.4. This spec adds no control to change it. A later volume control or another browser tab may change the stored value, so the Safety_Gate still reacts to changes.
@@ -25,7 +26,7 @@ Assumptions:
 ## Glossary
 
 - **Haunt_Engine**: The module that turns attention signal events and time into a haunt level, a lead haunt and a companion haunt, and starts, updates and stops haunts.
-- **Level_Logic**: The pure function inside the Haunt_Engine that takes signal events, time, gentle mode, the available haunts and the lead haunt of the previous look-away, and returns the haunt level, the lead haunt and the companion haunt. It has no DOM, audio, timer or camera access.
+- **Level_Logic**: The pure function inside the Haunt_Engine that takes signal events, time, Haunt_Mode, the available haunts and the lead haunt of the previous look-away, and returns the haunt level, the lead haunt and the companion haunt. It has no DOM, audio, timer or camera access.
 - **Attention_Signal**: The value emitted by the attention module through `subscribeSignal`: `present` or `away`, with a timestamp.
 - **Haunt**: One module file in `src/haunts/` that exports an `id`, a `name`, a `start` function, a `setLevel` function and a `stop` function, and supports Haunt_Levels 1 to 3.
 - **Haunt_Level**: An integer from 0 to 3. Level 0 is calm. Levels 1 to 3 are increasingly strong.
@@ -37,11 +38,13 @@ Assumptions:
 - **Volume_Cap**: The user's maximum output volume, between 0 and 1, read from local storage. The default is 0.4, used when the stored value is missing, unreadable, or outside 0 to 1. This spec provides no control to change it.
 - **Candle_Glow**: The warm light drawn around the Reading_Column in the reading view. At Haunt_Level 0 it is calm and steady. The candle Haunt dims and gutters it.
 - **Camera_Consent_Dialog**: The dialog from the attention-signal spec that explains why the camera is used and asks for permission. In the codebase it is the `ConsentDialog` component in `src/ui/ConsentDialog.tsx`, rendered by `AttentionLayer` in `src/ui/AttentionLayer.tsx`.
-- **Gentle_Mode**: A saved setting that limits the Haunt_Level to 1.
+- **Haunt_Mode**: A saved setting with exactly three values: Gentle, Classic (the default) and Nightmare.
+- **Gentle_Mode**: The Gentle value of the Haunt_Mode. It limits the Haunt_Level to 1 and allows no Ghost figures, glitch effects or jumpscares.
+- **Return_Moment**: The period of at most 3000 ms after the Attention_Signal becomes `present`, defined in the ghost-dread spec, in which the Ghost and other return effects may remain.
 - **Sound_Setting**: A saved setting that turns haunt and ambience sound on or off.
 - **Reduced_Motion**: The browser preference `prefers-reduced-motion: reduce`.
-- **Fade_Out**: The transition that brings every haunt effect to zero Intensity after the signal becomes `present`.
-- **Haunt_Control**: The small control in the top bar that toggles the Sound_Setting and Gentle_Mode.
+- **Fade_Out**: The transition that brings every ambient haunt effect to zero Intensity after the signal becomes `present`. The Ghost is not an ambient effect and may stay for the Return_Moment.
+- **Haunt_Control**: The small control in the top bar that toggles the Sound_Setting and sets the Haunt_Mode.
 - **Safety_Notice**: The short photosensitivity and sound notice shown before the first reading session.
 - **Audio_Unlock**: The first click or key press by the reader, after which the Haunt_Engine may produce sound.
 - **Reading_Column**: The centred column holding the reading text, including the active paragraph. Haunt effects never change the computed `color` of the reading text or the computed `background-color` of the Reading_Column.
@@ -69,7 +72,7 @@ Assumptions:
 #### Acceptance Criteria
 
 1. WHEN the Attention_Signal becomes `present`, THE Haunt_Engine SHALL set the Haunt_Level to 0.
-2. WHEN the Attention_Signal becomes `present`, THE Haunt_Engine SHALL complete the Fade_Out of every running Haunt effect, including the Companion_Haunt, within 800 ms in every mode, including Reduced_Motion.
+2. WHEN the Attention_Signal becomes `present`, THE Haunt_Engine SHALL complete the Fade_Out of every running ambient Haunt effect, including the Companion_Haunt, within 800 ms in every mode, including Reduced_Motion, and the Ghost MAY remain visible for the Return_Moment of at most 3000 ms after the Attention_Signal becomes `present`.
 3. WHEN the Fade_Out completes, THE Haunt_Engine SHALL call the `stop` function of every Haunt that was started and not yet stopped, including the Lead_Haunt and the Companion_Haunt.
 4. IF a Haunt `stop` function throws an error, THEN THE Haunt_Engine SHALL continue stopping the remaining Haunts and set the Haunt_Level to 0.
 5. IF the Attention_Signal changes from `away` to `present` and back to `away`, THEN THE Haunt_Engine SHALL restart the escalation timing from the new `away` timestamp and choose a new Lead_Haunt.
@@ -130,8 +133,8 @@ Assumptions:
 8. WHILE Reduced_Motion is on, THE Safety_Gate SHALL replace movement and flicker in every haunt visual effect with a fade, and every fade-in SHALL last at least 1000 ms.
 9. WHILE Reduced_Motion is on, THE Safety_Gate SHALL complete every fade-out within 800 ms after the Attention_Signal becomes `present`.
 10. WHILE Reduced_Motion is on, THE Safety_Gate SHALL emit no flashing effect.
-11. THE Safety_Gate SHALL keep every haunt visual effect outside the Reading_Column bounds, so that no effect covers the active paragraph.
-12. THE Safety_Gate SHALL keep the computed `color` of the reading text and the computed `background-color` of the Reading_Column unchanged by every Haunt, at every Haunt_Level and for every combination of running Haunts.
+11. OUTSIDE the Return_Moment, THE Safety_Gate SHALL keep every haunt visual effect outside the Reading_Column bounds, so that no effect covers the active paragraph. DURING the Return_Moment of at most 3000 ms, return effects, including the Evidence_Message, MAY cover or change the Reading_Column.
+12. OUTSIDE the Return_Moment, THE Safety_Gate SHALL keep the computed `color` of the reading text and the computed `background-color` of the Reading_Column unchanged by every Haunt, at every Haunt_Level and for every combination of running Haunts. Within 100 ms after the Return_Moment ends, the Reading_Column SHALL be fully readable and identical in content and layout to its state before the Return_Moment.
 13. WHEN the Volume_Cap changes while a haunt sound is playing, THE Safety_Gate SHALL apply the new cap to the combined output within 100 ms.
 14. WHEN the reading view opens, THE Safety_Gate SHALL read the Volume_Cap from local storage.
 15. IF the stored Volume_Cap is missing, unreadable, or outside 0 to 1, THEN THE Safety_Gate SHALL use a Volume_Cap of 0.4.
@@ -142,14 +145,14 @@ Assumptions:
 
 ### Requirement 7: Gentle mode
 
-**User Story:** As a sensitive reader, I want a gentle mode, so that haunts stay subtle.
+**User Story:** As a sensitive reader, I want a Gentle value of the Haunt_Mode, so that haunts stay subtle. Gentle limits haunts to level 1 with no Ghost figures, glitch effects or jumpscares.
 
 #### Acceptance Criteria
 
-1. WHERE Gentle_Mode is on, THE Level_Logic SHALL return a Haunt_Level of at most 1 and no Companion_Haunt for every sequence of Attention_Signal events and every elapsed time.
-2. WHEN Gentle_Mode is turned on while the Haunt_Level is above 1, THE Haunt_Engine SHALL lower the Intensity of the Lead_Haunt to the Intensity of level 1, fade out and stop the Companion_Haunt if one is running, and complete the transition within 800 ms in every mode, including Reduced_Motion.
-3. WHEN Gentle_Mode is turned off while the Attention_Signal is `away`, THE Haunt_Engine SHALL set the Haunt_Level from the time elapsed since the signal became `away`, using the thresholds in Requirement 1, keep the same Lead_Haunt, and start a Companion_Haunt if the resulting Haunt_Level is 3.
-4. WHERE Gentle_Mode is on and the Attention_Signal is `present`, THE Haunt_Engine SHALL keep the Haunt_Level at 0.
+1. WHERE the Haunt_Mode is Gentle, THE Level_Logic SHALL return a Haunt_Level of at most 1 and no Companion_Haunt for every sequence of Attention_Signal events and every elapsed time.
+2. WHEN the Haunt_Mode is changed to Gentle while the Haunt_Level is above 1, THE Haunt_Engine SHALL lower the Intensity of the Lead_Haunt to the Intensity of level 1, fade out and stop the Companion_Haunt if one is running, and complete the transition within 800 ms in every mode, including Reduced_Motion.
+3. WHEN the Haunt_Mode is changed from Gentle to Classic or Nightmare while the Attention_Signal is `away`, THE Haunt_Engine SHALL set the Haunt_Level from the time elapsed since the signal became `away`, using the thresholds in Requirement 1, keep the same Lead_Haunt, and start a Companion_Haunt if the resulting Haunt_Level is 3.
+4. WHERE the Haunt_Mode is Gentle and the Attention_Signal is `present`, THE Haunt_Engine SHALL keep the Haunt_Level at 0.
 
 ### Requirement 8: Photosensitivity and sound notice, and audio unlock
 
@@ -158,7 +161,7 @@ Assumptions:
 #### Acceptance Criteria
 
 1. WHEN the reader opens the first reading session on this device, THE Haunt_Engine SHALL show the Safety_Notice before any haunt can start.
-2. THE Safety_Notice SHALL state that haunts include dimming light and moving shadow, that haunts include quiet sound, and that the reader can turn sound off or use Gentle_Mode.
+2. THE Safety_Notice SHALL state that haunts include dimming light, ghosts and glitching, that haunts include quiet sound, and that the reader can turn sound off or use Gentle_Mode. THE Safety_Notice SHALL contain no description of a moving shadow.
 3. WHEN the reader dismisses the Safety_Notice, THE Haunt_Engine SHALL save that the notice was seen and not show it again on this device.
 4. WHILE the Safety_Notice has not been dismissed, THE Haunt_Engine SHALL keep the Haunt_Level at 0.
 5. WHILE the Audio_Unlock has not occurred, THE Haunt_Engine SHALL produce no sound.
@@ -170,18 +173,18 @@ Assumptions:
 11. WHEN the reader opens a session after the Safety_Notice was dismissed on this device, THE reading view SHALL not show the Safety_Notice and SHALL show the Camera_Consent_Dialog only under the conditions of the attention-signal spec.
 12. THE reading view SHALL hold back the Camera_Consent_Dialog without changing the camera logic of the attention module and without any Haunt_Engine access to the camera.
 
-### Requirement 9: Sound and gentle-mode control
+### Requirement 9: Sound and haunt-mode control
 
-**User Story:** As a reader, I want a quick control for sound and gentle mode, so that I can adjust the haunting without a settings screen.
+**User Story:** As a reader, I want a quick control for sound and the Haunt_Mode, so that I can adjust the haunting without a settings screen.
 
 #### Acceptance Criteria
 
 1. THE Haunt_Control SHALL appear in the top bar of the reading view.
 2. WHEN the reader activates the sound toggle in the Haunt_Control, THE Haunt_Engine SHALL switch the Sound_Setting and stop all haunt sound within 300 ms when the setting becomes off.
-3. WHEN the reader activates the gentle-mode toggle in the Haunt_Control, THE Haunt_Engine SHALL switch Gentle_Mode.
-4. WHEN the Sound_Setting or Gentle_Mode changes, THE Haunt_Engine SHALL save the new value locally.
-5. WHEN the reading view opens, THE Haunt_Engine SHALL restore the saved Sound_Setting and Gentle_Mode.
-6. IF the saved values are missing or unreadable, THEN THE Haunt_Engine SHALL use the defaults of Sound_Setting on and Gentle_Mode off.
+3. WHEN the reader chooses a Haunt_Mode in the Haunt_Control, THE Haunt_Engine SHALL switch to that Haunt_Mode (Gentle, Classic or Nightmare).
+4. WHEN the Sound_Setting or Haunt_Mode changes, THE Haunt_Engine SHALL save the new value locally.
+5. WHEN the reading view opens, THE Haunt_Engine SHALL restore the saved Sound_Setting and Haunt_Mode.
+6. IF the saved values are missing or unreadable, THEN THE Haunt_Engine SHALL use the defaults of Sound_Setting on and Haunt_Mode Classic.
 7. THE Haunt_Control SHALL expose a text label and an on/off state for each toggle to screen readers.
 8. THE Haunt_Control SHALL be operable with the keyboard alone and show a visible focus ring.
 
@@ -191,11 +194,11 @@ Assumptions:
 
 #### Acceptance Criteria
 
-1. THE Level_Logic SHALL take signal events, the current time, Gentle_Mode, the list of available Haunts and the Lead_Haunt of the previous look-away as input, and return the Haunt_Level, the Lead_Haunt and the Companion_Haunt as output.
+1. THE Level_Logic SHALL take signal events, the current time, Haunt_Mode, the list of available Haunts and the Lead_Haunt of the previous look-away as input, and return the Haunt_Level, the Lead_Haunt and the Companion_Haunt as output.
 2. THE Level_Logic SHALL return the same output for the same input.
 3. THE Level_Logic SHALL use no DOM, no audio, no camera, no timer and no global clock.
 4. FOR ALL sequences of Attention_Signal events and times, THE Level_Logic SHALL return a Haunt_Level between 0 and 3.
-5. FOR ALL sequences of Attention_Signal events and times with Gentle_Mode on, THE Level_Logic SHALL return a Haunt_Level between 0 and 1 and no Companion_Haunt.
+5. FOR ALL sequences of Attention_Signal events and times with Haunt_Mode Gentle, THE Level_Logic SHALL return a Haunt_Level between 0 and 1 and no Companion_Haunt.
 6. FOR ALL inputs in which the latest Attention_Signal is `present`, THE Level_Logic SHALL return a Haunt_Level of 0 and no Companion_Haunt.
 7. FOR ALL consecutive inputs in which the Attention_Signal stays `present`, THE Level_Logic SHALL return a Haunt_Level that does not rise.
 8. FOR ALL sequences of consecutive look-aways with two or more available Haunts, THE Level_Logic SHALL not choose the same Lead_Haunt `id` for two consecutive look-aways.
@@ -259,20 +262,14 @@ Assumptions:
 9. WHILE Reduced_Motion is on, THE whispers Haunt SHALL fade in the edge vignette over at least 1000 ms and fade it out within 800 ms.
 10. THE whispers Haunt SHALL generate no speech and no lyrics.
 
-### Requirement 15: Shadow haunt, crosses the page edge
+### Requirement 15: The Ghost replaces the shadow haunt
 
-**User Story:** As a reader, I want a shadow to pass along the edge of the page, more visibly the longer I look away, so that something seems to move beyond my sight.
+**User Story:** As a developer, I want the shadow haunt removed from this spec, so that the Ghost of the ghost-dread spec is the only figure haunt.
 
 #### Acceptance Criteria
 
-1. THE shadow Haunt SHALL support Haunt_Levels 1, 2 and 3.
-2. WHEN the shadow Haunt runs at Haunt_Level 1, THE shadow Haunt SHALL move a faint, soft shadow shape slowly across the edge of the page, outside the Reading_Column bounds, using CSS or SVG.
-3. WHEN the shadow Haunt runs at Haunt_Level 2, THE shadow Haunt SHALL draw the shadow shape darker and larger than at level 1.
-4. WHEN the shadow Haunt runs at Haunt_Level 3, THE shadow Haunt SHALL draw the shadow shape darker and larger than at level 2 and cross the page edge more often, within the flash-rate limit of the Safety_Gate.
-5. THE shadow Haunt SHALL draw a shadow shape that has no face and no figure of a real person or group.
-6. WHILE Reduced_Motion is on, THE shadow Haunt SHALL fade the shadow in place over at least 1000 ms with no crossing movement, and fade it out within 800 ms.
-7. WHEN the shadow Haunt stops, THE shadow Haunt SHALL remove its elements from the document.
-8. THE shadow Haunt SHALL produce no sound.
+1. THE haunt list of this spec SHALL contain the candle haunt and the whispers haunt only, and no shadow haunt file SHALL be built.
+2. THE Ghost, as defined in the ghost-dread spec, SHALL take the place of the shadow haunt, and its Haunt_Mode rules apply (no Ghost figure in Gentle).
 
 ### Requirement 16: Reading view integration and cleanup
 
@@ -283,7 +280,7 @@ Assumptions:
 1. WHEN the reading view opens, THE Haunt_Engine SHALL subscribe to the Attention_Signal and start at Haunt_Level 0.
 2. WHEN the reading view closes, THE Haunt_Engine SHALL stop all Haunts, including the Lead_Haunt and the Companion_Haunt, and unsubscribe from the Attention_Signal.
 3. WHEN haunts are wired into the reading view, THE reading view SHALL remove the `TempAttentionLabel` component and its test.
-4. THE Haunt_Engine SHALL leave the Reading_Column, the active paragraph and reading controls unchanged in position and content at every Haunt_Level.
+4. OUTSIDE the Return_Moment, THE Haunt_Engine SHALL leave the Reading_Column, the active paragraph and reading controls unchanged in position and content at every Haunt_Level. During the Return_Moment of at most 3000 ms, return effects MAY cover or change the Reading_Column, and within 100 ms after it ends the Reading_Column SHALL be identical in content and layout to its state before the Return_Moment.
 5. WHILE the Haunt_Level is above 0, THE reading view SHALL keep keyboard use of the reading flow working.
 6. THE Haunt_Engine SHALL send no data over the network.
 7. THE Haunt_Engine SHALL store no video frame and no camera data.

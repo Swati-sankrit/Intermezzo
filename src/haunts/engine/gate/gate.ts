@@ -139,6 +139,8 @@ export function createGate(deps: GateDeps): Gate {
         rec.requested = Number.isFinite(requested) ? requested : 0;
         planAudio('fade');
       },
+      // Inert placeholder until the Safety_Gate extensions task (ghost-dread task 3).
+      onTick: () => () => {},
       onAudibleChange(cb) {
         if (rec.closed) return () => {};
         const off = audible.subscribe(cb);
@@ -182,6 +184,10 @@ export function createGate(deps: GateDeps): Gate {
     },
     refreshVolumeCap,
     unlockAudio: () => audio.unlock(),
+    // Inert placeholders until the Safety_Gate extensions task (ghost-dread task 3).
+    beginReturnMoment: () => {},
+    endReturnMoment: () => {},
+    openReturn: () => null,
     dispose() {
       if (disposed) return;
       disposed = true;

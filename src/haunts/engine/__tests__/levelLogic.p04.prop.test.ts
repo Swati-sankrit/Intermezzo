@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { evaluate, THRESHOLDS_MS } from '../levelLogic';
 import type { AttentionSignalLike } from '../levelLogic';
-import { awayHistoryArb, hauntIdsArb, rollsArb } from './arbitraries';
+import { awayHistoryArb, hauntIdsArb, rollsArb, modeArb, fullModeArb } from './arbitraries';
 
 const NUM_RUNS = 300;
 
@@ -54,11 +54,11 @@ function thresholdLevel(elapsed: number): 1 | 2 | 3 {
 describe('Level_Logic evaluate: level never falls while away, lead stays the same', () => {
   // Feature: haunt-feature, Property 4: Level never falls while away, and the lead stays the same
   // **Validates: Requirements 1.6, 3.4, 7.3, 10.11**
-  it('Property 4: level at t2 is at least the level at t1, for any gentle value', () => {
+  it('Property 4: level at t2 is at least the level at t1, for any mode', () => {
     fc.assert(
-      fc.property(baseTimesArb, fc.boolean(), ({ base, t1, t2 }, gentle) => {
-        const a = evaluate({ ...base, gentle, now: t1 });
-        const b = evaluate({ ...base, gentle, now: t2 });
+      fc.property(baseTimesArb, modeArb, ({ base, t1, t2 }, mode) => {
+        const a = evaluate({ ...base, mode, now: t1 });
+        const b = evaluate({ ...base, mode, now: t2 });
         expect(b.level).toBeGreaterThanOrEqual(a.level);
       }),
       { numRuns: NUM_RUNS },
@@ -69,9 +69,9 @@ describe('Level_Logic evaluate: level never falls while away, lead stays the sam
   // **Validates: Requirements 1.6, 3.4, 7.3, 10.11**
   it('Property 4: leadId is the same at t1 and t2', () => {
     fc.assert(
-      fc.property(baseTimesArb, fc.boolean(), ({ base, t1, t2 }, gentle) => {
-        const a = evaluate({ ...base, gentle, now: t1 });
-        const b = evaluate({ ...base, gentle, now: t2 });
+      fc.property(baseTimesArb, modeArb, ({ base, t1, t2 }, mode) => {
+        const a = evaluate({ ...base, mode, now: t1 });
+        const b = evaluate({ ...base, mode, now: t2 });
         expect(b.leadId).toBe(a.leadId);
       }),
       { numRuns: NUM_RUNS },
@@ -80,11 +80,11 @@ describe('Level_Logic evaluate: level never falls while away, lead stays the sam
 
   // Feature: haunt-feature, Property 4: Level never falls while away, and the lead stays the same
   // **Validates: Requirements 1.6, 3.4, 7.3, 10.11**
-  it('Property 4: changing only gentle does not change leadId', () => {
+  it('Property 4: changing only the mode does not change leadId', () => {
     fc.assert(
-      fc.property(baseNowArb, ({ base, now }) => {
-        const on = evaluate({ ...base, gentle: true, now });
-        const off = evaluate({ ...base, gentle: false, now });
+      fc.property(baseNowArb, fullModeArb, ({ base, now }, full) => {
+        const on = evaluate({ ...base, mode: 'gentle', now });
+        const off = evaluate({ ...base, mode: full, now });
         expect(on.leadId).toBe(off.leadId);
       }),
       { numRuns: NUM_RUNS },
@@ -93,10 +93,10 @@ describe('Level_Logic evaluate: level never falls while away, lead stays the sam
 
   // Feature: haunt-feature, Property 4: Level never falls while away, and the lead stays the same
   // **Validates: Requirements 1.6, 3.4, 7.3, 10.11**
-  it('Property 4: with gentle off the level equals the threshold level for the elapsed time', () => {
+  it('Property 4: with Classic or Nightmare the level equals the threshold level for the elapsed time', () => {
     fc.assert(
-      fc.property(baseNowArb, ({ base, now }) => {
-        const out = evaluate({ ...base, gentle: false, now });
+      fc.property(baseNowArb, fullModeArb, ({ base, now }, full) => {
+        const out = evaluate({ ...base, mode: full, now });
         if (base.hauntIds.length === 0) {
           expect(out.level).toBe(0);
           return;
@@ -116,7 +116,7 @@ describe('Level_Logic evaluate: level never falls while away, lead stays the sam
     fc.assert(
       fc.property(baseNowArb, ({ base, now }) => {
         if (base.hauntIds.length > 0) withIds++;
-        levels.add(evaluate({ ...base, gentle: false, now }).level);
+        levels.add(evaluate({ ...base, mode: 'classic', now }).level);
       }),
       { numRuns: NUM_RUNS },
     );

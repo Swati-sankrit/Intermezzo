@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { evaluate } from '../levelLogic';
 import type { AttentionSignalLike, LevelInput } from '../levelLogic';
-import { eventHistoryArb, hauntIdsArb, presentHistoryArb, rollsArb } from './arbitraries';
+import { eventHistoryArb, hauntIdsArb, presentHistoryArb, rollsArb, modeArb } from './arbitraries';
 
 const NUM_RUNS = 300;
 
@@ -17,7 +17,7 @@ const nowArb = fc.integer({ min: -1_000_000, max: 2_000_000 });
 
 const otherInputArb = fc.record({
   now: nowArb,
-  gentle: fc.boolean(),
+  mode: modeArb,
   hauntIds: hauntIdsArb,
   previousLeadId: fc.oneof(fc.constant<string | null>(null), fc.stringMatching(/^[a-z][a-z0-9-]{0,7}$/)),
   rolls: rollsArb,

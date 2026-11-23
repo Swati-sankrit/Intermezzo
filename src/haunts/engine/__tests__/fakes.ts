@@ -13,6 +13,7 @@
  * code that needs the in-flight value must compute it itself.
  */
 import type { MatchMediaFn, MediaQueryListLike } from '../gate/reducedMotion';
+import type { EvidenceHost, ReadingContext, ReturnPort, SpoilerCardView, SpoilerHost } from '../returnTypes';
 import type {
   AudioOut,
   Gate,
@@ -231,6 +232,10 @@ export interface FakeGatePort extends GatePort {
   readonly audibleCallbacks: ((audible: boolean) => void)[];
   /** Sets audibility; subscribers are called only when the value changes. */
   setAudible(audible: boolean): void;
+  /** Callbacks subscribed through `onTick`, with their requested period. */
+  readonly tickCallbacks: { cb: () => void; periodMs: number }[];
+  /** Calls every subscribed tick callback once. */
+  tick(): void;
 }
 
 export interface FakeVisualLayer extends VisualLayer {
@@ -238,6 +243,7 @@ export interface FakeVisualLayer extends VisualLayer {
   readonly markup: string[];
   readonly opacities: number[];
   readonly sweeps: (number | null)[];
+  readonly labels: string[];
   readonly removed: boolean;
 }
 
@@ -245,18 +251,21 @@ function createFakeLayer(side: 'left' | 'right'): FakeVisualLayer {
   const markup: string[] = [];
   const opacities: number[] = [];
   const sweeps: (number | null)[] = [];
+  const labels: string[] = [];
   let removed = false;
   return {
     side,
     markup,
     opacities,
     sweeps,
+    labels,
     get removed() {
       return removed;
     },
     setMarkup: (svg) => void markup.push(svg),
     setOpacity: (o) => void opacities.push(o),
     setSweep: (p) => void sweeps.push(p),
+    setLabel: (text) => void labels.push(text),
     remove: () => {
       removed = true;
     },
@@ -272,6 +281,9 @@ export type GateCall =
   | { readonly type: 'refreshVolumeCap' }
   | { readonly type: 'unlockAudio' }
   | { readonly type: 'dispose' }
+  | { readonly type: 'beginReturnMoment' }
+  | { readonly type: 'endReturnMoment'; readonly fadeMs: number | undefined }
+  | { readonly type: 'openReturn'; readonly effectId: string; readonly jumpSound: boolean }
   | { readonly type: 'close'; readonly hauntId: string };
 
 export interface FakeGate extends Gate {
@@ -283,6 +295,10 @@ export interface FakeGate extends Gate {
   soundEnabled: boolean;
   reducedMotion: boolean;
   disposed: boolean;
+  /** True between `beginReturnMoment` and `endReturnMoment`. */
+  returnActive: boolean;
+  /** Every ReturnPort handed out by `openReturn`. */
+  readonly returnPorts: ReturnPort[];
 }
 
 export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
@@ -295,6 +311,8 @@ export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
     soundEnabled: true,
     reducedMotion: false,
     disposed: false,
+    returnActive: false,
+    returnPorts: [],
     openPorts: () => ports.filter((p) => !p.closed),
     open(hauntId) {
       calls.push({ type: 'open', hauntId });
@@ -305,6 +323,7 @@ export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
       const readyCallbacks: FakeGatePort['readyCallbacks'] = [];
       const fadeOuts: number[] = [];
       const audibleCallbacks: FakeGatePort['audibleCallbacks'] = [];
+      const tickCallbacks: FakeGatePort['tickCallbacks'] = [];
       let audible = true;
       let audibleSubscriptions = 0;
       let closeCalls = 0;
@@ -315,6 +334,10 @@ export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
         layers,
         readyCallbacks,
         audibleCallbacks,
+        tickCallbacks,
+        tick() {
+          for (const t of [...tickCallbacks]) t.cb();
+        },
         get audible() {
           return audible;
         },
@@ -341,6 +364,14 @@ export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
             };
           },
           setGain: (g) => void gains.push(g),
+          onTick(cb, periodMs) {
+            const entry = { cb, periodMs };
+            tickCallbacks.push(entry);
+            return () => {
+              const i = tickCallbacks.indexOf(entry);
+              if (i >= 0) tickCallbacks.splice(i, 1);
+            };
+          },
           onAudibleChange(cb) {
             audibleSubscriptions += 1;
             audibleCallbacks.push(cb);
@@ -395,12 +426,106 @@ export function createFakeGate(options: FakeGateOptions = {}): FakeGate {
     },
     refreshVolumeCap: () => void calls.push({ type: 'refreshVolumeCap' }),
     unlockAudio: () => void calls.push({ type: 'unlockAudio' }),
+    beginReturnMoment() {
+      calls.push({ type: 'beginReturnMoment' });
+      gate.returnActive = true;
+    },
+    endReturnMoment(fadeMs) {
+      calls.push({ type: 'endReturnMoment', fadeMs });
+      gate.returnActive = false;
+    },
+    openReturn(effectId, opts) {
+      calls.push({ type: 'openReturn', effectId, jumpSound: opts?.jumpSound === true });
+      if (!gate.returnActive) return null;
+      const base: AudioOut = {
+        whenReady: () => () => undefined,
+        setGain: () => undefined,
+        onAudibleChange: () => () => undefined,
+        onTick: () => () => undefined,
+      };
+      const port: ReturnPort = {
+        audio: base,
+        visual: {
+          glow: { setDim: () => undefined, setGutter: () => undefined },
+          createLayer: createFakeLayer,
+          createOverlay: () => createFakeLayer('left'),
+          runGlitch: (spec) => ({ grantedFlickers: spec.flickers }),
+        },
+        close: () => undefined,
+      };
+      gate.returnPorts.push(port);
+      return port;
+    },
     dispose() {
       calls.push({ type: 'dispose' });
       gate.disposed = true;
     },
   };
   return gate;
+}
+
+// ---------------------------------------------------------------------------
+// Fake reading context, evidence host and spoiler host (ghost-dread)
+// ---------------------------------------------------------------------------
+
+export interface FakeReadingOptions {
+  chapterKey?: string;
+  activeParagraph?: string | null;
+  spoilerSource?: ReturnType<ReadingContext['spoilerSource']>;
+  readSoFar?: { text: string; position: number };
+}
+
+export interface FakeReading extends ReadingContext {
+  options: FakeReadingOptions;
+}
+
+/** A reading context whose answers are set by the test and can change between calls. */
+export function createFakeReading(options: FakeReadingOptions = {}): FakeReading {
+  const reading: FakeReading = {
+    options,
+    chapterKey: () => reading.options.chapterKey ?? 'chapter-1',
+    activeParagraph: () => reading.options.activeParagraph ?? null,
+    spoilerSource: () => reading.options.spoilerSource ?? null,
+    readSoFar: () => reading.options.readSoFar ?? { text: '', position: 0 },
+  };
+  return reading;
+}
+
+export interface FakeEvidenceHost extends EvidenceHost {
+  readonly shown: { shown: string; original: string }[];
+  clears: number;
+}
+
+export function createFakeEvidenceHost(): FakeEvidenceHost {
+  const host: FakeEvidenceHost = {
+    shown: [],
+    clears: 0,
+    show: (shown, original) => void host.shown.push({ shown, original }),
+    clear: () => {
+      host.clears += 1;
+    },
+  };
+  return host;
+}
+
+export interface FakeSpoilerHost extends SpoilerHost {
+  readonly cards: SpoilerCardView[];
+  readonly holdings: boolean[];
+  hides: number;
+}
+
+export function createFakeSpoilerHost(): FakeSpoilerHost {
+  const host: FakeSpoilerHost = {
+    cards: [],
+    holdings: [],
+    hides: 0,
+    show: (card) => void host.cards.push(card),
+    setHolding: (holding) => void host.holdings.push(holding),
+    hide: () => {
+      host.hides += 1;
+    },
+  };
+  return host;
 }
 
 // ---------------------------------------------------------------------------

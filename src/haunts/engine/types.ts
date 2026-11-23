@@ -4,6 +4,8 @@
  */
 
 import type { HauntAudioContext } from './hauntAudio';
+import type { HauntMode } from './ghost/mode';
+import type { ReturnPort } from './returnTypes';
 
 export type {
   HauntAudioContext, HauntBufferSource, HauntFilter, HauntNode, HauntPanner, HauntParam, HauntSink,
@@ -12,13 +14,29 @@ export type {
 export type HauntLevel = 1 | 2 | 3;
 export type Unsubscribe = () => void;
 
+export type { HauntMode } from './ghost/mode';
+
+/** Extra start data. Existing haunts may ignore it. */
+export interface StartInfo {
+  readonly mode: HauntMode;
+  readonly ghostStep: 0 | 1 | 2 | 3 | 4;
+  /** One random draw in [0, 1) per start. */
+  readonly roll: number;
+}
+
 /** The shape of a haunt module's named exports. */
 export interface Haunt {
   readonly id: string;
   readonly name: string;
-  start(level: HauntLevel, audio: AudioOut, visual: VisualOut): void;
+  start(level: HauntLevel, audio: AudioOut, visual: VisualOut, info?: StartInfo): void;
   setLevel(level: HauntLevel): void;
   stop(): void;
+  /** Default 'lead'. Layers run alongside the lead and never enter Level_Logic. */
+  readonly role?: 'lead' | 'layer';
+  /** Default: all three modes. */
+  readonly modes?: readonly HauntMode[];
+  /** Layers only. Default 1. */
+  readonly minLevel?: HauntLevel;
 }
 
 export interface AudioOut {
@@ -38,6 +56,11 @@ export interface AudioOut {
    * (it keeps delivering after `fadeOut`, which only stops requests). No calls after `gate.dispose()`.
    */
   onAudibleChange(cb: (audible: boolean) => void): Unsubscribe;
+  /**
+   * Calls `cb` about every `periodMs` (at least 100) until cancelled or the port closes or
+   * fades out. Gate-owned, so haunt files need no timers.
+   */
+  onTick(cb: () => void, periodMs: number): Unsubscribe;
 }
 
 export interface GlowControl {
@@ -53,6 +76,8 @@ export interface VisualLayer {
   setOpacity(opacity: number, fadeMs?: number): void;
   /** Slow movement across the layer, one crossing per `periodMs`; null stops it. */
   setSweep(periodMs: number | null): void;
+  /** Screen-reader label. Without it the layer is hidden from assistive technology. */
+  setLabel(text: string): void;
   remove(): void;
 }
 
@@ -72,6 +97,12 @@ export interface Gate {
   refreshVolumeCap(): void;
   /** Create and resume the AudioContext. Called by the first-gesture listener. */
   unlockAudio(): void;
+  /** Starts a Return_Moment (at most 3000 ms); enables `openReturn`. */
+  beginReturnMoment(): void;
+  /** Closes every ReturnPort and overlay. `fadeMs` is at most 100. Safe to call twice. */
+  endReturnMoment(fadeMs?: number): void;
+  /** Null when no Return_Moment is running. */
+  openReturn(effectId: string, opts?: { jumpSound?: boolean }): ReturnPort | null;
   dispose(): void;
 }
 
@@ -99,14 +130,16 @@ export interface AttentionSignalLike {
 /** Settings shape, declared here so EngineDeps compiles before settings.ts exists. */
 export interface HauntSettings {
   readonly sound: boolean;
-  readonly gentle: boolean;
+  readonly mode: HauntMode;
   readonly noticeSeen: boolean;
+  /** True once the headphones tip has been shown with a saved notice. */
+  readonly headphonesTipSeen: boolean;
 }
 
 export interface SettingsStore {
   get(): HauntSettings;
-  /** Saves best-effort, then notifies. */
-  set(patch: Partial<HauntSettings>): void;
+  /** Memory first, then best-effort save. Returns false when any write failed or storage is missing. */
+  set(patch: Partial<HauntSettings>): boolean;
   subscribe(cb: () => void): Unsubscribe;
 }
 

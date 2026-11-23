@@ -1,0 +1,134 @@
+{
+  "pbtResults": {
+    "1.4 Write property test for mode resolution and settings round trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1795417184693
+    },
+    "1.6 Write property test for Level_Logic with modes and update existing level tests": {
+      "status": "passed",
+      "lastRunTimestamp": 1795417355018
+    }
+  },
+  "executionHistory": {
+    "1. Foundation: spec amendment, modes, settings migration, types, registry": [
+      {
+        "executionId": "c60b9258-c0aa-4b62-a4d8-ea777edafad6",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795416455431
+      }
+    ],
+    "1.1 Amend the haunt-feature spec": [
+      {
+        "executionId": "c60b9258-c0aa-4b62-a4d8-ea777edafad6",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795416460147
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795416478383
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795416682549
+      }
+    ],
+    "1.2 Create the mode and contract types": [
+      {
+        "executionId": "c60b9258-c0aa-4b62-a4d8-ea777edafad6",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795416460403
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795416682875
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795416779372
+      }
+    ],
+    "1.3 Implement the settings migration in `engine/settings.ts`": [
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795416782103
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417086423
+      }
+    ],
+    "1.4 Write property test for mode resolution and settings round trip": [
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417091243
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417209506
+      }
+    ],
+    "1.5 Change Level_Logic from `gentle` to `mode`": [
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417209936
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417237477
+      }
+    ],
+    "1.6 Write property test for Level_Logic with modes and update existing level tests": [
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417237990
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417382057
+      }
+    ],
+    "1.7 Migrate every consumer of `gentle`": [
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417382489
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417551438
+      }
+    ],
+    "1.8 Extend the registry for roles, modes and return effects": [
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417551069
+      },
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417618356
+      }
+    ],
+    "1.9 Write property test for the registry and extend the static scan": [
+      {
+        "executionId": "9383c5cc-ea1a-450b-a160-2753737203cf",
+        "chatSessionId": "sess_5fb10388-e3d9-4d63-b8e5-d76ac8fcccf3",
+        "timestamp": 1795417618453
+      }
+    ]
+  }
+}

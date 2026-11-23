@@ -4,6 +4,7 @@
  * declared here as minimal structural copies of the design.
  */
 import fc from 'fast-check';
+import type { HauntMode } from '../ghost/mode';
 import type { AttentionSignalLike, HauntSettings } from '../types';
 
 export interface GainRequest {
@@ -24,8 +25,10 @@ export interface Rect {
 /** Storage keys from the design (settings.ts, later task). */
 export const SETTINGS_STORAGE_KEYS = [
   'rod_haunt_sound',
+  'rod_haunt_mode',
   'rod_haunt_gentle',
   'rod_safety_notice_seen',
+  'rod_headphones_tip_seen',
   'rod_volume_cap',
 ] as const;
 
@@ -69,6 +72,25 @@ export function historyEndingWith(value: 'present' | 'away'): fc.Arbitrary<Atten
 
 export const awayHistoryArb = historyEndingWith('away');
 export const presentHistoryArb = historyEndingWith('present');
+
+// ---------------------------------------------------------------- modes
+
+/** Any of the three modes, evenly. */
+export const modeArb: fc.Arbitrary<HauntMode> = fc.constantFrom<HauntMode>('gentle', 'classic', 'nightmare');
+
+/** Classic or Nightmare: the modes with full escalation. */
+export const fullModeArb: fc.Arbitrary<HauntMode> = fc.constantFrom<HauntMode>('classic', 'nightmare');
+
+/**
+ * Gentle with weight `gentle`, otherwise Classic or Nightmare (evenly) with weight `other`.
+ * Replaces the old `gentle` boolean generators with the same Gentle share.
+ */
+export function weightedModeArb(gentle: number, other: number): fc.Arbitrary<HauntMode> {
+  return fc.oneof(
+    { weight: gentle, arbitrary: fc.constant<HauntMode>('gentle') },
+    { weight: other, arbitrary: fullModeArb },
+  );
+}
 
 // ---------------------------------------------------------- haunt ids, rolls
 
@@ -175,8 +197,9 @@ export const volumeCapRawArb: fc.Arbitrary<unknown> = fc.oneof(
 
 export const hauntSettingsArb: fc.Arbitrary<HauntSettings> = fc.record({
   sound: fc.boolean(),
-  gentle: fc.boolean(),
+  mode: fc.constantFrom<HauntMode>('gentle', 'classic', 'nightmare'),
   noticeSeen: fc.boolean(),
+  headphonesTipSeen: fc.boolean(),
 });
 
 const storageValueArb = fc.oneof(

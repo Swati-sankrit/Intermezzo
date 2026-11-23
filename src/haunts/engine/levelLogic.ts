@@ -2,6 +2,7 @@
  * Level_Logic: pure decision of haunt level, lead haunt and companion haunt.
  * No clock, timers, randomness, DOM or audio. Time and random draws are inputs.
  */
+import type { HauntMode } from './ghost/mode';
 import type { AttentionSignalLike } from './types';
 
 export type { AttentionSignalLike } from './types';
@@ -10,7 +11,8 @@ export interface LevelInput {
   /** Delivery order. The trailing run of `away` events gives the away start. */
   readonly events: readonly AttentionSignalLike[];
   readonly now: number;
-  readonly gentle: boolean;
+  /** Gentle: level at most 1 and no companion. Classic and Nightmare: full escalation. */
+  readonly mode: HauntMode;
   readonly hauntIds: readonly string[];
   /** Lead of the previous look-away, or null. */
   readonly previousLeadId: string | null;
@@ -55,7 +57,7 @@ export function evaluate(input: LevelInput): LevelOutput {
   if (start === null || input.hauntIds.length === 0) return CALM;
 
   const elapsed = Math.max(0, input.now - start);
-  const level = input.gentle ? 1 : rawLevel(elapsed);
+  const level = input.mode === 'gentle' ? 1 : rawLevel(elapsed);
 
   const withoutPrevious = input.hauntIds.filter((id) => id !== input.previousLeadId);
   const leadCandidates =
@@ -76,7 +78,7 @@ export function evaluate(input: LevelInput): LevelOutput {
 /** Ms until the level next changes, or null if it cannot change by time alone. */
 export function nextChangeDelay(input: LevelInput): number | null {
   const start = awayStart(input.events);
-  if (start === null || input.gentle || input.hauntIds.length === 0) return null;
+  if (start === null || input.mode === 'gentle' || input.hauntIds.length === 0) return null;
 
   // Unclamped on purpose: a start slightly ahead of `now` must not shorten the wait.
   const elapsed = input.now - start;

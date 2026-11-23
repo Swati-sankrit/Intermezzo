@@ -84,6 +84,8 @@ export function createLayerRecord(ctx: LayerContext, key: string): LayerRecord {
       applyRate(allocated);
       ctx.changed();
     },
+    // Inert placeholder until ghost-dread task 3.
+    setLabel() {},
     remove() {
       destroy();
       ctx.changed();

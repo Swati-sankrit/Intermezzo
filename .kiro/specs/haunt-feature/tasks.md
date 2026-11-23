@@ -2,9 +2,9 @@
 
 ## Overview
 
-Implement the haunt feature in TypeScript. Engine, Level_Logic, Safety_Gate, registry and shared types live in `src/haunts/engine/`. Haunt files (`candle.ts`, `whispers.ts`, `shadow.ts`) live directly in `src/haunts/`. React components live in `src/ui/`. Tasks follow the delivery order in the design: pure core first, then the gate and engine, then the candle haunt wired into the reading view end to end, then whispers, then shadow.
+Implement the haunt feature in TypeScript. Engine, Level_Logic, Safety_Gate, registry and shared types live in `src/haunts/engine/`. Haunt files (`candle.ts`, `whispers.ts`) live directly in `src/haunts/`. React components live in `src/ui/`. Tasks follow the delivery order in the design: pure core first, then the gate and engine, then the candle haunt wired into the reading view end to end, then whispers, then shadow.
 
-Whispers and shadow are each one new file plus its tests. They must not require any edit in `src/haunts/engine/`. Every shared helper they need (`noise.ts`, the gate primitives, the registry and the glob) is built before the candle checkpoint. Tests that cover "every real haunt" iterate the discovered registry, so they cover whispers and shadow automatically once the files exist.
+Whispers is one new file plus its tests. The Ghost of the ghost-dread spec replaces the shadow haunt, so no shadow haunt is built. It must not require any edit in `src/haunts/engine/`. Every shared helper it needs (`noise.ts`, the gate primitives, the registry and the glob) is built before the candle checkpoint. Tests that cover "every real haunt" iterate the discovered registry, so they cover whispers automatically once the file exists.
 
 All level, gate-planning, registry, settings, region and dialog-order logic is pure and property-tested with fast-check. Adapters and the engine receive side-effecting dependencies as injected ports and are tested with fakes. No video frame or camera data is touched, stored, or sent. The engine receives the attention signal only through `subscribeSignal`. No new dependency is added.
 
@@ -88,7 +88,7 @@ Testing rules that apply to every task (from the testing steering file): no fake
   - [x] 1.15 Write property test for fade durations
     - File: `src/haunts/engine/__tests__/plan.p11.prop.test.ts`
     - **Property 11: Fade durations respect their bounds**
-    - **Validates: Requirements 2.2, 6.3, 6.4, 6.8, 6.9, 7.2, 13.5, 13.6, 14.9, 15.6**
+    - **Validates: Requirements 2.2, 6.3, 6.4, 6.8, 6.9, 7.2, 13.5, 13.6, 14.9**
 
   - [x] 1.16 Write property test for the flash budget
     - File: `src/haunts/engine/__tests__/plan.p12.prop.test.ts`
@@ -122,12 +122,12 @@ Testing rules that apply to every task (from the testing steering file): no fake
 
   - [x] 1.22 Implement `src/haunts/engine/regions.ts`
     - `Rect`, `Regions`, `computeRegions(viewportWidth, viewportHeight, column)`; left region from x 0 to column left, right region from column right to viewport width, widths never below 0
-    - _Requirements: 6.11, 12.2, 15.2_
+    - _Requirements: 6.11, 12.2_
 
   - [x] 1.23 Write property test for effect regions
     - File: `src/haunts/engine/__tests__/regions.p18.prop.test.ts`
     - **Property 18: Effects stay outside the Reading_Column**
-    - **Validates: Requirements 6.11, 12.2, 15.2**
+    - **Validates: Requirements 6.11, 12.2**
 
   - [x] 1.24 Implement `src/haunts/engine/dialogOrder.ts`
     - `visibleDialogs(noticeSeen, cameraChoice)` returns `{ notice: !noticeSeen, consent: noticeSeen && cameraChoice === 'unanswered' }`
@@ -169,7 +169,7 @@ Testing rules that apply to every task (from the testing steering file): no fake
   - [x] 3.5 Implement `gate/visualAdapter.ts`
     - Writes only inside the stage host elements. Glow dim and gutter set CSS custom properties and classes on the stage root (`--glow-dim`, `--glow-fade`, `--gutter-depth`, `--gutter-period`, `is-guttering`); a layer is a `div` in a side region with `setMarkup`, `setOpacity`, `setSweep`, `remove`
     - Under reduced motion never add `is-sweeping` or `is-guttering`; fades use `planFadeIn` and `planFadeOut`. No Web Animations API
-    - _Requirements: 6.5, 6.8, 6.10, 6.11, 6.12, 13.5, 15.6_
+    - _Requirements: 6.5, 6.8, 6.10, 6.11, 6.12, 13.5_
 
   - [x] 3.6 Implement `gate/gate.ts` (`createGate`)
     - `open`, `fadeOutAll`, `setSoundEnabled`, `setReducedMotion`, `refreshVolumeCap` (also on the `storage` event), `unlockAudio`, `dispose`; `GatePort` with `audio`, `visual`, `fadeOut(ms)` (fades only that port to 0 over `planFadeOut(ms)`, then ignores further requests; `fadeOutAll` uses the same per-port path) and `close()` (safe to call twice)
@@ -218,9 +218,9 @@ Testing rules that apply to every task (from the testing steering file): no fake
 
   - [x] 5.2 Write property test for reduced motion over every real haunt
     - File: `src/haunts/engine/__tests__/reducedMotion.p15.prop.test.ts`
-    - Iterates the discovered registry (`loadHaunts()`), so whispers and shadow are covered automatically when they are added. Uses the real gate and visual adapter with a jsdom stage host
+    - Iterates the discovered registry (`loadHaunts()`), so whispers is covered automatically when it is added. Uses the real gate and visual adapter with a jsdom stage host
     - **Property 15: Reduced motion emits no flashing from any haunt**
-    - **Validates: Requirements 6.8, 6.10, 13.5, 15.6, 15.4**
+    - **Validates: Requirements 6.8, 6.10, 13.5**
 
   - [ ]* 5.3 Write unit tests for the candle haunt
     - File: `src/haunts/__tests__/candle.unit.test.ts`
@@ -253,7 +253,7 @@ Testing rules that apply to every task (from the testing steering file): no fake
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.7, 9.8_
 
   - [x] 6.3 Implement `src/ui/SafetyNotice.tsx` and its CSS
-    - Modal (`role="dialog"`, `aria-modal`, `useFocusTrap`), one button "Begin reading". Text states that haunts include dimming light and moving shadow, that haunts include quiet sound, and that the reader can turn sound off or use Gentle mode. Dismiss writes `noticeSeen` to the settings store. Keyboard only operation works. Gothic, calm wording per the design steering
+    - Modal (`role="dialog"`, `aria-modal`, `useFocusTrap`), one button "Begin reading". Text states that haunts include dimming light, ghosts and glitching (no moving shadow), that haunts include quiet sound, and that the reader can turn sound off or use Gentle mode. Dismiss writes `noticeSeen` to the settings store. Keyboard only operation works. Gothic, calm wording per the design steering
     - _Requirements: 8.1, 8.2, 8.3, 8.8_
 
   - [x] 6.4 Implement `src/ui/HauntLayer.tsx`
@@ -308,7 +308,7 @@ Testing rules that apply to every task (from the testing steering file): no fake
 
   - [x] 8.3 Write property test for the cap over real haunts and the real adapter
     - File: `src/haunts/engine/__tests__/gateCap.p14.prop.test.ts`
-    - Iterates ordered pairs of distinct haunts from `loadHaunts()`, so shadow is covered when it is added. Real gate and audio adapter against the fake `AudioContext`; any interleaving of `setGain`, `setLevel`, cap changes and sound toggles
+    - Iterates ordered pairs of distinct haunts from `loadHaunts()`, so every discovered haunt is covered. Real gate and audio adapter against the fake `AudioContext`; any interleaving of `setGain`, `setLevel`, cap changes and sound toggles
     - **Property 14: Real adapter and real haunts stay under the cap**
     - **Validates: Requirements 4.3, 6.2, 6.3, 6.4, 6.13, 14.5**
 
@@ -319,23 +319,6 @@ Testing rules that apply to every task (from the testing steering file): no fake
 
   - [x] 8.5 Report results in `docs/BUILD_LOG.md`
     - Append a section for task 8: Properties 14 and 15 over candle and whispers, cases run, any counterexample with seed and shrunk input, and a confirmation that no file under `src/haunts/engine/` changed (`git diff --stat src/haunts/engine`)
-    - _Requirements: none (testing rule)_
-
-- [ ] 9. Add the shadow haunt (one file, no engine edits)
-  - [ ] 9.1 Implement `src/haunts/shadow.ts`
-    - Exports `id` (`shadow`), `name`, `start`, `setLevel`, `stop`. Uses `visual.createLayer` with an inline SVG string of an abstract soft shape (no face, no figure), `setOpacity` and `setSweep` (starting periods 14 s, 10 s, 6 s; darker, larger and more frequent with level, within the flash budget)
-    - Reduced motion handling is done by the gate (fade in place, no crossing). No sound. `stop` removes the layer
-    - Do not edit any file in `src/haunts/engine/`. If an edit seems needed, stop and report it
-    - Run the existing suites (Property 14, Property 15, colour rule, static scan, discovery smoke) and confirm they now cover three haunts and all pairs
-    - _Requirements: 4.1, 4.3, 4.5, 4.6, 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7, 15.8, 5.2_
-
-  - [ ]* 9.2 Write unit tests for the shadow haunt
-    - File: `src/haunts/__tests__/shadow.unit.test.ts`
-    - Contract type assertion; opacity and size non-decreasing across levels with a strict rise; sweep period shrinks with level; `stop()` removes every layer; no audio calls
-    - _Requirements: 4.6, 15.2, 15.3, 15.4, 15.7, 15.8_
-
-  - [ ] 9.3 Report results in `docs/BUILD_LOG.md`
-    - Append a section for task 9: Properties 14 and 15 over all three haunts and all ordered pairs, cases run, any counterexample with seed and shrunk input, and a confirmation that no file under `src/haunts/engine/` changed
     - _Requirements: none (testing rule)_
 
 - [x] 10. Final integration checks
@@ -356,8 +339,9 @@ Testing rules that apply to every task (from the testing steering file): no fake
 - Tasks marked with `*` are optional (example and unit tests). Property tests are required, as in the attention-signal and reader-core specs, together with the static scan, discovery smoke, colour rule and network spy tests, which guard safety rules.
 - Each task references specific requirements for traceability. Checkpoints ensure incremental validation.
 - Property tests validate universal correctness properties; unit tests validate specific examples and edge cases.
-- Properties 14 and 15 iterate the discovered registry. They are introduced when the first haunt that needs them exists (15 with candle, 14 with whispers) and then cover shadow without edits.
+- Properties 14 and 15 iterate the discovered registry. They are introduced when the first haunt that needs them exists (15 with candle, 14 with whispers) and then cover every later haunt without edits.
 - No new dependency is added. Vite, React, Vitest, fast-check and jsdom are already in `package.json`.
+- Haunt_Mode amendment: `gentle` in the completed tasks above means the Gentle value of the three-valued Haunt_Mode (Gentle, Classic, Nightmare; Classic is the default). The ghost-dread spec (tasks 1.3 to 1.7) migrates the code from the `gentle` flag to `mode`, and the Haunt_Control toggle becomes a mode choice there. Ambient fade-out stays within 800 ms, and the Ghost may stay for the Return_Moment of at most 3000 ms. During the Return_Moment, effects may cover the Reading_Column, which is identical in content and layout within 100 ms after it ends; the colour-rule test (6.8) runs outside the Return_Moment.
 - Design correspondence: the design places the colour-rule test in "Unit and example tests"; here it sits in task 6 because it needs `HauntStage`.
 
 ## Task Dependency Graph
@@ -376,8 +360,8 @@ Testing rules that apply to every task (from the testing steering file): no fake
     { "id": 8, "tasks": ["6.9", "8.1"] },
     { "id": 9, "tasks": ["6.11", "8.2"] },
     { "id": 10, "tasks": ["8.3", "8.4"] },
-    { "id": 11, "tasks": ["8.5", "9.1"] },
-    { "id": 12, "tasks": ["9.2", "9.3", "10.1"] },
+    { "id": 11, "tasks": ["8.5"] },
+    { "id": 12, "tasks": ["10.1"] },
     { "id": 13, "tasks": ["10.2"] }
   ]
 }

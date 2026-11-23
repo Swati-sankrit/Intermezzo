@@ -860,3 +860,8 @@ The task 1.26 table gave P7 as 1,200 cases and P8 as 900, total 24,500 for tasks
 - For any other failure: stop and ask. Assertions are not weakened and tests are not deleted to get green.
 - The no-engine-edit rule applies again from the ghost haunt onward. If an edit in `src/haunts/engine/` seems needed, stop and report.
 - Task 10.1 (`network.unit.test.ts`, spies on `fetch`, `XMLHttpRequest`, `sendBeacon` and `localStorage.setItem`) had no log entry of its own. It is counted in the totals above.
+
+## ghost-dread task 1.6: Level_Logic with modes
+- Migrated `levelLogic.p01` to `p08` from `gentle: boolean` to `mode: HauntMode`. Assertions unchanged. Gentle shares kept (p05 25%, p06 42%, p07 35%, p08 32.5%); the non-Gentle share splits evenly between Classic and Nightmare. Where a test fixed `gentle: false` (p02, p04), it now draws Classic or Nightmare. Shared generators `modeArb`, `fullModeArb`, `weightedModeArb` added to `arbitraries.ts`.
+- Added `levelLogic.gd02.prop.test.ts` (Property 2): Gentle caps level at 1 with no companion; Classic and Nightmare equal a reference copy of the previous Level_Logic with gentle false (the reference is in the test file); Classic equals Nightmare; coverage test. 4 tests, 300 cases each, coverage test 1000 cases.
+- Result: 9 files, 35 tests passed. Counterexamples: none. Coverage misses: none.

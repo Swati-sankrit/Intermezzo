@@ -63,11 +63,27 @@ const PURE_LOGIC_RULES: Rule[] = [
   { label: 'Math.random', re: /\bMath\s*\.\s*random\b/ },
 ];
 
+/** Pure-logic rules plus the network APIs, for every file in engine/ghost/. */
+const GHOST_FILE_RULES: Rule[] = [
+  ...PURE_LOGIC_RULES,
+  { label: 'fetch', re: /\bfetch\b/ },
+  { label: 'XMLHttpRequest', re: /\bXMLHttpRequest\b/ },
+];
+
 const MEDIA_FILE_RE = /\.(?:mp3|wav|ogg|m4a)\b/i;
 const FORBIDDEN_IMPORT_RE = /attention|(?:^|[/\\])ui(?:[/\\]|$)|camera|video|detector|mediapipe/i;
 
 /** Specifiers a haunt file (src/haunts/*.ts) may import. hauntAudio holds types only. */
 const ALLOWED_HAUNT_IMPORTS = ['./engine/types', './engine/noise', './engine/hauntAudio'];
+/** Any module under engine/ghost/ may also be imported by a haunt file. */
+const ALLOWED_HAUNT_IMPORT_PREFIX = './engine/ghost/';
+
+function isAllowedHauntImport(spec: string): boolean {
+  return (
+    ALLOWED_HAUNT_IMPORTS.includes(spec) ||
+    (spec.startsWith(ALLOWED_HAUNT_IMPORT_PREFIX) && spec.length > ALLOWED_HAUNT_IMPORT_PREFIX.length && !spec.includes('..'))
+  );
+}
 
 interface Found { rule: string; line: number }
 
@@ -102,7 +118,7 @@ export function findImports(code: string): ImportRef[] {
 /** Problems with the imports of a haunt file; empty when all are allowed. */
 export function hauntImportProblems(code: string): string[] {
   return findImports(code).flatMap((r) => {
-    if (!ALLOWED_HAUNT_IMPORTS.includes(r.spec)) return [`line ${r.line}: import from '${r.spec}' is not allowed`];
+    if (!isAllowedHauntImport(r.spec)) return [`line ${r.line}: import from '${r.spec}' is not allowed`];
     if (r.spec === './engine/hauntAudio' && !r.typeOnly) return [`line ${r.line}: hauntAudio must be a type-only import`];
     return [];
   });
@@ -132,6 +148,8 @@ const describeFound = (path: string, f: Found[]): string[] => f.map((x) => `${re
 
 const hauntsSources = sourceFiles(HAUNTS_DIR);
 const hauntFiles = hauntsSources.filter((p) => dirname(p) === HAUNTS_DIR);
+const GHOST_DIR = join(HAUNTS_DIR, 'engine', 'ghost');
+const ghostFiles = sourceFiles(GHOST_DIR);
 const byName = (name: string): string[] => hauntsSources.filter((p) => p.split(/[/\\]/).pop() === name);
 
 describe('static source scan: scanner self-checks', () => {
@@ -141,8 +159,10 @@ describe('static source scan: scanner self-checks', () => {
       'speechSynthesis.speak(); const k = "@keyframes x"; el.animation; setInterval(f); setTimeout(f);',
       'localStorage.getItem(k); Date.now(); performance.now(); Math.random();',
     ].join('\n');
-    const labels = new Set([...scanRules(bad, HAUNT_FILE_RULES), ...scanRules(bad, PURE_LOGIC_RULES)].map((f) => f.rule));
-    for (const r of [...HAUNT_FILE_RULES, ...PURE_LOGIC_RULES]) expect(labels.has(r.label), r.label).toBe(true);
+    const labels = new Set(
+      [...scanRules(bad, HAUNT_FILE_RULES), ...scanRules(bad, PURE_LOGIC_RULES), ...scanRules(`${bad}\nnew XMLHttpRequest();`, GHOST_FILE_RULES)].map((f) => f.rule),
+    );
+    for (const r of [...HAUNT_FILE_RULES, ...PURE_LOGIC_RULES, ...GHOST_FILE_RULES]) expect(labels.has(r.label), r.label).toBe(true);
     expect(MEDIA_FILE_RE.test('const u = "sound.mp3"')).toBe(true);
     expect(MEDIA_FILE_RE.test("x.m4a")).toBe(true);
   });
@@ -155,6 +175,7 @@ describe('static source scan: scanner self-checks', () => {
     ].join('\n'));
     expect(scanRules(ok, HAUNT_FILE_RULES)).toEqual([]);
     expect(scanRules(ok, PURE_LOGIC_RULES)).toEqual([]);
+    expect(scanRules(ok, GHOST_FILE_RULES)).toEqual([]);
   });
 
   it('flags disallowed imports and allows the permitted ones', () => {
@@ -163,6 +184,10 @@ describe('static source scan: scanner self-checks', () => {
     const good = "import type { A } from './engine/types';\nimport { noise } from './engine/noise';\nimport type { C } from './engine/hauntAudio';";
     expect(hauntImportProblems(good)).toEqual([]);
     expect(hauntImportProblems("import { C } from './engine/hauntAudio';")).toHaveLength(1);
+    expect(hauntImportProblems("import { m } from './engine/ghost/mode';\nimport type { P } from './engine/ghost/plan';")).toEqual([]);
+    expect(hauntImportProblems("import { x } from './engine/ghost/';")).toHaveLength(1);
+    expect(hauntImportProblems("import { x } from './engine/ghost/../levelLogic';")).toHaveLength(1);
+    expect(hauntImportProblems("import { x } from './engine/ghosts/mode';")).toHaveLength(1);
     expect(FORBIDDEN_IMPORT_RE.test('../../ui/App')).toBe(true);
     expect(FORBIDDEN_IMPORT_RE.test('../../attention')).toBe(true);
     expect(FORBIDDEN_IMPORT_RE.test('./engine/types')).toBe(false);
@@ -174,6 +199,7 @@ describe('static source scan: real source', () => {
     expect(hauntFiles.map((p) => p.split(/[/\\]/).pop())).toContain('candle.ts');
     expect(byName('levelLogic.ts')).toHaveLength(1);
     expect(byName('plan.ts')).toHaveLength(1);
+    expect(ghostFiles.map((p) => p.split(/[/\\]/).pop())).toContain('mode.ts');
     expect(byName('audioAdapter.ts')).toHaveLength(1);
     expect(byName('audioGraph.ts')).toHaveLength(1);
     expect(hauntsSources.every((p) => !isTestFile(p))).toBe(true);
@@ -192,6 +218,11 @@ describe('static source scan: real source', () => {
   it('levelLogic.ts and plan.ts are pure (no DOM, clock or randomness)', () => {
     const files = [...byName('levelLogic.ts'), ...byName('plan.ts')];
     const hits = files.flatMap((p) => describeFound(p, scanRules(load(p), PURE_LOGIC_RULES)));
+    expect(hits).toEqual([]);
+  });
+
+  it('every file in engine/ghost/ is pure (no DOM, clock, randomness or network)', () => {
+    const hits = ghostFiles.flatMap((p) => describeFound(p, scanRules(load(p), GHOST_FILE_RULES)));
     expect(hits).toEqual([]);
   });
 

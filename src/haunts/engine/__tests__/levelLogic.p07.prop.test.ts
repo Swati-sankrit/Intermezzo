@@ -2,17 +2,14 @@ import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { evaluate } from '../levelLogic';
 import type { LevelInput } from '../levelLogic';
-import { awayHistoryArb, eventHistoryArb, rollsArb } from './arbitraries';
+import { awayHistoryArb, eventHistoryArb, rollsArb, weightedModeArb } from './arbitraries';
 
 const NUM_RUNS = 300;
 /** The coverage check has a floor and a ceiling for gentle mode, so it gets more cases (same approach as p08). */
 const COVERAGE_RUNS = 1000;
 
 /** Gentle mode on about 35% of the time, the centre of the 25% to 45% coverage band. */
-const gentleArb = fc.oneof(
-  { weight: 13, arbitrary: fc.constant(false) },
-  { weight: 7, arbitrary: fc.constant(true) },
-);
+const modeInputArb = weightedModeArb(7, 13);
 
 const idArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,7}$/);
 
@@ -33,7 +30,7 @@ const awayInputArb: fc.Arbitrary<LevelInput> = fc
   .record({
     events: awayHistoryArb,
     elapsed: elapsedArb,
-    gentle: gentleArb,
+    mode: modeInputArb,
     hauntIds: sizedIdsArb,
     rolls: rollsArb,
   })
@@ -49,7 +46,7 @@ const awayInputArb: fc.Arbitrary<LevelInput> = fc
         (previousLeadId): LevelInput => ({
           events: r.events,
           now: start + r.elapsed,
-          gentle: r.gentle,
+          mode: r.mode,
           hauntIds: r.hauntIds,
           previousLeadId,
           rolls: r.rolls,
@@ -62,14 +59,14 @@ const anyInputArb: fc.Arbitrary<LevelInput> = fc
   .record({
     events: eventHistoryArb,
     offset: fc.integer({ min: -2000, max: 30_000 }),
-    gentle: gentleArb,
+    mode: modeInputArb,
     hauntIds: sizedIdsArb,
     rolls: rollsArb,
   })
   .map((r) => ({
     events: r.events,
     now: (r.events.length > 0 ? r.events[r.events.length - 1].timestamp : 0) + r.offset,
-    gentle: r.gentle,
+    mode: r.mode,
     hauntIds: r.hauntIds,
     previousLeadId: r.hauntIds[0] ?? null,
     rolls: r.rolls,
@@ -144,7 +141,7 @@ describe('Level_Logic evaluate: determinism and no input mutation', () => {
         if (out.level === 1) seen.l1++;
         if (out.level === 2) seen.l2++;
         if (out.level === 3) seen.l3++;
-        if (input.gentle) seen.gentle++;
+        if (input.mode === 'gentle') seen.gentle++;
         if (out.companionId !== null) seen.companion++;
       }),
       { numRuns: COVERAGE_RUNS },

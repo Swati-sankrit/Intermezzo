@@ -22,44 +22,44 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
 ## Tasks
 
 - [ ] 1. Foundation: spec amendment, modes, settings migration, types, registry
-  - [ ] 1.1 Amend the haunt-feature spec
+  - [x] 1.1 Amend the haunt-feature spec
     - Edit `.kiro/specs/haunt-feature/requirements.md`, `design.md` and `tasks.md` as in the design table "Amendments to the haunt-feature spec": ambient fade within 800 ms and the Ghost may stay for the Return_Moment (13.1); the Ghost replaces the shadow haunt, remove task 9 and every `shadow.ts` mention (13.2); Return_Moment effects may cover the column and the column is identical within 100 ms after (13.3); `Gentle_Mode` becomes the Gentle value of a three-valued Haunt_Mode (13.4); the Safety_Notice describes ghosts and glitching, not a shadow (13.5)
     - Run `validate_spec_format` on each edited document
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
 
-  - [ ] 1.2 Create the mode and contract types
+  - [x] 1.2 Create the mode and contract types
     - `src/haunts/engine/ghost/mode.ts`: `HauntMode`, `HAUNT_MODES`, `DEFAULT_MODE`, `resolveMode`
     - `engine/types.ts`: add `StartInfo`, optional `role`, `modes`, `minLevel` on `Haunt`, `AudioOut.onTick`, `VisualLayer.setLabel`, and the optional fourth `start` argument; `Gate` gains `beginReturnMoment`, `endReturnMoment`, `openReturn`
     - `engine/returnTypes.ts`: `ReturnPlan`, `ReturnEffect`, `ReturnPort`, `ReturnVisualOut`, `OverlayKind`, `GlitchSpec`, `ReadingContext`, `EvidenceHost`, `SpoilerHost`
     - Types only, no DOM, audio, timer or camera access; each file under 200 lines
     - _Requirements: 8.1, 8.2, 8.12, 11.1, 13.6_
 
-  - [ ] 1.3 Implement the settings migration in `engine/settings.ts`
+  - [x] 1.3 Implement the settings migration in `engine/settings.ts`
     - Replace `gentle` with `mode: HauntMode`; add `headphonesTipSeen`; new keys `rod_haunt_mode` and `rod_headphones_tip_seen`; `rod_haunt_gentle` is read only
     - `parseSettings` uses `resolveMode` (valid mode wins, invalid string gives Classic, missing mode migrates from the legacy flag `'true'` to Gentle and `'false'` to Classic, anything else Classic); `serializeSettings` writes the new keys; `set()` returns `false` when any write failed
     - _Requirements: 8.2, 8.5, 8.6, 8.7, 8.8, 8.9, 10.5_
 
-  - [ ] 1.4 Write property test for mode resolution and settings round trip
+  - [x] 1.4 Write property test for mode resolution and settings round trip
     - File: `src/haunts/engine/__tests__/settings.gd01.prop.test.ts` (replaces the `gentle` assertions of `settings.p16`)
     - **Property 1: Haunt mode resolution and settings round trip**
     - **Validates: Requirements 8.2, 8.7, 8.8, 8.9, 10.5**
 
-  - [ ] 1.5 Change Level_Logic from `gentle` to `mode`
+  - [x] 1.5 Change Level_Logic from `gentle` to `mode`
     - `engine/levelLogic.ts`: `LevelInput.gentle` becomes `mode: HauntMode`; Gentle gives level at most 1 and no companion; Classic and Nightmare give the previous output
     - _Requirements: 8.12_
 
-  - [ ] 1.6 Write property test for Level_Logic with modes and update existing level tests
+  - [x] 1.6 Write property test for Level_Logic with modes and update existing level tests
     - File: `src/haunts/engine/__tests__/levelLogic.gd02.prop.test.ts`
     - Move `levelLogic.p01` to `p08` and `plan`-independent tests to the `mode` input with the same assertions
     - **Property 2: Level_Logic with modes**
     - **Validates: Requirements 8.12**
 
-  - [ ] 1.7 Migrate every consumer of `gentle`
+  - [x] 1.7 Migrate every consumer of `gentle`
     - `engine.ts`, `HauntLayer.tsx`, `HauntControl.tsx` (one toggle mapped to Gentle or Classic until task 11), `useHauntSettings`, the fakes in `engine/__tests__/fakes.ts` (add `reading`, `evidence`, `spoiler` fakes) and `engine.p20`, `reducedMotion.p15`, `gateCap.p14` and `colorRule` tests
     - Run the TypeScript compiler; the removed `gentle` field makes every use a compile error
     - _Requirements: 8.4, 8.5, 8.12_
 
-  - [ ] 1.8 Extend the registry for roles, modes and return effects
+  - [x] 1.8 Extend the registry for roles, modes and return effects
     - `engine/registry.ts`: classify Haunt, ReturnEffect or both; validate optional `role`, `modes`, `minLevel`, `jumpSound`; add `loadRegistry(warn)` returning `{ haunts, effects }`; keep `loadHaunts` and the glob unchanged
     - _Requirements: 1.14, 13.6_
 

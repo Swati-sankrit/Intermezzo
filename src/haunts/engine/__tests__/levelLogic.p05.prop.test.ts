@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { evaluate } from '../levelLogic';
 import type { LevelOutput } from '../levelLogic';
-import { awayHistoryArb, rollArb } from './arbitraries';
+import type { HauntMode } from '../ghost/mode';
+import { awayHistoryArb, rollArb, weightedModeArb } from './arbitraries';
 
 const NUM_RUNS = 300;
 
@@ -37,7 +38,7 @@ const elapsedArb = fc.oneof(
 const lookAwayArb = fc.record({
   events: awayHistoryArb,
   elapsed: elapsedArb,
-  gentle: fc.oneof({ weight: 3, arbitrary: fc.constant(false) }, { weight: 1, arbitrary: fc.constant(true) }),
+  mode: weightedModeArb(1, 3),
   rolls: rollsArb,
 });
 
@@ -64,7 +65,7 @@ type Scenario = {
   lookAways: Array<{
     events: Array<{ value: 'present' | 'away'; timestamp: number }>;
     elapsed: number;
-    gentle: boolean;
+    mode: HauntMode;
     rolls: { lead: number; companion: number };
   }>;
   firstPrevious: string | null;
@@ -84,7 +85,7 @@ function run(s: Scenario): Step[] {
     const out = evaluate({
       events: la.events,
       now: start + la.elapsed,
-      gentle: la.gentle,
+      mode: la.mode,
       hauntIds: s.hauntIds,
       previousLeadId,
       rolls: la.rolls,

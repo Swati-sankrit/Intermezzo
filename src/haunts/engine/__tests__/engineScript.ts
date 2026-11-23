@@ -208,7 +208,7 @@ export function runScript(script: Script): ScriptStats {
   const store = createSettingsStore(
     createFakeStorage({
       [KEYS.sound]: String(init.sound),
-      [KEYS.gentle]: String(init.gentle),
+      [KEYS.mode]: init.gentle ? 'gentle' : 'classic',
       [KEYS.noticeSeen]: String(init.armed),
     }),
   );
@@ -532,7 +532,7 @@ export function runScript(script: Script): ScriptStats {
         step(kind, () => {
           if (!stopped && op.on && before.level === 3 && before.companionId !== null) stats.gentleOnAtLevel3 = true;
           if (!stopped) gentle = op.on;
-          store.set({ gentle: op.on });
+          store.set({ mode: op.on ? 'gentle' : 'classic' });
         });
         if (win) {
           const throwsOn = rule(script.haunts[haunts.indexOf(win.lead)].setLevel);

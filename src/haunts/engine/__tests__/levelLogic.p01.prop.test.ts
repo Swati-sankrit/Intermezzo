@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { evaluate } from '../levelLogic';
 import type { LevelInput } from '../levelLogic';
-import { eventHistoryArb, awayHistoryArb, hauntIdsArb, rollsArb } from './arbitraries';
+import type { HauntMode } from '../ghost/mode';
+import { eventHistoryArb, awayHistoryArb, hauntIdsArb, rollsArb, modeArb } from './arbitraries';
 
 const NUM_RUNS = 300;
 
@@ -10,21 +11,21 @@ const NUM_RUNS = 300;
 const nowArb = fc.integer({ min: -1000, max: 1_100_000 + 200_000 });
 
 /** Previous lead: none, a listed id, or an id that is not in the list. */
-function inputArb(history: fc.Arbitrary<LevelInput['events']>, gentle: fc.Arbitrary<boolean>) {
+function inputArb(history: fc.Arbitrary<LevelInput['events']>, mode: fc.Arbitrary<HauntMode>) {
   return fc
-    .tuple(history, nowArb, gentle, hauntIdsArb, rollsArb)
-    .chain(([events, now, g, hauntIds, rolls]) =>
+    .tuple(history, nowArb, mode, hauntIdsArb, rollsArb)
+    .chain(([events, now, m, hauntIds, rolls]) =>
       fc
         .oneof(
           fc.constant<string | null>(null),
           hauntIds.length > 0 ? fc.constantFrom(...hauntIds) : fc.constant<string | null>(null),
           fc.constant<string | null>('not-in-list'),
         )
-        .map((previousLeadId): LevelInput => ({ events, now, gentle: g, hauntIds, previousLeadId, rolls })),
+        .map((previousLeadId): LevelInput => ({ events, now, mode: m, hauntIds, previousLeadId, rolls })),
     );
 }
 
-const anyInputArb = inputArb(fc.oneof(eventHistoryArb, awayHistoryArb), fc.boolean());
+const anyInputArb = inputArb(fc.oneof(eventHistoryArb, awayHistoryArb), modeArb);
 /** Offset from the trailing away start: before it, among the levels, at each boundary. */
 const offsetArb = fc.oneof(
   { weight: 3, arbitrary: fc.integer({ min: -1000, max: 20_000 }) },
@@ -33,14 +34,14 @@ const offsetArb = fc.oneof(
 
 /** Away history with `now` drawn relative to the trailing away start, so levels 1 to 3 all occur. */
 const relativeInputArb: fc.Arbitrary<LevelInput> = fc
-  .tuple(awayHistoryArb, offsetArb, fc.boolean(), hauntIdsArb, rollsArb)
-  .map(([events, offset, gentle, hauntIds, rolls]) => {
+  .tuple(awayHistoryArb, offsetArb, modeArb, hauntIdsArb, rollsArb)
+  .map(([events, offset, mode, hauntIds, rolls]) => {
     let start = events[events.length - 1].timestamp;
     for (let i = events.length - 1; i >= 0 && events[i].value === 'away'; i--) start = events[i].timestamp;
-    return { events, now: start + offset, gentle, hauntIds, previousLeadId: null, rolls };
+    return { events, now: start + offset, mode, hauntIds, previousLeadId: null, rolls };
   });
 const coverageInputArb = fc.oneof(anyInputArb, relativeInputArb);
-const gentleInputArb = inputArb(fc.oneof(eventHistoryArb, awayHistoryArb), fc.constant(true));
+const gentleInputArb = inputArb(fc.oneof(eventHistoryArb, awayHistoryArb), fc.constant<HauntMode>('gentle'));
 
 describe('Level_Logic evaluate', () => {
   // Feature: haunt-feature, Property 1: Level is bounded and gentle mode caps it
@@ -78,7 +79,7 @@ describe('Level_Logic evaluate', () => {
       fc.property(coverageInputArb, (input) => {
         const out = evaluate(input);
         seen.add(out.level);
-        if (input.gentle && evaluate({ ...input, gentle: false }).level > 1) {
+        if (input.mode === 'gentle' && evaluate({ ...input, mode: 'classic' }).level > 1) {
           capped++;
           expect(out.level).toBe(1);
           expect(out.companionId).toBeNull();

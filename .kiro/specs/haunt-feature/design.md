@@ -13,7 +13,7 @@ Design decisions, with reasons:
 | The Safety_Gate is pure planning functions plus thin Web Audio and DOM adapters. | The rules (gain scaling, flash budget, fade durations, cap parsing) become property-testable without a browser. |
 | Haunts see only `AudioOut` and `VisualOut`. Time-varying visuals use gate primitives (`setOpacity`, `setSweep`, `setFlashRate`, `glow.setGutter`), never haunt-written CSS animation. | The gate can count and limit every flash and movement. All `@keyframes` live in one stylesheet owned by the stage. |
 | Level_Logic takes its random choices as inputs (`rolls`). | The function stays pure and deterministic (Req 10.2), while the engine supplies one random draw per look-away. |
-| One shared settings store (sound, gentle, notice seen) read by the engine, the top-bar control and the dialog hold-back. | One source of truth. No prop drilling through `AttentionLayer` or `ReaderView`. |
+| One shared settings store (sound, Haunt_Mode, notice seen) read by the engine, the top-bar control and the dialog hold-back. | One source of truth. No prop drilling through `AttentionLayer` or `ReaderView`. |
 | Consent hold-back is a pure predicate `visibleDialogs(noticeSeen, choice)` used by `AttentionLayer`. | Two complementary conditions can never be true together, and the attention module is untouched (Req 8.12). |
 
 No new dependency is proposed. The feature uses Vite, React, Vitest, fast-check and jsdom, which are already in `package.json`. No new licence applies.
@@ -72,7 +72,6 @@ flowchart TD
   subgraph haunts["src/haunts/*.ts (one file each)"]
     H1[candle.ts]
     H2[whispers.ts]
-    H3[shadow.ts]
   end
 
   SIG --> AL
@@ -102,6 +101,9 @@ Rules the diagram encodes:
 
 ### Signal to haunt sequence
 
+Amendment (ghost-dread Req 13.1): on `present`, ambient effects finish fading within 800 ms (the 600 ms `fadeOutAll` below is inside that limit). The Ghost of the ghost-dread spec is not an ambient effect and may stay for the Return_Moment of at most 3000 ms.
+
+
 ```mermaid
 sequenceDiagram
   participant A as Attention signal
@@ -112,7 +114,7 @@ sequenceDiagram
 
   A->>E: away (t0)
   E->>E: new look-away: draw rolls, remember previous lead
-  E->>L: evaluate(events, now, gentle, ids, previousLead, rolls)
+  E->>L: evaluate(events, now, mode, ids, previousLead, rolls)
   L-->>E: level 1, lead X
   E->>G: open(X)
   E->>H: X.start(1, audio, visual)
@@ -130,13 +132,20 @@ sequenceDiagram
   E->>G: close(X), close(Y)
 ```
 
+### Amendments from the ghost-dread spec
+
+- **Haunt_Mode (ghost-dread 13.4).** `Gentle_Mode` is the Gentle value of a three-valued Haunt_Mode (Gentle, Classic, Nightmare), with Classic as the default. Gentle limits haunts to level 1 with no Ghost figure, glitch effect or jumpscare. Where this document says "gentle", it means the Gentle value. The code migration is ghost-dread tasks 1.3 to 1.7.
+- **Return_Moment (ghost-dread 13.1, 13.3).** Ambient effects finish fading within 800 ms of `present`. The Ghost may stay for the Return_Moment of at most 3000 ms. During the Return_Moment, return effects, including the Evidence_Message, may cover or change the Reading_Column. Within 100 ms after it ends the column is fully readable and identical in content and layout to its state before. Req 6.11, 6.12 and 16.4 hold outside the Return_Moment, and the colour-rule test runs outside it.
+- **Ghost replaces shadow (ghost-dread 13.2).** The haunt list is candle and whispers.
+- **Safety_Notice (ghost-dread 13.5).** The notice describes ghosts and glitching, with no moving shadow.
+
 ### Engine states
 
 ```mermaid
 stateDiagram-v2
   [*] --> Idle
   Idle --> Haunting: away and armed
-  Haunting --> Haunting: level change, gentle toggle
+  Haunting --> Haunting: level change, mode change
   Haunting --> Retiring: present
   Retiring --> Idle: fade done, all stopped
   Retiring --> Haunting: away again (flush at most 50 ms, then start new lead)
@@ -152,7 +161,6 @@ stateDiagram-v2
 src/haunts/
   candle.ts              haunt: exports id, name, start, setLevel, stop
   whispers.ts            haunt (increment 2)
-  shadow.ts              haunt (increment 2)
   __tests__/             haunt tests (the glob does not match subfolders)
   engine/
     types.ts             Haunt, HauntLevel, AudioOut, VisualOut, Gate, ports
@@ -310,7 +318,7 @@ export function stop(): void { visual?.glow.setDim(0); visual?.glow.setGutter(0,
 function apply(level: HauntLevel): void { /* glow.setDim(DIM[level]); glow.setGutter(...) */ }
 ```
 
-The numbers are starting values to tune by eye; tests check order (level 1 < 2 < 3), not the exact values. The whispers haunt starts with gains 0.04, 0.10 and 0.18, and the shadow haunt uses sweep periods of 14 s, 10 s and 6 s. Whispers (Req 14.8): the vignette must show while sound is off or locked, and a haunt cannot see the gate's sound and unlock state. Whispers therefore subscribes with `audio.onAudibleChange`: the `createLayer` vignette is shown at the level's strength whenever audible is false, faded out when it is true, and follows later changes in both directions; `stop` unsubscribes. `whenReady` is still used to build the audio graph. A haunt module keeps its state at module level. The engine never starts a running haunt twice, so one instance per module is enough.
+The numbers are starting values to tune by eye; tests check order (level 1 < 2 < 3), not the exact values. The whispers haunt starts with gains 0.04, 0.10 and 0.18. Whispers (Req 14.8): the vignette must show while sound is off or locked, and a haunt cannot see the gate's sound and unlock state. Whispers therefore subscribes with `audio.onAudibleChange`: the `createLayer` vignette is shown at the level's strength whenever audible is false, faded out when it is true, and follows later changes in both directions; `stop` unsubscribes. `whenReady` is still used to build the audio graph. A haunt module keeps its state at module level. The engine never starts a running haunt twice, so one instance per module is enough.
 
 ### Level_Logic (`engine/levelLogic.ts`)
 
@@ -319,7 +327,7 @@ export interface LevelInput {
   /** Delivery order. The latest run of `away` events at the end gives the away start. */
   readonly events: readonly AttentionSignalLike[];
   readonly now: number;
-  readonly gentle: boolean;
+  readonly mode: HauntMode;   // 'gentle' | 'classic' | 'nightmare'
   readonly hauntIds: readonly string[];
   /** Lead of the previous look-away, or null. */
   readonly previousLeadId: string | null;
@@ -348,11 +356,11 @@ Rules of `evaluate`:
 3. With no haunt ids, the level is 0 and both ids are null (Req 3.7).
 4. `leadId`: the candidates are `hauntIds` without `previousLeadId`. If that leaves none (one haunt), or `previousLeadId` is null or absent from the list, the candidates are all `hauntIds`. The lead is `candidates[floor(rolls.lead * candidates.length)]`. The index is clamped to the last element, so a roll outside `[0, 1)` cannot index out of range.
 5. `companionId`: only when `level === 3` and there are at least two ids. Candidates are `hauntIds` without `leadId`, and the companion is `candidates[floor(rolls.companion * length)]`. Otherwise null.
-6. Gentle: `level = min(level, 1)` and `companionId = null`.
+6. Mode Gentle: `level = min(level, 1)` and `companionId = null`. Classic and Nightmare leave the output unchanged.
 
-Because rolls and `previousLeadId` are fixed for a look-away, the lead is a function of the events only. It does not change with `now` or `gentle`, which gives Req 3.4 and Req 7.3 for free.
+Because rolls and `previousLeadId` are fixed for a look-away, the lead is a function of the events only. It does not change with `now` or `mode`, which gives Req 3.4 and Req 7.3 for free.
 
-`nextChangeDelay` returns `5000 - elapsed` or `12000 - elapsed` for the next threshold, and null when the level is 0, 3, gentle, or the haunt list is empty.
+`nextChangeDelay` returns `5000 - elapsed` or `12000 - elapsed` for the next threshold, and null when the level is 0, 3, the mode is Gentle, or the haunt list is empty.
 
 ### Registry (`engine/registry.ts`)
 
@@ -399,7 +407,7 @@ export interface RateRequest { readonly key: string; readonly rate: number }
 Design notes:
 
 - Gains add, so the plan treats the sum of channel gains as the worst-case combined level. A DynamicsCompressor on the master bus is a second line of defence for filter resonance peaks. It is not what the guarantee relies on.
-- A flash is one dip and recovery of brightness or opacity. A sweep crossing counts as one flash-equivalent, so the budget covers moving shadows as well as glow gutters. The minimum sweep period of 2 s caps one sweep at 0.5 per second.
+- A flash is one dip and recovery of brightness or opacity. A sweep crossing counts as one flash-equivalent, so the budget covers moving shapes as well as glow gutters. The minimum sweep period of 2 s caps one sweep at 0.5 per second.
 - Fades that fall (gain or opacity going down, cap lowered, sound switched off) use `planFadeOut`. Fades that rise use `planFadeIn`. Lowering the cap or switching sound off uses a fixed short ramp (cap: 50 ms, sound off: 150 ms), which is inside the 100 ms and 300 ms limits of Req 6.13 and 9.2.
 
 #### Gain planning rules (`gate/gainPlan.ts`)
@@ -495,7 +503,7 @@ export function createHauntEngine(deps: EngineDeps): HauntEngine;
 
 Behaviour:
 
-- `start` subscribes through `subscribeSignal` and also subscribes to the settings store for `gentle`, `sound` and `noticeSeen`. The first value delivered on subscribe is handled like any other event (Req 11.4).
+- `start` subscribes through `subscribeSignal` and also subscribes to the settings store for `mode`, `sound` and `noticeSeen`. The first value delivered on subscribe is handled like any other event (Req 11.4).
 - The engine keeps the events since the last `present`. A consecutive duplicate value is ignored. When a look-away begins it draws `rolls` once with `random()` and freezes `previousLeadId` as the lead of the previous look-away.
 - `recompute()` calls `evaluate` with `clock.now()`, then `reconcile`:
   - `level 0`: if anything runs, call `gate.fadeOutAll(600)`, then after 600 ms call `stop()` on each running haunt in its own try/catch, then `port.close()` for each. A thrown error is passed to `warn`. The level is 0 from the moment of the call (Req 2.1 to 2.4).
@@ -509,10 +517,10 @@ Behaviour:
 ### Settings (`engine/settings.ts`)
 
 ```ts
-export interface HauntSettings { readonly sound: boolean; readonly gentle: boolean; readonly noticeSeen: boolean }
-export const DEFAULT_SETTINGS: HauntSettings = { sound: true, gentle: false, noticeSeen: false };
+export interface HauntSettings { readonly sound: boolean; readonly mode: HauntMode; readonly noticeSeen: boolean }
+export const DEFAULT_SETTINGS: HauntSettings = { sound: true, mode: 'classic', noticeSeen: false };
 export const KEYS = {
-  sound: 'rod_haunt_sound', gentle: 'rod_haunt_gentle',
+  sound: 'rod_haunt_sound', mode: 'rod_haunt_mode',   // legacy rod_haunt_gentle is read only
   noticeSeen: 'rod_safety_notice_seen', volumeCap: 'rod_volume_cap',
 } as const;
 
@@ -555,12 +563,12 @@ export function computeRegions(viewportWidth: number, viewportHeight: number, co
 | --- | --- |
 | `HauntLayer` | Builds the engine and gate once per mounted reading view (`useEffect` with cleanup), passes `subscribeSignal`, renders `HauntStage` and, when needed, `SafetyNotice`. No logic beyond wiring. |
 | `HauntStage` | Fixed, full-viewport overlay (`pointer-events: none`, `aria-hidden`, z-index below the top bar). Holds the Candle_Glow and the two side regions. Measures the column (`[data-reading-column]`, set on `.paragraph-list`) with `ResizeObserver` and the window `resize` event, and sets the region sizes from `computeRegions`. Exposes the host elements to `HauntLayer` through a ref callback. Owns every `@keyframes` rule. |
-| `SafetyNotice` | Modal dialog (`role="dialog"`, `aria-modal`, `useFocusTrap`), one button "Begin reading". Text: haunts include dimming light and moving shadow, haunts include quiet sound, sound can be turned off or Gentle mode used. Writes `noticeSeen` to the settings store on dismiss. |
-| `HauntControl` | Two buttons in the top bar with `aria-pressed`: "Haunt sound: on/off" and "Gentle mode: on/off". Reads and writes the settings store through `useHauntSettings`. Uses the existing `reader__button` styling and focus ring. |
+| `SafetyNotice` | Modal dialog (`role="dialog"`, `aria-modal`, `useFocusTrap`), one button "Begin reading". Text: haunts include dimming light, ghosts and glitching (no moving shadow), haunts include quiet sound, sound can be turned off or Gentle mode used. Writes `noticeSeen` to the settings store on dismiss. |
+| `HauntControl` | Two buttons in the top bar with `aria-pressed`: "Haunt sound: on/off" and "Gentle mode: on/off" (the ghost-dread spec replaces the second toggle with a choice of Haunt_Mode: Gentle, Classic, Nightmare). Reads and writes the settings store through `useHauntSettings`. Uses the existing `reader__button` styling and focus ring. |
 
 Placement: `ReaderView` adds `<HauntControl />` next to the Pace Guide button, and `ParagraphList` gains the attribute `data-reading-column` on `.paragraph-list`. Nothing else in `ReaderView` or the reading flow changes.
 
-The Candle_Glow CSS in `HauntStage.css` uses `color-mix(in srgb, var(--accent) 20%, transparent)`, so no colour is hard-coded and `theme.css` needs one new line at most (`--glow`, same expression). Its drift animation changes opacity between 0.97 and 1 over a 16 s cycle (3 percent, one cycle per 16 s, inside Req 12.3). `@media (prefers-reduced-motion: reduce)` sets `animation: none` on the glow, and the gate also refuses to add motion classes when reduced motion is on. The shadow and vignette layers use `var(--shadow)`. Everything that darkens never lightens the area behind the reading text, and all effects sit in the side regions.
+The Candle_Glow CSS in `HauntStage.css` uses `color-mix(in srgb, var(--accent) 20%, transparent)`, so no colour is hard-coded and `theme.css` needs one new line at most (`--glow`, same expression). Its drift animation changes opacity between 0.97 and 1 over a 16 s cycle (3 percent, one cycle per 16 s, inside Req 12.3). `@media (prefers-reduced-motion: reduce)` sets `animation: none` on the glow, and the gate also refuses to add motion classes when reduced motion is on. The vignette layers use `var(--shadow)`. Everything that darkens never lightens the area behind the reading text, and all effects sit in the side regions.
 
 Known limitation: on screens narrow enough that the column fills the width (about 360 px), the side regions have almost no width, so visual haunts are thin there. The sound still carries the haunt. This follows from "never over the active paragraph" (Req 6.11) and is accepted. A later change could add top and bottom bands.
 
@@ -569,7 +577,7 @@ Known limitation: on screens narrow enough that the column fills the width (abou
 ```ts
 // Level_Logic
 type Level = 0 | 1 | 2 | 3;
-interface LevelInput { events; now; gentle; hauntIds; previousLeadId; rolls }   // see above
+interface LevelInput { events; now; mode; hauntIds; previousLeadId; rolls }   // see above
 interface LevelOutput { level: Level; leadId: string | null; companionId: string | null }
 
 // Engine, per look-away (internal)
@@ -578,7 +586,8 @@ interface Running { haunt: Haunt; port: GatePort; level: HauntLevel }
 
 // Settings in localStorage (strings)
 // rod_haunt_sound        'true' | 'false'     default 'true'
-// rod_haunt_gentle       'true' | 'false'     default 'false'
+// rod_haunt_mode         'gentle' | 'classic' | 'nightmare'     default 'classic'
+// rod_haunt_gentle       legacy, read only: 'true' maps to Gentle when no mode is stored
 // rod_safety_notice_seen 'true' | 'false'     default 'false'
 // rod_volume_cap         decimal text in [0,1], default 0.4 when missing, unreadable or out of range
 
@@ -759,7 +768,7 @@ Unit and example tests:
 - **Haunt contract (Req 4.1, 4.5, 4.6, 13 to 15):** each real haunt is checked with a type assertion (`const h: Haunt = candle`) and at run time. A recorder counts what each haunt asks for at levels 1, 2 and 3. For each haunt, every "stronger means larger" observable is non-decreasing from level to level and at least one strictly rises (dim, gain, opacity, size, and sweep frequency). After `stop()`, nodes created equals nodes disconnected and layers created equals layers removed. The haunt never calls `setLevel` side effects that stop it.
 - **Static source scan (Req 4.4, 6.1, 6.18, 6.19, 10.3, 11.2):** the files `src/haunts/*.ts` do not contain `document`, `window`, `AudioContext(`, `.destination`, `fetch`, `Audio(`, `speechSynthesis`, `SpeechSynthesis`, `@keyframes`, `animation`, `setInterval`, `setTimeout`, `localStorage`, or an import from outside `./engine/types` and `./engine/noise`. `levelLogic.ts` and `plan.ts` do not mention `document`, `window`, `Date`, `performance`, `setTimeout` or `Math.random`. `src/haunts/` has no import from `src/attention`, `src/ui` or camera or video code. `.destination` appears only in `audioAdapter.ts` and `audioGraph.ts`. The scan is the second guard: the restricted audio context already gives haunts no way to reach `destination` (`engine/__tests__/restrictedAudio.unit.test.ts`). No `.mp3`, `.wav`, `.ogg` or `.m4a` string appears under `src/haunts/`.
 - **Discovery smoke test (Req 5.1, 5.3):** the keys of `discovered` are exactly the haunt files present, and contain no test file and nothing under `engine/`. A synthetic extra valid module passed to `buildRegistry` appears in the result without any engine change (Req 5.2).
-- **Colour rule (Req 6.12, 12.5):** a jsdom fixture renders `HauntStage` beside a column element whose `color` and `background-color` come from inline styles. For each real haunt at each level, with the real gate, the test records `getComputedStyle` of the column and of a text element before and after, and installs a `MutationObserver` on `document.documentElement`. It asserts that the computed colours are unchanged and that every mutation target lies inside the stage overlay root. This is the DOM-level check of the rule that haunt visuals write only to the overlay outside the column. The static scan above is its second half.
+- **Colour rule (Req 6.12, 12.5):** this test runs outside the Return_Moment (see the amendment section below). A jsdom fixture renders `HauntStage` beside a column element whose `color` and `background-color` come from inline styles. For each real haunt at each level, with the real gate, the test records `getComputedStyle` of the column and of a text element before and after, and installs a `MutationObserver` on `document.documentElement`. It asserts that the computed colours are unchanged and that every mutation target lies inside the stage overlay root. This is the DOM-level check of the rule that haunt visuals write only to the overlay outside the column. The static scan above is its second half.
 - **Restricted audio context:** with only the context from `whenReady`, a caller finds no `destination`, raw context or `.context` on the context or any wrapper (own and inherited properties walked); `connect` to anything but a same-port wrapper or `ctx.input` throws; after source, filter, panner, `ctx.input`, the fake graph shows exactly one path to `destination`, through the channel gain, master gain and compressor.
 - **Gate adapters:** cap change applied within 100 ms; sound toggle off ramps to zero within 300 ms; gain ramps start from the current value; rising ramps last at least 300 ms; no sound before unlock, and the first `pointerdown` or `keydown` unlocks (Req 8.5 to 8.7).
 - **Engine:** a first signal delivered at subscribe time is treated as an event (Req 11.4); away, 5 s, 12 s gives start, `setLevel(2)`, companion start; present stops everything within 800 ms; gentle on at level 3 lowers the lead and stops the companion within 800 ms; gentle off restores the level from elapsed time with the same lead (Req 7.2, 7.3); present then away restarts timing and picks a new lead (Req 2.5); arming while away starts at level 1.
@@ -776,5 +785,5 @@ The feature is built so that one haunt works end to end before the others exist.
 1. **Pure core first.** `types.ts`, `levelLogic.ts`, `plan.ts`, `settings.ts`, `registry.ts`, `regions.ts`, `dialogOrder.ts`, with Properties 1 to 13 and 16 to 19.
 2. **Engine plus one haunt plus wiring, end to end.** `engine.ts`, the gate adapters, `discover.ts`, `candle.ts`, `HauntStage` with the Candle_Glow, `HauntLayer`, `SafetyNotice`, `HauntControl`, the `AttentionLayer` hold-back, the `data-reading-column` attribute, and removal of `TempAttentionLabel` and its test. With only one haunt, the lead is always the candle (Req 3.2) and no companion appears. Property 20, the colour-rule test and the integration tests run here. Checkpoint: look away in the browser and watch the glow dim, gutter and recover.
 3. **Whispers.** `whispers.ts` as a single file. Adding it must need no edit in `engine/`; this is the check on Req 5.2. Properties 14 and 15 then run over two haunts, so the companion and no-repeat rules are used for the first time.
-4. **Shadow.** `shadow.ts` as a single file, with the same checks. Properties 14 and 15 run over every ordered pair.
+4. **No shadow haunt.** The Ghost of the ghost-dread spec replaces the shadow haunt, so no shadow haunt file is built.
 5. **Final pass.** Static scan, network spy, manual listening and keyboard checks, and the `docs/BUILD_LOG.md` entry.
