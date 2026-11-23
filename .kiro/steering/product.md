@@ -6,7 +6,9 @@ inclusion: always
 
 A browser reading companion that helps people finish the book they uploaded.
 The page is calm while you read. When you look away, the room slowly gets haunted.
-When your eyes come back, the haunting retreats.
+When your eyes come back, the room calms, but the ghost may linger for a short
+return moment. If you were away too long, a short penance follows, which
+earned points can skip.
 
 Built for Kiroween 2026, Costume Contest category.
 
@@ -20,7 +22,9 @@ to their phone or another tab.
 1. Upload a book (plain text or EPUB).
 2. Read one paragraph at a time; click to open the next.
 3. Look away from the screen: a haunt begins and escalates.
-4. Look back: the haunt fades.
+4. Look back: the room calms, but the ghost may linger for a short return
+   moment. If the reader was away too long, a short penance follows that
+   points can skip.
 5. Finish the chapter: a character from it visits and you can talk with them
    (or answer one fill-in-the-blank check), then see session stats.
 
@@ -56,7 +60,7 @@ and rewarding when they finish a chapter.
 
 ## Tone
 
-Playful gothic, not gore. A reading room at night: candle, paper, quiet.
-A haunt is a nudge back to the page. A breach of focus costs a short penance
-scene, which earned focus points can skip. Penance is brief and safe, never
-cruel: the reader should want to come back tomorrow.
+Gentle and Classic are playful gothic. Nightmare is genuinely frightening but
+never gory or cruel. A haunt is always a nudge back to the page, and the reader
+should want to come back tomorrow. A reading room at night: candle, paper,
+quiet. Penance is brief and safe, never cruel.

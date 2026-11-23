@@ -4,13 +4,26 @@ inclusion: always
 
 # Haunt safety and accessibility
 
-These rules apply to every haunt, sound, and animation.
+These rules apply to every haunt, sound, and animation, in every haunt mode.
+
+## Haunt modes
+
+- There are three haunt modes: Gentle, Classic (the default) and Nightmare.
+  The reader chooses one on the safety notice and can change it at any time
+  in the top bar.
+- Gentle: level 1 only. No ghost figures, no glitch effects, no jumpscares.
+- Classic and Nightmare: ghost figures, glitch effects and jumpscares are
+  allowed, as described in the ghost-dread spec. Every rule below still
+  applies in these modes.
 
 ## Sound
 
-- No sudden full-volume sound. Every sound fades in over at least 300 ms.
 - A user volume cap exists in settings and is enforced in one place in the
-  audio code. Default cap is moderate; haunts cannot override it.
+  audio code. Default cap is moderate; haunts cannot override it. This holds
+  for every sound, including jump sounds.
+- Every sound fades in over at least 300 ms, except a jump sound.
+- A jump sound may start fast, with an attack of at least 20 ms, and never
+  goes above the volume cap. Jump sounds play only during the return moment.
 - Ambience is instrumental only. No lyrics or speech while reading, except a
   word meaning read aloud because the reader asked for it.
 - Speech (word meanings, visitor replies) obeys the same volume cap and can
@@ -20,18 +33,31 @@ These rules apply to every haunt, sound, and animation.
 ## Visuals
 
 - No flashing faster than 3 times per second.
+- No full-screen flashes of saturated red.
 - Respect `prefers-reduced-motion`: replace movement and flicker with slow
   fades.
 - A photosensitivity notice appears before the first session.
-- Reading text keeps WCAG AA contrast at every haunt level. Haunts happen
-  around the text, never on top of the current paragraph.
+- Outside the return moment, effects stay around the text, never on top of
+  it, and the reading text keeps WCAG AA contrast at every haunt level.
+- During the return moment (at most 3 seconds) effects may cover the text.
+  When it ends, the text is fully readable again.
+
+## Jumpscares and glitches
+
+- Jumpscares and glitches happen only at the moment the reader returns after
+  a look-away. They never happen while the reader is present and reading.
+- The return moment lasts at most 3 seconds.
+- Under reduced motion, a jumpscare or glitch becomes a slow fade, with no
+  sudden movement and no flicker.
 
 ## Escalation
 
 - Level 0: calm. Level 1 after a short look-away: subtle (candle dims).
   Higher levels only if the reader stays away.
-- Looking back always de-escalates within one second.
-- A "gentle mode" limits haunts to level 1.
+- Looking back calms the room: ambient haunt effects fade out within one
+  second. A ghost may linger for the return moment, at most 3 seconds after
+  the reader returns.
+- Gentle mode limits haunts to level 1.
 
 ## Penance and breaks
 
@@ -52,5 +78,6 @@ These rules apply to every haunt, sound, and animation.
 
 ## Content
 
-- No gore, no jump-scare faces, nothing aimed at a real person or group.
+- No gore. No real people, and nothing aimed at a real person or group.
+- No copyrighted characters. Ghosts are original drawings.
 - Keyboard-only use must work for the whole reading flow.
