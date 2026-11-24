@@ -659,6 +659,21 @@
         "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795487716239
+      },
+      {
+        "executionId": "8612a424-f805-4a14-b267-c02bc67bd267",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795516031232
+      },
+      {
+        "executionId": "26acc6dc-40ba-4a5f-871d-c057f8d39fc2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795517963948
+      },
+      {
+        "executionId": "26acc6dc-40ba-4a5f-871d-c057f8d39fc2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795518365944
       }
     ],
     "5.7 Implement `engine/returnMoment.ts` (Return controller)": [
@@ -731,6 +746,21 @@
         "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795511970079
+      },
+      {
+        "executionId": "8612a424-f805-4a14-b267-c02bc67bd267",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795516031617
+      },
+      {
+        "executionId": "26acc6dc-40ba-4a5f-871d-c057f8d39fc2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795518366021
+      },
+      {
+        "executionId": "26acc6dc-40ba-4a5f-871d-c057f8d39fc2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795518986727
       }
     ],
     "6.3 Write the end-to-end integration test": [
@@ -774,6 +804,13 @@
         "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795514743573
+      }
+    ],
+    "7. Checkpoint A - Ghost, Return_Moment and Jumpscare work end to end": [
+      {
+        "executionId": "26acc6dc-40ba-4a5f-871d-c057f8d39fc2",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795518987518
       }
     ]
   }

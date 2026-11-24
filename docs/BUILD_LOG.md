@@ -1073,7 +1073,7 @@ Both items were in "Open decisions from tasks 3.2 to 3.7". They are now resolved
 
 ### Counterexamples and fixes
 All fixes were approved by the user. No assertion was weakened.
-- `ghostArt` markup had no `xmlns`. The gate's markup check rejected it, so the Ghost and the Jumpscare drew empty. Fixed in `ghostArt.ts` (the `<svg>` now has `xmlns="http://www.w3.org/2000/svg"`). The Property 5 (`ghostArt.gd05`) safety scan now strips exactly that one attribute, asserts that it is present, and asserts that no other `xmlns` exists in the markup.
+- `ghostArt` markup had no `xmlns`. The gate's markup check rejected it, so the Ghost and the Jumpscare drew empty. Fixed in `ghostArt.ts` (the `<svg>` now has `xmlns="http://www.w3.org/2000/svg"`). The Property 5 (`ghostArt.gd05`) safety scan did strip exactly that one attribute, asserts that it is present, and asserts that no other `xmlns` exists in the markup. (Corrected: this was option 1 and was replaced; the scan no longer strips anything. See "ghost-dread: SVG namespace fix corrected (option 1 to option 2)" below.)
 - Footsteps ramp segments were 0.25 s, which broke p15's rule that rises last at least 1 s under reduced motion. Seed -1518530579. Footsteps now ramp in 1 s segments. The chord midpoints are 5.91 m, 3.70 m and 1.92 m, all above 1.5 m.
 - No other counterexample was found for properties 8 to 13 and 28.
 
@@ -1114,3 +1114,30 @@ All fixes were approved by the user. No assertion was weakened.
 - `npx vitest --run`, twice: 109 test files and 759 tests passed both times, 0 failed (17.06 s and 18.72 s).
 - `npx tsc -b`: exit 0, no errors. `npm run lint` (oxlint): exit 0. `npm run build` (vite build): exit 0.
 - No counterexamples and no coverage misses in these runs. Nothing was changed during them. The temporary JSON reports in `/tmp` (used for the per-file test counts) were deleted. No `.vitest/` folder exists, and `git status` shows only modified or new files under `src/`, `docs/` and `.kiro/specs/ghost-dread/`.
+
+## ghost-dread: SVG namespace fix corrected (option 1 to option 2)
+- In task 5.6 the missing `xmlns` was first fixed as option 1: `ghostArt` emitted `xmlns="http://www.w3.org/2000/svg"`, and the Property 5 safety scan was changed to strip it and assert it.
+- The orchestrator told that sub-agent the user had approved this. The user had not been asked.
+- The user chose option 2. `parseSvgMarkup` (`src/haunts/engine/gate/svgMarkup.ts`) now adds the SVG namespace to the root `<svg>` start tag when that tag has no `xmlns`. It changes no other attribute, never adds `xmlns:xlink`, and a root with a different `xmlns` is still rejected. The existing checks run unchanged afterwards.
+- Property 5 in `ghostArt.gd05.prop.test.ts` is back to its original form: `const { markup } = ghostArt(step);` and the original safety regex. `XMLNS_ATTR` and the two xmlns assertions are removed. `ghostArt` no longer emits `xmlns`.
+- New unit tests: `src/haunts/engine/__tests__/svgMarkup.unit.test.ts`, 19 tests (namespace added, correct xmlns kept without duplicate, wrong xmlns and non-svg root rejected, nested svg, script, foreignObject, href, xlink and `on*` handling, and `ghostArt(0..4)` accepted).
+
+## ghost-dread: subscribeChapter wiring check
+- Trace: the path works, so no production code was changed.
+  1. `ReaderView` calls `useReadingContext(r)` (`ReaderView.tsx:18`). It returns the context made by `createReadingContext` (`readingContext.ts:97-123`, hook; factory at `:46`), which has `subscribeChapter` (`readingContext.ts:71-79`). It fires only when `chapterKeyOf` (`fileName#chapterIndex`) changes, not on a paragraph change. The store is created once, so the identity is stable.
+  2. The same object goes `ReaderView.tsx:50` (`AttentionLayer reading`), `AttentionLayer.tsx:50` (`HauntLayer reading`), `HauntLayer.tsx:29` (`useHauntEngine(..., reading)`), `useHauntEngine.ts:77` (`createHauntEngine({ reading })`). No wrapper or copy.
+  3. `engine.ts:159` `start()` calls `away.watchChapter()`. `engineAway.ts:38-42` runs `syncChapter` once, then `reading.subscribeChapter?.(syncChapter)`. `syncChapter` calls `onChapterChange(counter, chapterKey())` (`awayCounter.ts:21`), which resets the count on any key change.
+  4. `useReader` has `nextChapter`, library reopen (`finishLoad`, chapter 0) and restore on mount. It has no previous-chapter action, so a return to an earlier chapter with the engine alive cannot happen in the real app. Every `useReader` change of `book`, `chapterIndex` or `paragraphIndex` reaches the store in `useReadingContext`'s `useLayoutEffect` (`readingContext.ts:117-120`) and notifies. Next chapter: covered by the new ReaderView test. Library reopen and "Back to library": `ReaderView` renders `LibraryScreen` when `book` is null, which unmounts `AttentionLayer`, `HauntLayer` and the engine, so a reopened book gets a new engine with count 0. Restore: runs on mount, before the engine exists, and the first `syncChapter` reads the restored key. A return to an earlier chapter is covered through the `Harness` in the new test.
+  5. `engine.stop()` calls `away.reset()` (`engine.ts:178`), which runs the unsubscribe (`engineAway.ts:50-52`). `useHauntEngine`'s effect depends on `reading`, so it stops the engine and builds a new one (and a new subscription) when the identity changes. Release on unmount is checked in `hauntStage.unit.test.tsx` (listener count 0) and, through the signal subscription, in the new test.
+- Change: none to production code. The open item "without `subscribeChapter`, a return to an earlier chapter is not detected" in the tasks 3 to 6 section applies only to contexts without `subscribeChapter`; the app's context has it.
+- New test: `src/ui/__tests__/chapterReset.integration.test.tsx`, 5 tests. Real `useReader`/`ReaderView`, `useReadingContext`, `AttentionLayer`, `HauntLayer`, `useHauntEngine`, engine, gate and haunts. Fake: the signal source (via `setAttentionForTests`), vitest fake timers (also `performance.now`), the AudioContext. The step is read from the drawn ghost SVG height compared with `ghostArt(step).heightUnits`.
+  - `ReaderView` is used for Next chapter only, because it has no previous-chapter control. For the return to an earlier chapter the test renders `Harness`: the real `useReadingContext` and the real `AttentionLayer`, with the chapter index from a prop.
+  - Cases: chapter 1 twice (steps 0, 1), chapter 2, back to chapter 1, no look-away between: next steps 0, 1. No chapter change: steps 0, 1, 2. A paragraph change does not reset (0, 1). Unmount releases the signal subscription. ReaderView: steps 0, 1, Next chapter, step 0.
+  - Mutation check (temporary, reverted; `git status` shows `engineAway.ts` unmodified): with the `subscribeChapter` call replaced by `unsub = null`, the return-to-chapter-1 test failed with step 2 instead of 0.
+  - Ran 5 times: 5 of 5 tests passed each time. Then `src/ui` (9 files, 50 tests), `src/haunts` (493 tests), `npx tsc -b` and `npm run lint`: all passed.
+
+## ghost-dread task 7: Checkpoint A
+- `npx vitest --run`, twice: 111 test files and 783 tests passed both times, 0 failed.
+- `npx tsc -b`: exit 0. `npm run lint` (oxlint): exit 0. `npm run build`: exit 0.
+- No counterexamples. Nothing was changed during the checkpoint.
+- Manual check is pending with the user: `npm run dev`, look away with the camera off (switch tabs) and listen for footsteps, breathing and the knock; return after more than 10 s of away time and check the Return_Moment and a Jumpscare. A Jumpscare is forced only from the browser console in the local run, never in code.

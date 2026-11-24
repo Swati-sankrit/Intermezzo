@@ -256,7 +256,7 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     - Append a section for tasks 3 to 6: properties 8 to 13, 23, 24, 26 and 28, cases run, any counterexample with seed and shrunk input, the API findings from 3.1, and a confirmation that adding the five new haunt files needed no further edit in the engine beyond the one-time contract reading
     - _Requirements: none (testing rule)_
 
-- [ ] 7. Checkpoint A - Ghost, Return_Moment and Jumpscare work end to end
+- [-] 7. Checkpoint A - Ghost, Return_Moment and Jumpscare work end to end
   - Run `npx vitest --run`, `npm run lint` and `npm run build`. Ensure all tests pass, ask the user if questions arise. Remind the user of the manual check: run `npm run dev`, look away with the camera off (switch tabs) and listen with headphones for footsteps, breathing and the knock; return after 12 s and check the Return_Moment and a Jumpscare (raise the roll through a temporary debug seed only in the local run, not in code).
 
 - [ ] 8. Glitch at the return
