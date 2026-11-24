@@ -23,22 +23,50 @@
  * adapter's cap ramp), and must be <= the new cap after that. It also requires combined(T + 100 ms) <= the
  * allowed cap at that time (Req 6.13; see the comment at the check), and that the sum of the target values of all channel gains is <=
  * the cap in force (within 1e-9), which is the literal wording of Property 14.
+ *
+ * ghost-dread additions (task 6.4). The registry now gives haunts AND return effects (`loadRegistry`; this file
+ * used `loadHaunts`, haunts only). The haunts include the layers (footsteps, breathing, knock, ghostFigure),
+ * which start with a `StartInfo` as the engine gives them. A Return_Moment is begun through the real Return
+ * controller (ghostHarness.ts), so the registry's return effects (ghostFigure, jumpscare) run on real
+ * ReturnPorts, the jumpscare on a jump channel. The rise rule for a jump channel is the one of gd23: 20 ms
+ * (300 ms under reduced motion); every other channel keeps 300 ms (1000 ms). Nothing else is relaxed.
+ *
+ * What this adds beyond gd23 (gateCap.gd23): gd23 drives the gate with synthetic ports and a scripted jump
+ * request. This file runs the REAL haunt files: their own gain requests, pulse buffers, spatial panner chains
+ * and `onTick` position ramps, together with the lead and the companion (the "ensemble" property below), and
+ * the REAL jumpscare and ghostFigure effects planned by the real planner, with any cap change, sound toggle,
+ * lock and fade around them. A real file asking for more than the gate allows, or a gain change that bypasses
+ * the cap, shows up here and cannot in gd23.
  */
+import { appendFileSync } from 'node:fs';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { createGate } from '../gate/gate';
 import { parseVolumeCap } from '../gate/plan';
 import { createReducedMotion } from '../gate/reducedMotion';
-import { loadHaunts } from '../registry';
+import { loadRegistry } from '../registry';
 import { KEYS } from '../settings';
-import type { Gate, GatePort, Haunt, HauntLevel } from '../types';
+import type { ReturnEffect } from '../returnTypes';
+import type { AudioOut, Gate, GatePort, Haunt, HauntLevel, StartInfo } from '../types';
 import { fadeMsArb } from './arbitraries';
+import { createReturnDriver, retArgsArb, startInfoArb, type RetArgs, type ReturnDriver } from './ghostHarness';
 import {
   FakeAudioContext, type FakeAudioNode, type FakeAudioState, type FakeGainNode,
   createFakeAudioContextFactory, createFakeMatchMedia, createFakeStorage, createFakeTime,
 } from './fakes';
 
-const NUM_RUNS = 300;
+/**
+ * 700, was 300. The registry now gives 6 haunts, so 36 combos. At 300 runs each combo was drawn about 8 times
+ * and the check "every combo at least once" (floor 1) failed in 2 of 20 measured batches (a single combo drawn
+ * 0 times). At 700 the mean per combo is about 19 (binomial SD 4.4), about 4 SD above the floor. No floor changed.
+ */
+const NUM_RUNS = 700;
+const ENSEMBLE_RUNS = 300;
+/**
+ * Explicit timeout for the two property tests (same reason as gd23): the default 5000 ms is too close to
+ * their times once the whole suite runs in parallel. Measured alone: see the report of task 6.4.
+ */
+const SLOW_TEST_MS = 20_000;
 const EPS = 1e-9;
 /** Tolerance window after a cap drop: the adapter's 50 ms cap ramp. design.md states none. */
 const CAP_WINDOW_S = 0.05;
@@ -135,7 +163,9 @@ type Action =
   | { k: 'close'; who: number }
   | { k: 'restart'; who: number; level: Level }
   | { k: 'reducedOs'; on: boolean }
-  | { k: 'reducedApp'; on: boolean };
+  | { k: 'reducedApp'; on: boolean }
+  | { k: 'ret'; args: RetArgs }
+  | { k: 'retAbort'; reason: 'away' | 'stop' };
 
 interface Step { readonly a: Action; readonly dt: number }
 
@@ -146,6 +176,8 @@ interface Scenario {
   readonly soundOn: boolean;
   readonly osReduced: boolean;
   readonly unlockAtStart: boolean;
+  /** What the engine passes to every haunt's `start`. */
+  readonly info: StartInfo;
   readonly steps: readonly Step[];
 }
 
@@ -162,7 +194,8 @@ const setGainValueArb = fc.oneof(
   { weight: 5, arbitrary: fc.double({ min: 0, max: 1, noNaN: true }) },
   { weight: 1, arbitrary: fc.constantFrom(0, 1, 2, Number.NaN, Number.POSITIVE_INFINITY, -1) },
 );
-const dtArb = fc.constantFrom(0, 0, 10, 30, 49, 51, 80, 99, 101, 150, 299, 301, 500, 1000, 1500);
+// 0, 10, 30 and 49 ms put two actions inside one 50 ms cap window; 2000 and 3200 let a Return_Moment run to its end.
+const dtArb = fc.constantFrom(0, 0, 0, 10, 10, 30, 49, 51, 80, 99, 101, 150, 299, 301, 500, 1000, 1500, 2000, 3200);
 
 const actionArb: fc.Arbitrary<Action> = fc.oneof(
   { weight: 4, arbitrary: fc.record({ k: fc.constant('setLevel' as const), who: whoArb, level: levelArb }) },
@@ -180,6 +213,8 @@ const actionArb: fc.Arbitrary<Action> = fc.oneof(
   { weight: 2, arbitrary: fc.record({ k: fc.constant('restart' as const), who: whoArb, level: levelArb }) },
   { weight: 1, arbitrary: fc.record({ k: fc.constant('reducedOs' as const), on: fc.boolean() }) },
   { weight: 1, arbitrary: fc.record({ k: fc.constant('reducedApp' as const), on: fc.boolean() }) },
+  { weight: 3, arbitrary: fc.record({ k: fc.constant('ret' as const), args: retArgsArb }) },
+  { weight: 2, arbitrary: fc.record({ k: fc.constant('retAbort' as const), reason: fc.constantFrom<'away' | 'stop'>('away', 'stop') }) },
 );
 
 /** Integers from `from` up to but not including `to`. */
@@ -187,20 +222,28 @@ function indexRange(from: number, to: number): number[] {
   return Array.from({ length: to - from }, (_, i) => from + i);
 }
 
-function scenarioArb(comboCount: number): fc.Arbitrary<Scenario> {
+/**
+ * Which combo a scenario runs. Combos are [singles..., ordered pairs...], so there are about sqrt(comboCount)
+ * singles. fc.integer is biased toward its lower bound, which favoured the singles; constantFrom is uniform.
+ * Pairs are drawn 85% of the time so the pair share has a wide margin over its floor (0.75 expected) and
+ * every combo still shows up.
+ */
+function comboPickArb(comboCount: number): fc.Arbitrary<number> {
+  return fc.oneof(
+    { weight: 3, arbitrary: fc.constantFrom(...indexRange(0, Math.round(Math.sqrt(comboCount)))) },
+    { weight: 17, arbitrary: fc.constantFrom(...indexRange(Math.round(Math.sqrt(comboCount)), comboCount)) },
+  );
+}
+
+function scenarioArb(comboPick: fc.Arbitrary<number>): fc.Arbitrary<Scenario> {
   return fc.record({
-    // Combos are [singles..., ordered pairs...], so there are sqrt(comboCount) singles. fc.integer is biased
-    // toward its lower bound, which favoured the singles; constantFrom is uniform. Pairs are drawn 85% of the
-    // time so the pair share has a wide margin over its floor (0.75 expected) and every combo still shows up.
-    combo: fc.oneof(
-      { weight: 3, arbitrary: fc.constantFrom(...indexRange(0, Math.round(Math.sqrt(comboCount)))) },
-      { weight: 17, arbitrary: fc.constantFrom(...indexRange(Math.round(Math.sqrt(comboCount)), comboCount)) },
-    ),
+    combo: comboPick,
     levels: fc.tuple(levelArb, levelArb),
     capText: capTextArb,
     soundOn: fc.oneof({ weight: 9, arbitrary: fc.constant(true) }, { weight: 1, arbitrary: fc.constant(false) }),
     osReduced: fc.oneof({ weight: 3, arbitrary: fc.constant(false) }, { weight: 1, arbitrary: fc.constant(true) }),
     unlockAtStart: fc.oneof({ weight: 9, arbitrary: fc.constant(true) }, { weight: 1, arbitrary: fc.constant(false) }),
+    info: startInfoArb,
     steps: fc.array(fc.record({ a: actionArb, dt: dtArb }), { minLength: 8, maxLength: 16 }),
   });
 }
@@ -212,15 +255,53 @@ function combosOf(haunts: readonly Haunt[]): Haunt[][] {
   return out;
 }
 
+const isLayer = (h: Haunt): boolean => h.role === 'layer';
+
+/**
+ * The engine's full crew: a lead and a companion (both orders), with every non-empty subset of the layers
+ * running alongside them.
+ */
+function ensemblesOf(haunts: readonly Haunt[]): Haunt[][] {
+  const leads = haunts.filter((h) => !isLayer(h));
+  const layers = haunts.filter(isLayer);
+  const out: Haunt[][] = [];
+  for (let mask = 1; mask < 2 ** layers.length; mask++) {
+    const subset = layers.filter((_, i) => (mask >> i) & 1);
+    for (const lead of leads) for (const companion of leads) if (lead !== companion) out.push([lead, companion, ...subset]);
+  }
+  return out;
+}
+
 // ------------------------------------------------------------------ tallies
 
-const tally = {
+interface Tally {
+  scenarios: number; pairs: number; played: number; built: number; capDropPlaying: number; soundTogglePlaying: number;
+  reduced: number; interrupted: number; capDropWhileFalling: number; risesChecked: number; windowChecks: number;
+  whispersPlayed: number; whispersScenarios: number; twoDrops: number; soundOffAfterDrop: number; fadePlaying: number;
+  planInFlight: number; jumpRisesChecked: number;
+  /** Scenarios with each ghost-dread flag (see `GHOST_FLAGS` and the `built:<layer>` flags), each counted once per scenario. */
+  ghost: Map<string, number>;
+}
+const newTally = (): Tally => ({
   scenarios: 0, pairs: 0, played: 0, built: 0, capDropPlaying: 0, soundTogglePlaying: 0, reduced: 0, interrupted: 0,
   capDropWhileFalling: 0, risesChecked: 0, windowChecks: 0, whispersPlayed: 0, whispersScenarios: 0,
-  twoDrops: 0, soundOffAfterDrop: 0, fadePlaying: 0, planInFlight: 0,
-};
+  twoDrops: 0, soundOffAfterDrop: 0, fadePlaying: 0, planInFlight: 0, jumpRisesChecked: 0, ghost: new Map(),
+});
+/** Base property: single haunts and ordered pairs. Ensemble property: lead, companion and layers. */
+const tally = newTally();
+const ensembleTally = newTally();
 const comboCounts = new Map<number, number>();
 const bump = (m: Map<number, number>, k: number): void => void m.set(k, (m.get(k) ?? 0) + 1);
+/**
+ * Ghost-dread flags, one per thing the task asks to see run. `built:<layer id>` is added for every layer:
+ * the layer's own `whenReady` callback ran, so it built its sources. Return flags are about the controller
+ * opening a port for the effect, so a Return_Moment really ran it.
+ */
+const GHOST_FLAGS = [
+  'ghostDrawn', 'ghostReturnRan', 'jumpReturnRan', 'jumpPlaying', 'jumpReducedRan', 'returnAborted',
+] as const;
+/** Only the ensemble property can have a lead, a companion and a layer at once. */
+const ENSEMBLE_FLAGS = ['layersWithLeadAndCompanion'] as const;
 
 // ------------------------------------------------------------------ harness
 
@@ -242,9 +323,16 @@ function storageEventTarget(): {
   };
 }
 
-interface Slot { haunt: Haunt; port: GatePort | null; active: boolean }
+interface Slot { haunt: Haunt; port: GatePort | null; active: boolean; built: boolean }
 
-async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<void> {
+/** The port's audio with a read-only note of when the haunt's own `whenReady` callback runs. */
+function watched(slot: Slot, audio: AudioOut): AudioOut {
+  return { ...audio, whenReady: (cb) => audio.whenReady((ctx) => { slot.built = true; cb(ctx); }) };
+}
+
+async function runScenario(
+  combos: readonly Haunt[][], effects: readonly ReturnEffect[], s: Scenario, tl: Tally, countCombo: boolean,
+): Promise<void> {
   const combo = combos[s.combo];
   const { clock, scheduler } = createFakeTime();
   const factory = createFakeAudioContextFactory(clock);
@@ -257,6 +345,7 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
   const right = document.createElement('div');
   root.append(left, right);
   document.body.append(root);
+  const warnings: string[] = [];
   const gate: Gate = createGate({
     audio: { createAudioContext: factory.create, eventTarget: unlockTarget },
     hosts: { root, left, right },
@@ -264,8 +353,29 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
     storageEvents: events.target,
     reducedMotion: createReducedMotion(mm.matchMedia),
     scheduler,
+    warn: (m) => void warnings.push(m),
   });
-  const slots: Slot[] = combo.map((haunt) => ({ haunt, port: null, active: false }));
+  const slots: Slot[] = combo.map((haunt) => ({ haunt, port: null, active: false, built: false }));
+  const seen = new Set<string>();
+  /** Gain nodes of jump channels the controller opened (found at the moment of the open). */
+  const jumpNodes: FakeGainNode[] = [];
+  const driver: ReturnDriver = createReturnDriver({
+    gate, effects, scheduler, warn: (m) => void warnings.push(m),
+    around(effectId, jumpSound, doOpen) {
+      const ctx = ctxOf();
+      const before = ctx === undefined ? -1 : ctx.nodesOfKind('gain').length;
+      const port = doOpen();
+      if (port === null) return null;
+      seen.add(`opened:${effectId}`);
+      if (jumpSound) {
+        const gains = ctx === undefined ? [] : ctx.nodesOfKind('gain');
+        if (ctx === undefined || gains.length !== before + 1) throw new Error('could not find the gain node of the jump channel');
+        jumpNodes.push(gains[gains.length - 1] as FakeGainNode);
+        if (osReduced || appReduced) seen.add('jumpReducedRan');
+      }
+      return port;
+    },
+  });
 
   let appReduced = false;
   let osReduced = s.osReduced;
@@ -355,12 +465,14 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
     for (const c of hist.changes) {
       const t = c.t + CAP_APPLY_S;
       if (t < now) continue;
-      tally.windowChecks++;
+      tl.windowChecks++;
       expect(combinedAt(ctx, channels, t), `combined gain 100 ms after the cap change at ${c.t}s`).toBeLessThanOrEqual(allowedAt(hist, t) + EPS);
     }
 
-    // Clause: every rising ramp lasts at least 300 ms (1000 ms under reduced motion).
+    // Clause: every rising ramp lasts at least 300 ms (1000 ms under reduced motion). A jump channel (found when
+    // the controller opened it) may rise in 20 ms (300 ms under reduced motion), as in gd23. Nothing else is relaxed.
     const reduced = osReduced || appReduced;
+    const jumpParams = new Set<unknown>(jumpNodes.map((n) => n.gain));
     for (let i = mark; i < ctx.automation.length; i++) {
       const c = ctx.automation[i];
       if (c.type !== 'linearRampToValueAtTime' || !c.param.label.startsWith('gain#')) continue;
@@ -368,11 +480,20 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
       const prev = calls[calls.indexOf(c) - 1];
       expect(prev?.type, `${c.param.label}: a ramp is anchored by setValueAtTime`).toBe('setValueAtTime');
       if ((c.value as number) > (prev.value as number) + 1e-12) {
-        tally.risesChecked++;
-        expect(c.effectiveTime - c.atContextTime, `${c.param.label} rise ${prev.value} to ${c.value}`).toBeGreaterThanOrEqual((reduced ? 1 : 0.3) - EPS);
+        const jump = jumpParams.has(c.param);
+        const min = jump ? (reduced ? 0.3 : 0.02) : reduced ? 1 : 0.3;
+        if (jump) tl.jumpRisesChecked++;
+        else tl.risesChecked++;
+        expect(c.effectiveTime - c.atContextTime, `${c.param.label} rise ${prev.value} to ${c.value} (jump channel: ${jump})`).toBeGreaterThanOrEqual(min - EPS);
       }
     }
     mark = ctx.automation.length;
+
+    // Flags only (no assertion): a jump channel made sound, a Ghost layer is drawn in a side region.
+    if (jumpNodes.some((n) => times.some((x) => ctx.effectiveGainAt(n, x) > AUDIBLE))) seen.add('jumpPlaying');
+    // The Ghost layer carries this label (ghostFigure.ts), so this is the Ghost and not a lead's layer.
+    const ghostLabel = '[aria-label="A ghost stands nearby"]';
+    if (left.querySelector(ghostLabel) !== null || right.querySelector(ghostLabel) !== null) seen.add('ghostDrawn');
   };
 
   const perform = async (a: Action): Promise<void> => {
@@ -447,7 +568,7 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
         const sl = slot(a.who);
         if (!sl.active) {
           sl.port = gate.open(sl.haunt.id);
-          sl.haunt.start(a.level, sl.port.audio, sl.port.visual);
+          sl.haunt.start(a.level, watched(sl, sl.port.audio), sl.port.visual, s.info);
           sl.active = true;
         }
         break;
@@ -459,6 +580,18 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
       case 'reducedApp':
         appReduced = a.on;
         gate.setReducedMotion(a.on);
+        break;
+      case 'ret':
+        // The Return_Moment needs the audio graph to exist, so the jump channel's gain node can be found
+        // when it opens. Before the first unlock the action does nothing (gd23 covers that order).
+        if (ctxOf() === undefined) break;
+        driver.begin(a.args, osReduced || appReduced, (ms) => {
+          for (const sl of slots) if (sl.active) sl.port?.fadeOut(ms);
+        });
+        break;
+      case 'retAbort':
+        if (driver.running()) seen.add('returnAborted');
+        driver.abort(a.reason);
         break;
     }
     if (osReduced || appReduced) sawReduced = true;
@@ -472,7 +605,7 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
     }
     combo.forEach((haunt, i) => {
       const port = gate.open(haunt.id);
-      haunt.start(s.levels[i], port.audio, port.visual);
+      haunt.start(s.levels[i], watched(slots[i], port.audio), port.visual, s.info);
       slots[i].port = port;
       slots[i].active = true;
     });
@@ -481,11 +614,14 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
     for (const step of s.steps) {
       await perform(step.a);
       verify();
-      clock.advance(step.dt);
+      // scheduler.advance moves the clock AND fires due timers: ticks, fade cleanups, the Return controller.
+      scheduler.advance(step.dt);
       await flush();
       verify();
     }
+    expect(warnings, 'warnings from the gate, the controller or an effect').toEqual([]);
   } finally {
+    driver.abort('stop');
     for (const sl of slots) {
       if (sl.active) {
         sl.haunt.stop();
@@ -495,21 +631,27 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
     }
     const ctx = ctxOf();
     const built = ctx !== undefined && ctx.nodesOfKind('bufferSource').length > 0;
-    tally.scenarios++;
-    bump(comboCounts, s.combo);
-    if (combo.length === 2) tally.pairs++;
-    if (peak > AUDIBLE) tally.played++;
-    if (built) tally.built++;
+    tl.scenarios++;
+    if (countCombo) bump(comboCounts, s.combo);
+    if (combo.length === 2) tl.pairs++;
+    if (peak > AUDIBLE) tl.played++;
+    if (built) tl.built++;
     if (combo.some((h) => h.id === 'whispers')) {
-      tally.whispersScenarios++;
-      if (peak > AUDIBLE && built) tally.whispersPlayed++;
+      tl.whispersScenarios++;
+      if (peak > AUDIBLE && built) tl.whispersPlayed++;
     }
-    if (flags.capDropPlaying) tally.capDropPlaying++;
-    if (flags.soundTogglePlaying) tally.soundTogglePlaying++;
-    if (sawReduced) tally.reduced++;
-    if (flags.interrupted) tally.interrupted++;
-    if (flags.capDropFalling) tally.capDropWhileFalling++;
-    for (const k of ['twoDrops', 'soundOffAfterDrop', 'fadePlaying', 'planInFlight'] as const) if (flags[k]) tally[k]++;
+    if (flags.capDropPlaying) tl.capDropPlaying++;
+    if (flags.soundTogglePlaying) tl.soundTogglePlaying++;
+    if (sawReduced) tl.reduced++;
+    if (flags.interrupted) tl.interrupted++;
+    if (flags.capDropFalling) tl.capDropWhileFalling++;
+    for (const k of ['twoDrops', 'soundOffAfterDrop', 'fadePlaying', 'planInFlight'] as const) if (flags[k]) tl[k]++;
+    // ghost-dread flags
+    for (const sl of slots) if (sl.haunt.role === 'layer' && sl.built) seen.add(`built:${sl.haunt.id}`);
+    if (seen.has('opened:ghostFigure')) seen.add('ghostReturnRan');
+    if (seen.has('opened:jumpscare')) seen.add('jumpReturnRan');
+    if (combo.length >= 3 && slots.some((sl) => sl.haunt.role === 'layer' && sl.built)) seen.add('layersWithLeadAndCompanion');
+    for (const f of seen) if (!f.startsWith('opened:')) tl.ghost.set(f, (tl.ghost.get(f) ?? 0) + 1);
     gate.dispose();
     root.remove();
   }
@@ -518,13 +660,27 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
 // ------------------------------------------------------------------ tests
 
 describe('Property 14: real adapter and real haunts stay under the cap', () => {
-  const haunts = loadHaunts();
+  const { haunts, effects } = loadRegistry();
   const combos = combosOf(haunts);
+  const ensembles = ensemblesOf(haunts);
+  const layers = haunts.filter(isLayer);
 
   it('covers each haunt alone and every ordered pair of distinct haunts', () => {
     expect(haunts.length).toBeGreaterThanOrEqual(2);
     expect(haunts.map((h) => h.id)).toEqual(expect.arrayContaining(['candle', 'whispers']));
     expect(combos.length).toBe(haunts.length + haunts.length * (haunts.length - 1));
+  });
+
+  it('the registry has the ghost-dread layers and return effects, so the suites below run them', () => {
+    expect(layers.map((h) => h.id).sort()).toEqual(['breathing', 'footsteps', 'ghostFigure', 'knock']);
+    expect(effects.map((e) => e.id).sort()).toEqual(['ghostFigure', 'jumpscare']);
+    expect(effects.find((e) => e.id === 'jumpscare')?.jumpSound).toBe(true);
+    // Every ensemble has a lead, a companion and at least one layer; all 15 layer subsets in both lead orders.
+    expect(ensembles.length).toBe(2 * (2 ** layers.length - 1));
+    for (const e of ensembles) {
+      expect(e.slice(0, 2).every((h) => !isLayer(h))).toBe(true);
+      expect(e.slice(2).length).toBeGreaterThanOrEqual(1);
+    }
   });
 
   describe('control: the check detects a gain above the cap', () => {
@@ -551,15 +707,31 @@ describe('Property 14: real adapter and real haunts stay under the cap', () => {
   // Feature: haunt-feature, Property 14: Real adapter and real haunts stay under the cap
   // **Validates: Requirements 4.3, 6.2, 6.3, 6.4, 6.13, 14.5**
   it('combined gain stays under the cap in force at every instant, rises last >= 300 ms (>= 1000 ms reduced), a new cap lands within 100 ms', async () => {
-    await fc.assert(fc.asyncProperty(scenarioArb(combos.length), (s) => runScenario(combos, s)), { numRuns: NUM_RUNS });
-  });
+    await fc.assert(
+      fc.asyncProperty(scenarioArb(comboPickArb(combos.length)), (s) => runScenario(combos, effects, s, tally, true)),
+      { numRuns: NUM_RUNS },
+    );
+  }, SLOW_TEST_MS);
+
+  // Feature: ghost-dread, Property 23 (p14 extension): the cap holds with layers alongside the lead and companion
+  // **Validates: Requirements 1.7, 9.4**
+  it('ensemble: lead, companion and layers together, with Return_Moments, keep the combined gain under the cap', async () => {
+    await fc.assert(
+      fc.asyncProperty(scenarioArb(fc.constantFrom(...indexRange(0, ensembles.length))), (s) => runScenario(ensembles, effects, s, ensembleTally, false)),
+      { numRuns: ENSEMBLE_RUNS },
+    );
+  }, SLOW_TEST_MS);
 
   // Runs last in this file: the tallies come from the property run above.
   it('coverage: pairs, sound produced, cap drops while playing, sound toggles, reduced motion, interruptions, with margin', () => {
     const floor = (n: number, p: number): number => Math.max(1, Math.floor(n * p - 4 * Math.sqrt(n * p * (1 - p))));
     const n = tally.scenarios;
     expect(n).toBe(NUM_RUNS);
-    if (process.env.P14_TALLY) console.info('P14 tally', JSON.stringify({ ...tally, combos: [...comboCounts] }));
+    // P14_TALLY=<path>: append the tallies of this run to that file (vitest hides console output here).
+    if (process.env.P14_TALLY) {
+      const dump = (t: Tally, extra: object): string => JSON.stringify({ ...t, ghost: Object.fromEntries(t.ghost), ...extra });
+      appendFileSync(process.env.P14_TALLY, `${dump(tally, { combos: [...comboCounts] })}\n${dump(ensembleTally, {})}\n`);
+    }
     const pPairs = (haunts.length * (haunts.length - 1)) / combos.length;
     expect(tally.pairs, 'pairs').toBeGreaterThanOrEqual(floor(n, pPairs));
     for (let i = 0; i < combos.length; i++) expect(comboCounts.get(i) ?? 0, `combo ${combos[i].map((h) => h.id).join('+')}`).toBeGreaterThanOrEqual(floor(n, 1 / combos.length));
@@ -577,6 +749,22 @@ describe('Property 14: real adapter and real haunts stay under the cap', () => {
     // Measured 418.9 rising ramps per run (SD 23.7) over 40 runs: the floor of n = 300 is 5 SD below.
     expect(tally.risesChecked, 'rising ramps checked').toBeGreaterThanOrEqual(n);
   });
+
+  // Runs last: the tallies of the ghost-dread flags, in the base property and in the ensemble property.
+  it('coverage: each layer started, each return effect run, the jump channel heard, with margin', () => {
+    const floor = (n: number, p: number): number => Math.max(1, Math.floor(n * p - 4 * Math.sqrt(n * p * (1 - p))));
+    expect(ensembleTally.scenarios).toBe(ENSEMBLE_RUNS);
+    for (const [name, tl, share] of [['base', tally, GHOST_BASE], ['ensemble', ensembleTally, GHOST_ENSEMBLE]] as const) {
+      const n = tl.scenarios;
+      // ghostFigure makes no sound, so it never calls `whenReady`: its flag is `ghostDrawn` (below).
+      for (const h of layers.filter((x) => x.id !== 'ghostFigure')) {
+        expect(tl.ghost.get(`built:${h.id}`) ?? 0, `${name}: layer ${h.id} built its sources`).toBeGreaterThanOrEqual(floor(n, share[`built:${h.id}`] ?? share.built));
+      }
+      const flagsHere: readonly string[] = name === 'base' ? GHOST_FLAGS : [...GHOST_FLAGS, ...ENSEMBLE_FLAGS];
+      for (const f of flagsHere) expect(tl.ghost.get(f) ?? 0, `${name}: ${f}`).toBeGreaterThanOrEqual(floor(n, share[f]));
+      expect(tl.jumpRisesChecked, `${name}: rising ramps of jump channels checked`).toBeGreaterThanOrEqual(1);
+    }
+  });
 });
 
 /**
@@ -586,4 +774,19 @@ describe('Property 14: real adapter and real haunts stay under the cap', () => {
 const COVER = {
   played: 0.51, whispersPlayed: 0.7, capDropPlaying: 0.18, soundTogglePlaying: 0.19, reduced: 0.46, interrupted: 0.15,
   capDropWhileFalling: 0.11, twoDrops: 0.035, soundOffAfterDrop: 0.03, fadePlaying: 0.15, planInFlight: 0.5,
+};
+
+/**
+ * Expected shares of scenarios for the ghost-dread flags, from tallies measured over 10 batches of the base
+ * (700) and ensemble (300) properties. `floor` puts each check 4 binomial SD below the share. `built` is the
+ * share for every sound layer (footsteps, breathing, knock); ghostFigure makes no sound and is `ghostDrawn`.
+ * The knock's `minLevel` 3 is an engine rule; this harness starts every layer at the scenario's level.
+ */
+type ShareMap = Record<string, number>;
+const GHOST_BASE: ShareMap = {
+  built: 0.25, ghostDrawn: 0.24, ghostReturnRan: 0.6, jumpReturnRan: 0.38, jumpPlaying: 0.12, jumpReducedRan: 0.14, returnAborted: 0.06,
+};
+const GHOST_ENSEMBLE: ShareMap = {
+  built: 0.44, ghostDrawn: 0.4, ghostReturnRan: 0.58, jumpReturnRan: 0.4, jumpPlaying: 0.12, jumpReducedRan: 0.14, returnAborted: 0.06,
+  layersWithLeadAndCompanion: 0.8,
 };

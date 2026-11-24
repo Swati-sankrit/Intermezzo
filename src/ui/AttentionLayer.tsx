@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { visibleDialogs } from '../haunts/engine';
+import type { ReadingContext } from '../haunts/engine/returnTypes';
 import { CameraIndicator } from './CameraIndicator';
 import { ConsentDialog } from './ConsentDialog';
 import { NoticeBanner } from './NoticeBanner';
@@ -10,6 +11,8 @@ import { useHauntSettings } from './useHauntSettings';
 interface AttentionLayerProps {
   /** Suggested reading time for the active paragraph; sets the idle limit. */
   suggestedSecs: number;
+  /** Passed to the haunt layer. */
+  reading: ReadingContext;
   /** Receives the camera indicator so the caller can place it in the top bar. */
   children: (cameraIndicator: ReactNode) => ReactNode;
 }
@@ -18,7 +21,7 @@ interface AttentionLayerProps {
  * Owns the single useAttention() call, so the controller runs only while the
  * reading view (not the library) is mounted. Never blocks reading.
  */
-export function AttentionLayer({ suggestedSecs, children }: AttentionLayerProps) {
+export function AttentionLayer({ suggestedSecs, reading, children }: AttentionLayerProps) {
   const { status, chooseCamera, setCameraOn, setIdleLimit, subscribeSignal } = useAttention();
 
   const { settings } = useHauntSettings();
@@ -44,7 +47,7 @@ export function AttentionLayer({ suggestedSecs, children }: AttentionLayerProps)
         onDismiss={() => setDismissed(text)}
       />
       {children(<CameraIndicator cameraOn={status.cameraOn} onTurnOff={() => void setCameraOn(false)} />)}
-      <HauntLayer subscribeSignal={subscribeSignal} cameraChoice={status.choice} />
+      <HauntLayer subscribeSignal={subscribeSignal} cameraChoice={status.choice} reading={reading} />
     </>
   );
 }

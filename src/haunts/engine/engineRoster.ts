@@ -4,7 +4,7 @@
  * Every call into a haunt or a port is wrapped, so one failure never stops the engine.
  * No DOM, audio, camera or `src/attention/` access.
  */
-import type { EngineDeps, GatePort, Haunt, HauntLevel } from './types';
+import type { EngineDeps, GatePort, Haunt, HauntLevel, StartInfo } from './types';
 
 export const FADE_MS = 600;
 export const FLUSH_MS = 50;
@@ -27,11 +27,17 @@ export interface Roster {
   levelOf(id: string): HauntLevel | null;
   /** Ids whose start or setLevel failed during the current look-away. */
   hasFailed(id: string): boolean;
+  /** A new look-away: forget failures and which haunts were started. */
   clearFailed(): void;
-  start(haunt: Haunt, level: HauntLevel): void;
+  /** Opens a port and starts the haunt with `info` plus one `roll` draw. */
+  start(haunt: Haunt, level: HauntLevel, info: Omit<StartInfo, 'roll'>): void;
+  /** Started since the last `clearFailed` (the start of the look-away), even if retired since. */
+  wasStarted(id: string): boolean;
   setLevel(id: string, level: HauntLevel): void;
-  /** Level 0: fade every open port with `gate.fadeOutAll`, then stop and close. */
-  retireAll(): void;
+  /** Level 0: fade every open port with `gate.fadeOutAll(ms)`, then stop and close. */
+  retireAll(ms?: number): void;
+  /** Fade only the active haunts matching `pred` over `ms` (at most 800), then stop and close. */
+  retireWhere(pred: (haunt: Haunt) => boolean, ms?: number): void;
   /** Fade only this haunt's port, then stop and close it. */
   retireOne(id: string): void;
   /** Stop and close a retiring instance of `id` now, before it is started again. */
@@ -42,10 +48,11 @@ export interface Roster {
   closeAll(): void;
 }
 
-export function createRoster(deps: EngineDeps): Roster {
+export function createRoster(deps: EngineDeps, roll: () => number): Roster {
   const active = new Map<string, Entry>();
   const retiring = new Set<Entry>();
   const failed = new Set<string>();
+  const started = new Set<string>();
 
   function attempt(what: string, id: string, fn: () => void): boolean {
     try {
@@ -94,9 +101,13 @@ export function createRoster(deps: EngineDeps): Roster {
     isActive: (id) => active.has(id),
     levelOf: (id) => active.get(id)?.level ?? null,
     hasFailed: (id) => failed.has(id),
-    clearFailed: () => failed.clear(),
+    clearFailed() {
+      failed.clear();
+      started.clear();
+    },
+    wasStarted: (id) => started.has(id),
 
-    start(haunt, level) {
+    start(haunt, level, info) {
       let port: GatePort | null = null;
       if (!attempt('open', haunt.id, () => { port = deps.gate.open(haunt.id); }) || port === null) {
         failed.add(haunt.id);
@@ -105,7 +116,9 @@ export function createRoster(deps: EngineDeps): Roster {
       const opened: GatePort = port;
       const entry: Entry = { haunt, port: opened, level, timer: null, due: 0 };
       active.set(haunt.id, entry);
-      if (!attempt('start', haunt.id, () => haunt.start(level, opened.audio, opened.visual))) fail(entry);
+      started.add(haunt.id);
+      const startInfo: StartInfo = { ...info, roll: roll() };
+      if (!attempt('start', haunt.id, () => haunt.start(level, opened.audio, opened.visual, startInfo))) fail(entry);
     },
 
     setLevel(id, level) {
@@ -115,17 +128,24 @@ export function createRoster(deps: EngineDeps): Roster {
       if (!attempt('setLevel', id, () => entry.haunt.setLevel(level))) fail(entry);
     },
 
-    retireAll() {
+    retireAll(fadeMs = FADE_MS) {
       if (active.size === 0) return;
-      let ms = FADE_MS;
+      let ms = fadeMs;
       try {
-        ms = deps.gate.fadeOutAll(FADE_MS);
+        ms = deps.gate.fadeOutAll(fadeMs);
       } catch (error) {
         deps.warn(`fadeOutAll failed: ${error instanceof Error ? error.message : String(error)}`);
       }
       for (const entry of [...active.values()]) moveToRetiring(entry, ms);
     },
 
+    retireWhere(pred, ms = FADE_MS) {
+      for (const entry of [...active.values()]) {
+        if (!pred(entry.haunt)) continue;
+        attempt('fadeOut', entry.haunt.id, () => entry.port.fadeOut(ms));
+        moveToRetiring(entry, ms);
+      }
+    },
     retireOne(id) {
       const entry = active.get(id);
       if (!entry) return;
@@ -154,6 +174,7 @@ export function createRoster(deps: EngineDeps): Roster {
         stopAndClose(entry);
       }
       failed.clear();
+      started.clear();
     },
   };
 }

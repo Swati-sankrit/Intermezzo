@@ -1,42 +1,11 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { computeRegions, type Rect, type Regions, type VisualHosts } from '../haunts/engine';
+import type { Regions, VisualHosts } from '../haunts/engine';
+import { measureRegions, sameRegions } from './measureRegions';
 import './HauntStage.css';
-
-/** Rough width of one `ch` in px, used only when the column cannot be measured. */
-const CH_ESTIMATE_PX = 11;
-const COLUMN_CH = 65;
 
 interface HauntStageProps {
   /** Called with the host elements once mounted, and with `null` on unmount. */
   hostsRef?: (hosts: VisualHosts | null) => void;
-}
-
-/** Centred 65ch estimate, used when the column element or ResizeObserver is missing. */
-function estimateColumn(viewportWidth: number): Rect {
-  const half = Math.min(viewportWidth, COLUMN_CH * CH_ESTIMATE_PX) / 2;
-  const mid = viewportWidth / 2;
-  return { left: mid - half, right: mid + half, top: 0, bottom: 0 };
-}
-
-function measureRegions(): Regions {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  const el = document.querySelector('[data-reading-column]');
-  const r = el?.getBoundingClientRect();
-  const hasBox = r !== undefined && r.width > 0;
-  const column: Rect = hasBox
-    ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom }
-    : estimateColumn(w);
-  return computeRegions(w, h, column);
-}
-
-function sameRegions(a: Regions, b: Regions): boolean {
-  return (
-    a.left.right === b.left.right &&
-    a.right.left === b.right.left &&
-    a.left.bottom === b.left.bottom &&
-    a.right.right === b.right.right
-  );
 }
 
 function regionStyle(r: Regions['left']): CSSProperties {
@@ -56,6 +25,10 @@ function Glow({ side }: { side: 'left' | 'right' }) {
 /**
  * Fixed overlay with the Candle_Glow and two side regions beside the reading
  * column. Haunt visuals are drawn only in the side regions.
+ *
+ * The root is not `aria-hidden`: a descendant cannot undo an `aria-hidden` ancestor, and a
+ * labelled haunt layer (`role="img"`) must reach screen readers (Req 2.12). The glow keeps
+ * `aria-hidden`, and the visual adapter hides every layer and overlay that has no label.
  */
 export function HauntStage({ hostsRef }: HauntStageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -96,7 +69,7 @@ export function HauntStage({ hostsRef }: HauntStageProps) {
   }, []);
 
   return (
-    <div className="haunt-stage" ref={rootRef} aria-hidden="true">
+    <div className="haunt-stage" ref={rootRef}>
       <div className="haunt-stage__region" ref={leftRef} style={regionStyle(regions.left)}>
         <Glow side="left" />
       </div>

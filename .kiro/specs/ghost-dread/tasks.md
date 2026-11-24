@@ -193,7 +193,7 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     - **Property 13: Nightmare is more likely to scare than Classic**
     - **Validates: Requirements 5.7**
 
-- [ ] 5. Haunt files, Return controller and engine wiring
+- [x] 5. Haunt files, Return controller and engine wiring
   - [x] 5.1 Implement `src/haunts/footsteps.ts`
     - Layer, Classic and Nightmare, `minLevel` 1; looped footstep buffer from `buildPulseTrain`, filter, spatial panner (`createSpatialPanner()` may return `null`; on `null` fall back to stereo panner, then none); `onTick` every 500 ms schedules position ramps 1500 ms ahead; `setLevel` re-reads `footstepSpec`; `stop` disconnects every node. Imports only types, `noise` and `./engine/ghost/`
     - _Requirements: 1.1, 1.4, 1.5, 1.8, 1.13, 1.14, 1.15_
@@ -224,35 +224,35 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     - Evidence and spoiler calls are wired in tasks 9 and 10; the controller already accepts the hosts
     - _Requirements: 3.1, 3.3, 3.5, 3.6, 3.7, 3.9, 3.11, 5.3, 5.13, 8.10, 9.8_
 
-  - [ ] 5.8 Wire the engine
+  - [x] 5.8 Wire the engine
     - `engine/engineSelect.ts` (`selectByMode`, `layersToRun`); `engineRoster.ts` (`StartInfo` as fourth `start` argument, `retireAll(ms)`, `retireWhere`, a started layer is not restarted within a look-away); `engine.ts` (new deps `reading`, `evidence`, `spoiler`, `reducedMotion`; `startLookAway` on `away`, and `onChapterChange(counter, key)` whenever `reading.chapterKey()` changes, so a return to an earlier chapter resets Ghost_Distance; `begin` on `present` after a look-away with `recompute()` fallback; `abort('away')` on a new `away`; mode change handling; `stop` aborts everything). Keep each file under 200 lines
     - _Requirements: 1.3, 1.12, 1.14, 2.3, 2.4, 2.13, 3.1, 3.6, 3.7, 3.9, 3.11, 8.10, 9.9, 9.13, 9.15_
 
-  - [ ] 5.9 Write property test for engine behaviour over any script
+  - [x] 5.9 Write property test for engine behaviour over any script
     - File: `src/haunts/engine/__tests__/engine.gd28.prop.test.ts` (500 cases)
     - Real engine with fake lead haunts, fake layers (some `minLevel` 3, some limited to Classic and Nightmare), fake return effects, fake gate and fake scheduler; scripts of signals, clock steps, timer firings, mode changes, chapter changes, reduced-motion toggles and arming
     - **Property 28: The engine runs ghosts and returns inside their rules**
     - **Validates: Requirements 1.3, 1.14, 2.4, 2.13, 3.1, 3.5, 3.6, 3.7, 3.9, 3.11, 4.7, 5.3, 8.10, 9.8, 9.9, 9.13**
 
-- [ ] 6. Wire into the reading view and prove the flow end to end
-  - [ ] 6.1 Implement `src/ui/readingContext.ts`
+- [x] 6. Wire into the reading view and prove the flow end to end
+  - [x] 6.1 Implement `src/ui/readingContext.ts`
     - `ReadingContext` from reader state: `chapterKey()`, `activeParagraph()`, `readSoFar()`, `spoilerSource()` returning `null` for now; a no-op `EvidenceHost` and `SpoilerHost` until tasks 9 and 10. Read-only over reader state
     - _Requirements: 2.4, 4.8, 7.16_
 
-  - [ ] 6.2 Wire `HauntLayer` and `HauntStage`
+  - [x] 6.2 Wire `HauntLayer` and `HauntStage`
     - `HauntLayer`: use `loadRegistry`, pass `effects`, `reading`, `evidence`, `spoiler`, `reducedMotion` to the engine; `HauntStage.css`: ghost step styles, overlay layer styles, reduced-motion rules; `HauntStage` drops `aria-hidden` on its root and keeps it on glow elements. Components under 200 lines
     - _Requirements: 2.12, 9.2, 9.12_
 
-  - [ ] 6.3 Write the end-to-end integration test
+  - [x] 6.3 Write the end-to-end integration test
     - File: `src/ui/__tests__/ghostFlow.integration.test.tsx` (jsdom, real engine, real gate, real haunts, fake signal source, fake clock)
     - Away: Ghost layer in a side region and outside the column box. Present after 12 s with Classic and a low jump roll: Return_Moment starts, Jumpscare overlay appears, and at 3000 ms no overlay, no Ghost element and no jump channel remain and the column text is unchanged. Gentle shows no Ghost. A new `away` during the Return_Moment ends it at once
     - _Requirements: 2.1, 2.2, 2.13, 3.1, 3.5, 3.7, 5.1, 5.13, 9.9_
 
-  - [ ] 6.4 Extend the existing property suites over the new haunts
+  - [x] 6.4 Extend the existing property suites over the new haunts
     - `gateCap.p14` and `reducedMotion.p15` iterate the registry: confirm they now cover the layers and effects, and that with reduced motion no `is-guttering`, `is-sweeping` or `is-glitching` class is ever added and the Ghost and Jumpscare fade in at least 1000 ms
     - _Requirements: 1.7, 2.9, 5.12, 9.4, 9.10_
 
-  - [ ] 6.5 Report results in `docs/BUILD_LOG.md`
+  - [x] 6.5 Report results in `docs/BUILD_LOG.md`
     - Append a section for tasks 3 to 6: properties 8 to 13, 23, 24, 26 and 28, cases run, any counterexample with seed and shrunk input, the API findings from 3.1, and a confirmation that adding the five new haunt files needed no further edit in the engine beyond the one-time contract reading
     - _Requirements: none (testing rule)_
 

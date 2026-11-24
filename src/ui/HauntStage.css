@@ -1,6 +1,7 @@
 /*
  * Haunt stage: fixed overlay below the top bar (z-index 10). Everything is drawn
- * inside the two side regions, never over the reading column. Only opacity and
+ * inside the two side regions, never over the reading column, except overlays (.haunt-overlay)
+ * during a Return_Moment. Only opacity and
  * transform are animated; no `color` or `background-color` of the page changes.
  * All @keyframes for the haunt feature live in this file.
  * Variables written by the visual adapter on .haunt-stage:
@@ -60,7 +61,38 @@
   transition-timing-function: ease;
 }
 
+/* Whisper-style layers stretch over the whole region (preserveAspectRatio="none"). */
 .haunt-layer > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * Ghost step styles. The step is in the markup: `ghostArt(step)` draws a taller silhouette
+ * with more detail per step, all in a 100-unit-wide viewBox, aligned to the bottom (YMax).
+ * A ghost drawing keeps its aspect ratio, so this rule gives it the same size `ghostBox` gives:
+ * at most one px per viewBox unit (width capped at 100px), never larger than the region, and
+ * centred in it. Layers with `preserveAspectRatio="none"` are left alone.
+ */
+.haunt-layer > svg:not([preserveAspectRatio='none']) {
+  max-width: 100px;
+  margin-inline: auto;
+}
+
+/*
+ * Overlays are children of the stage root, not of a region, and the gate creates them only
+ * inside a Return_Moment (at most 3 s). They are the only stage content allowed over the
+ * reading column. They never take pointer events or focus, and the adapter hides every
+ * unlabelled one from screen readers.
+ */
+.haunt-overlay {
+  overflow: hidden;
+  pointer-events: none;
+  transition-property: opacity;
+}
+
+.haunt-overlay > svg {
   display: block;
   width: 100%;
   height: 100%;
@@ -106,5 +138,14 @@
   .haunt-stage.is-guttering .haunt-stage__gutter,
   .haunt-layer.is-sweeping {
     animation: none;
+    transform: none;
+  }
+
+  /* Only fades remain: no movement, no flicker. */
+  .haunt-layer,
+  .haunt-overlay {
+    animation: none;
+    transform: none;
+    transition-property: opacity;
   }
 }

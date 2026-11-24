@@ -3,14 +3,17 @@ import {
   createGate,
   createHauntEngine,
   createReducedMotion,
-  loadHaunts,
+  loadRegistry,
   type AttentionSignalLike,
   type Gate,
   type HauntSettings,
   type Unsubscribe,
   type VisualHosts,
 } from '../haunts/engine';
+import type { ReadingContext } from '../haunts/engine/returnTypes';
 import { getHauntSettingsStore } from './hauntSettingsStore';
+import { measureRegions } from './measureRegions';
+import { NOOP_EVIDENCE_HOST, NOOP_SPOILER_HOST } from './readingContext';
 
 /** Same time base as attention signal timestamps (src/attention/controllerPorts.ts). */
 const now = (): number => performance.timeOrigin + performance.now();
@@ -35,10 +38,13 @@ export function useHauntEngine(
   subscribeSignal: (cb: (s: AttentionSignalLike) => void) => Unsubscribe,
   settings: HauntSettings,
   gateRef: { current: Gate | null },
+  reading: ReadingContext,
 ): void {
   useEffect(() => {
     if (hosts === null) return;
     const hasWindow = typeof window !== 'undefined';
+    const reducedMotion = createReducedMotion();
+    const { haunts, effects } = loadRegistry(warn);
     const gate = createGate({
       audio: {
         createAudioContext: () => new AudioContext(),
@@ -47,7 +53,7 @@ export function useHauntEngine(
       hosts,
       storage: getStorage(),
       storageEvents: hasWindow ? window : null,
-      reducedMotion: createReducedMotion(),
+      reducedMotion,
       scheduler: {
         setTimeout: (fn, ms) => setTimeout(fn, ms),
         clearTimeout: (id) => clearTimeout(id as ReturnType<typeof setTimeout>),
@@ -58,7 +64,7 @@ export function useHauntEngine(
     gateRef.current = gate;
     const engine = createHauntEngine({
       subscribeSignal,
-      haunts: loadHaunts(warn),
+      haunts,
       gate,
       settings: getHauntSettingsStore(),
       clock: { now },
@@ -67,6 +73,15 @@ export function useHauntEngine(
         clearTimeout: (id) => clearTimeout(id as ReturnType<typeof setTimeout>),
       },
       random: Math.random,
+      effects,
+      reading,
+      // Evidence and spoiler displays arrive with tasks 9.5 and 10.8.
+      evidence: NOOP_EVIDENCE_HOST,
+      spoiler: NOOP_SPOILER_HOST,
+      reducedMotion: () => reducedMotion.get(),
+      // A getter: the column and viewport can change between haunt starts.
+      regions: measureRegions,
+      extraRandom: Math.random,
       warn,
     });
     engine.start();
@@ -75,7 +90,7 @@ export function useHauntEngine(
       gate.dispose();
       if (gateRef.current === gate) gateRef.current = null;
     };
-  }, [hosts, subscribeSignal, gateRef]);
+  }, [hosts, subscribeSignal, gateRef, reading]);
 
   const { sound } = settings;
   useEffect(() => {

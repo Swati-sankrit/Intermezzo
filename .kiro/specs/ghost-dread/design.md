@@ -289,8 +289,8 @@ export interface SettingsStore {
 /** Pure. Haunts allowed in this mode, split by role. A missing `modes` means all three. */
 export function selectByMode(haunts: readonly Haunt[], mode: HauntMode): { leads: Haunt[]; layers: Haunt[] };
 
-/** Pure. Layer ids that should run: mode allows it and level >= minLevel (default 1). Level 0 gives none. */
-export function layersToRun(layers: readonly Haunt[], level: 0 | 1 | 2 | 3): string[];
+/** Pure. Layer ids that should run: the layer's `modes` include `mode` and level >= minLevel (default 1). Level 0 and Gentle give none. */
+export function layersToRun(layers: readonly Haunt[], level: 0 | 1 | 2 | 3, mode: HauntMode): string[];
 ```
 
 `reconcile` adds `layersToRun(...)` to the wanted set of lead and companion. The roster changes are small:
@@ -682,6 +682,10 @@ Changes:
 - On `present` after a look-away, it computes `awayMs = signal.timestamp − awayStart`. If `mode !== 'gentle'` and the engine is armed, it calls `returnController.begin(args, (ms) => recompute(ms))`, so level 0 and the ambient fade happen inside `begin` at step 4. If `begin` returns `null` (Gentle, not armed, or one already running) the engine calls `recompute()` itself, which is the existing 600 ms fade (Req 3.9).
 - On `away` while a Return_Moment runs, it calls `returnController.abort('away')` before handling the new look-away (Req 3.7).
 - `stop()` also aborts the Return_Moment and the spoiler controller.
+- **Optional `subscribeChapter` (approved addition, task 5.8).** `ReadingContext` gains an optional `subscribeChapter(cb): () => void`. The engine subscribes at `start` and calls `onChapterChange` when the callback fires, so a return to an earlier chapter resets the count with no look-away in between. Without it, the engine reads `reading.chapterKey()` only when a look-away starts (`startLookAway` then resets the count for a new key), so a return to an earlier chapter with no look-away in between is not detected.
+- **Optional `regions` input (approved addition, task 5.8).** `EngineDeps.regions` is `Regions | (() => Regions | undefined)`, with `Regions` from `computeRegions`. The engine reads it at each haunt start and passes it as `StartInfo.regions`, so `ghostFigure` can apply `ghostBox`. Without it, `regions` is undefined.
+- **Optional `extraRandom` and `effects` (task 5.8, decided).** `EngineDeps.extraRandom` is the random source for the per-start `StartInfo.roll` and for the Return_Moment rolls. It is separate from `random`, so the lead and companion draw sequence (and Property 20) is unchanged. Default: a fixed-seed generator. `useHauntEngine` passes `Math.random`. `EngineDeps.effects` carries the Return effects from the registry (default none). `reading`, `evidence`, `spoiler` and `reducedMotion` are optional too, with no-op defaults, until task 6.2 passes the real ones. The optional inputs are declared in `EngineWiringDeps` (`returnTypes.ts`), and `engineWiring.ts` holds the defaults.
+- A layer is started at most once per look-away: the roster remembers the ids it started since the look-away began (`wasStarted`), so a mode round trip during one look-away does not play the knock twice (Req 1.3).
 
 ## Data Models
 

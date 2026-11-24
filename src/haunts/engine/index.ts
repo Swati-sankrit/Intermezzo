@@ -6,7 +6,7 @@ export { createHauntEngine } from './engine';
 export { createGate } from './gate/gate';
 export { createReducedMotion } from './gate/reducedMotion';
 export { createSettingsStore, DEFAULT_SETTINGS } from './settings';
-export { loadHaunts } from './registry';
+export { loadHaunts, loadRegistry } from './registry';
 export { visibleDialogs } from './dialogOrder';
 export { computeRegions } from './regions';
 

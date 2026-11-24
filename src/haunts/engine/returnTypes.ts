@@ -3,6 +3,7 @@
  */
 
 import type { HauntMode } from './ghost/mode';
+import type { Regions } from './regions';
 import type { AudioOut, VisualLayer, VisualOut } from './types';
 
 export type { HauntMode } from './ghost/mode';
@@ -86,6 +87,12 @@ export interface ReadingContext {
   } | null;
   /** Text before and including the active paragraph, and the offset where it ends. */
   readSoFar(): { text: string; position: number };
+  /**
+   * Optional. Calls `cb` as soon as the chapter changes, so the engine resets the look-away count
+   * at once. Without it the engine reads `chapterKey()` only when a look-away starts.
+   * Returns an unsubscribe function.
+   */
+  subscribeChapter?(cb: () => void): () => void;
 }
 
 export interface EvidenceHost {
@@ -120,4 +127,28 @@ export interface SpoilerHost {
   /** False when the Return_Moment ends (the Ghost leaves). */
   setHolding(holding: boolean): void;
   hide(): void;
+}
+
+/**
+ * Optional engine inputs added by ghost-dread task 5.8. Each has a safe no-op default, so a caller
+ * that passes none behaves as before the Return_Moment existed.
+ */
+export interface EngineWiringDeps {
+  /** Default: one chapter, no paragraph, no spoiler source. */
+  reading?: ReadingContext;
+  /** Default: shows nothing. */
+  evidence?: EvidenceHost;
+  /** Default: shows nothing. */
+  spoiler?: SpoilerHost;
+  /** Current reduced-motion preference. Default: false. */
+  reducedMotion?(): boolean;
+  /** Return effects from the registry. Default: none. */
+  effects?: readonly ReturnEffect[];
+  /** The side regions, or a getter read at each haunt start. Default: undefined, so haunts get no `regions`. */
+  regions?: Regions | (() => Regions | undefined);
+  /**
+   * Random source for the per-start `roll` and the Return_Moment rolls. Kept apart from `random` so
+   * the lead and companion draw sequence is unchanged. Default: a fixed-seed generator.
+   */
+  extraRandom?(): number;
 }

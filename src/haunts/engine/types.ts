@@ -5,7 +5,7 @@
 
 import type { HauntAudioContext } from './hauntAudio';
 import type { HauntMode } from './ghost/mode';
-import type { ReturnPort } from './returnTypes';
+import type { EngineWiringDeps, ReturnPort } from './returnTypes';
 import type { Rect } from './regions';
 
 export type {
@@ -147,7 +147,7 @@ export interface SettingsStore {
   subscribe(cb: () => void): Unsubscribe;
 }
 
-export interface EngineDeps {
+export interface EngineDeps extends EngineWiringDeps {
   subscribeSignal(cb: (s: AttentionSignalLike) => void): Unsubscribe;
   haunts: readonly Haunt[];
   gate: Gate;

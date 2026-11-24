@@ -15,6 +15,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { HauntLayer } from '../../../ui/HauntLayer';
+import { createReadingContext } from '../../../ui/readingContext';
 import { createHauntEngine } from '../engine';
 import { createGate } from '../gate/gate';
 import { createReducedMotion } from '../gate/reducedMotion';
@@ -172,7 +173,18 @@ describe('network and storage spies (Req 16.6, 16.7)', () => {
     let state = observe();
     expect(state.level).toBe(3);
     expect(state.leadId).not.toBeNull();
-    expect(state.running).toHaveLength(Math.min(2, registryIds.length));
+    // Leads and companions only: layers run in addition (Req 1.14). Role missing means lead.
+    const inClassic = (h: (typeof registry)[number]): boolean => h.modes === undefined || h.modes.includes('classic');
+    const leadCandidateCount = registry.filter((h) => h.role !== 'layer' && inClassic(h)).length;
+    const roleOf = new Map(registry.map((h) => [h.id, h.role] as const));
+    const runningLeads = state.running.filter((id) => roleOf.get(id) !== 'layer');
+    expect(runningLeads).toHaveLength(Math.min(2, leadCandidateCount));
+    // Layers: exactly those whose modes include Classic and whose minLevel (default 1) is <= 3.
+    const expectedLayers = registry
+      .filter((h) => h.role === 'layer' && inClassic(h) && 3 >= (h.minLevel ?? 1))
+      .map((h) => h.id);
+    const runningLayers = state.running.filter((id) => roleOf.get(id) === 'layer');
+    expect([...runningLayers].sort()).toEqual([...expectedLayers].sort());
     expect(state.running.every((id) => registryIds.includes(id))).toBe(true);
     // Real visual and audio effects reached the fakes and jsdom hosts.
     expect(root.style.getPropertyValue('--glow-dim')).not.toBe('');
@@ -241,7 +253,12 @@ describe('network and storage spies (Req 16.6, 16.7)', () => {
       });
     };
 
-    const view = render(createElement(HauntLayer, { subscribeSignal }));
+    // No book open: a real reading context over an empty state.
+    const reading = createReadingContext(
+      () => ({ book: null, chapterIndex: 0, paragraphIndex: 0 }),
+      () => () => undefined,
+    );
+    const view = render(createElement(HauntLayer, { subscribeSignal, reading }));
     expect(listeners.size).toBe(1); // the real engine subscribed through the real hook
 
     fireEvent.click(screen.getByRole('button', { name: 'Begin reading' }));

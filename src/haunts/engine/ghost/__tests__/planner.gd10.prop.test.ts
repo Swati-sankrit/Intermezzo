@@ -34,22 +34,23 @@ const ALMOST_ONE = 0.999999;
 
 /**
  * Any Classic or Nightmare input with reduced motion on. Besides the shared generator, two shapes
- * force a Jumpscare (history empty, away at least 10 s, jump roll 0): `scare`, and `longest`, which
+ * force a Jumpscare with a False_Calm (history empty, away at least 10 s, jump roll 0, calm roll below
+ * 0.75): `scare`, and `longest`, which
  * also takes a False_Calm of about 800 ms and the longest Jumpscare, so the fade ends near 3000 ms.
  */
 export const reducedInputArb: fc.Arbitrary<ReturnInput> = fc
   .tuple(
     plannerInputArb,
     fc.constantFrom<'classic' | 'nightmare'>('classic', 'nightmare'),
-    fc.constantFrom<Shape>('as-is', 'as-is', 'scare', 'longest'),
+    fc.constantFrom<Shape>('as-is', 'scare', 'longest', 'longest'),
     fc.integer({ min: 10_000, max: 60_000 }),
     fc.double({ min: 0, max: 0.74, noNaN: true }),
     fc.double({ min: 0.97, max: ALMOST_ONE, noNaN: true }),
   )
   .map(([base, mode, shape, away, calm, high]): ReturnInput => {
     if (shape === 'as-is') return { ...base, mode, reducedMotion: true };
-    const rolls: Rolls = { ...base.rolls, jump: 0 };
-    if (shape === 'longest') Object.assign(rolls, { calm, calmLen: high, jumpLen: high });
+    const rolls: Rolls = { ...base.rolls, jump: 0, calm };
+    if (shape === 'longest') Object.assign(rolls, { calmLen: high, jumpLen: high });
     return { ...base, mode, reducedMotion: true, awayMs: away, history: [], rolls };
   });
 

@@ -1026,3 +1026,91 @@ Both items were in "Open decisions from tasks 3.2 to 3.7". They are now resolved
   - Compile error that triggered the test changes: `error TS2741: Property 'scheduler' is missing in type ... but required in type 'GateDeps'`.
   - Seven test files now pass the fake scheduler: `audible.unit`, `colorRule.unit`, `fadeDeadline.unit`, `gate.unit`, `gateCap.p14.prop`, `reducedMotion.p15.prop`, `network.unit`.
   - `design.md` now says the gate takes a required scheduler in `GateDeps`. The line "`createGate(deps)` has no scheduler today" was removed.
+
+## ghost-dread tasks 4 to 6: results
+- Task 3.1 (audio API findings) has its own section above ("ghost-dread task 3.1: audio API findings"). Not repeated here. Properties 23, 24 and 26 are in "ghost-dread follow-ups to task 2, and task 3: results".
+- Case counts are read from the test files: `fc.assert` blocks times `numRuns`. Coverage tests that use `fc.sample` (300 inputs each) are listed separately because they are not `fc.assert` runs. Test counts per file come from a JSON-reporter run of these 20 files (154 tests, 0 failed).
+
+### Properties
+| Property | Name | File | Tests | fc.assert blocks x cases | Total cases | Result |
+|---|---|---|---|---|---|---|
+| 8 | Return plan bounds and determinism | `src/haunts/engine/ghost/__tests__/planner.gd08.prop.test.ts` | 7 | 5 x 300 | 1,500 (plus a 300-sample coverage test, and one boundary example test) | pass |
+| 9 | Gentle plans are empty | `.../ghost/__tests__/planner.gd09.prop.test.ts` | 6 | 4 x 300 | 1,200 (plus a 300-sample coverage test, and one worst-case example test) | pass |
+| 10 | Reduced motion plans have no Glitch and no close-up | `.../ghost/__tests__/planner.gd10.prop.test.ts` | 5 | 3 x 300 | 900 (plus a 300-sample coverage test, and one longest-case example test) | pass (input shaping only, see below) |
+| 11 | A Jumpscare needs a Qualifying_Return | `.../ghost/__tests__/planner.gd11.prop.test.ts` | 5 | 3 x 500 | 1,500 (plus a 300-sample coverage test, and one boundary example test) | pass |
+| 12 | Jumpscare frequency over any three Qualifying_Returns | `.../ghost/__tests__/planner.gd12.prop.test.ts` | 4 | 3 x 500 | 1,500 (plus a 300-sample coverage test) | pass |
+| 13 | Nightmare is more likely to scare than Classic | `.../ghost/__tests__/planner.gd13.prop.test.ts` | 6 | 6 x 500 | 3,000 (plus a 300-sample coverage test) | pass |
+| 28 | The engine runs ghosts and returns inside their rules | `src/haunts/engine/__tests__/engine.gd28.prop.test.ts` | 2 | 1 x 500 scripts | 500 (plus a coverage test over 500 more scripts) | pass |
+| 14 (extended) | Real adapter and real haunts stay under the cap, now with layers and return effects (`gateCap.p14`) | `src/haunts/engine/__tests__/gateCap.p14.prop.test.ts` | 7 | 1 x 700 scenarios + 1 x 300 (ensemble: lead, companion and layers, with Return_Moments) | 1,000 scenarios (was 300; plus 2 coverage tests and 4 control and registry tests) | pass |
+| 15 (extended) | Reduced motion emits no flashing, now over the ghost-dread haunts and effects (`reducedMotion.p15`) | `src/haunts/engine/__tests__/reducedMotion.p15.prop.test.ts` | 10 | 2 x 200 scenarios | 400 scenarios (plus 2 coverage tests, 4 control tests and 2 registry tests) | pass (one counterexample, fixed, see below) |
+- The properties 14 and 15 here extend the earlier haunt-feature properties of the same name (`gateCap.p14`, `reducedMotion.p15`). They are not the ghost-dread properties 14 and 15 of tasks 9 and 10.
+- gd28 floors and the other coverage tests passed in every run. Floors sit at least 4 SD under measured shares.
+
+### Unit and integration test files (tests per file)
+| File | Tests |
+|---|---|
+| `src/haunts/engine/__tests__/returnMoment.unit.test.ts` | 8 |
+| `src/haunts/engine/__tests__/returnMomentAbort.unit.test.ts` | 6 |
+| `src/haunts/__tests__/ghostHaunts.unit.test.ts` | 26 |
+| `src/haunts/__tests__/ghostHaunts.visual.unit.test.ts` | 22 |
+| `src/haunts/engine/__tests__/engineWiring.unit.test.ts` | 12 |
+| `src/haunts/engine/__tests__/engineSelect.unit.test.ts` | 2 |
+| `src/ui/__tests__/readingContext.unit.test.ts` | 7 |
+| `src/ui/__tests__/hauntStage.unit.test.tsx` | 9 |
+| `src/ui/__tests__/ghostFlow.integration.test.tsx` | 4 |
+| `src/haunts/engine/__tests__/discover.unit.test.ts` (updated) | 4 |
+- `network.unit.test.ts` (2 tests) was also updated, see below.
+
+### No engine edit was needed to add the five haunt files
+- Confirmed with `git log` and `git diff`. The five files `footsteps.ts`, `breathing.ts`, `knock.ts`, `ghostFigure.ts` and `jumpscare.ts` were added in commit 3e9ef16 and have not changed since. The roster and engine files `engine.ts` and `engineRoster.ts` have no commit after 6dcc357 (task 1) and 4610119 (the haunt-feature engine). So the haunt files did not need an edit in either of them.
+- Discovery picks the files up without a registry or engine edit. `discover.unit` has a synthetic module that appears with no engine change.
+- Engine-side changes made in the same commit as the haunt files were contract only: `engine/types.ts` (+4 lines: the `ReturnEffect`, `ReturnPlan` and `ReturnPort` type exports, and the optional `StartInfo.regions`) and the new Return controller `engine/returnMoment.ts` (task 5.7). Neither is an edit that a particular haunt file forced.
+- Task 5.8 is not in its own commit; it is in the working tree. Files it touched, from `git status` and `git diff`:
+  - Edited: `engine.ts`, `engineRoster.ts`, `types.ts` (`EngineDeps extends EngineWiringDeps`), `returnTypes.ts` (`EngineWiringDeps`, optional `subscribeChapter`), `index.ts` (exports `loadRegistry`).
+  - New: `engineSelect.ts` (`selectByMode`, `layersToRun`), `engineWiring.ts` (defaults for the new deps), `engineAway.ts` (look-away counter and chapter watch).
+  - This is the one-time contract reading: the engine now reads `role`, `modes`, `minLevel` and the `StartInfo` fields. No file named after a haunt appears in any of them.
+- Interim state before 5.8: the engine still built its lead list from every haunt id with no mode or role filter. So `footsteps` (a layer, Classic and Nightmare only) could be picked as the lead, even in Gentle. 5.8 closed this: `selectByMode` keeps only allowed leads, and `layersToRun` returns nothing in Gentle or at level 0. Property 28 covers it ("Classic/Nightmare layer skipped in Gentle").
+
+### Counterexamples and fixes
+All fixes were approved by the user. No assertion was weakened.
+- `ghostArt` markup had no `xmlns`. The gate's markup check rejected it, so the Ghost and the Jumpscare drew empty. Fixed in `ghostArt.ts` (the `<svg>` now has `xmlns="http://www.w3.org/2000/svg"`). The Property 5 (`ghostArt.gd05`) safety scan now strips exactly that one attribute, asserts that it is present, and asserts that no other `xmlns` exists in the markup.
+- Footsteps ramp segments were 0.25 s, which broke p15's rule that rises last at least 1 s under reduced motion. Seed -1518530579. Footsteps now ramp in 1 s segments. The chord midpoints are 5.91 m, 3.70 m and 1.92 m, all above 1.5 m.
+- No other counterexample was found for properties 8 to 13 and 28.
+
+### Test changes the user approved
+- `discover.unit.test.ts`, two tests. Both counted haunts only, which was wrong once a file can be an effect only (`jumpscare`).
+  - "loads the real haunts" had `expect(haunts).toHaveLength(Object.keys(discovered).length)`. It now checks that `loadHaunts` excludes `jumpscare` and includes `ghostFigure`, then calls `loadRegistry` and asserts that the count of distinct ids in haunts ∪ effects equals `Object.keys(discovered).length`, with `jumpscare` an effect only and `ghostFigure` both.
+  - "a synthetic extra valid module appears" had `expect(haunts).toHaveLength(Object.keys(discovered).length + 1)`. It now asserts that the distinct ids in haunts ∪ effects number `Object.keys(discovered).length + 1`.
+- `network.unit.test.ts` line 175 (the Classic level 3 check) had `expect(state.running).toHaveLength(Math.min(2, registryIds.length))`. The running count now covers leads and companions only (role missing means lead, Classic allowed): `Math.min(2, leadCandidateCount)`. A separate assertion checks that the running layers are exactly the ones whose modes include Classic and whose `minLevel` (default 1) is at most 3. The HauntLayer test also passes a real reading context over an empty state.
+- p15: jump channels may rise in 300 ms under reduced motion, which is the gate's own floor (the same rule as Property 23). Every other rising ramp still needs 1000 ms. Only the gain param of a channel opened with `jumpSound` is exempt.
+- p14: the base property went from 300 to 700 runs.
+- gd10: input shaping only. `reducedInputArb` now sets the calm roll below 0.75 in both forcing shapes (`scare` and `longest`), so a False_Calm is present, and the shape list weights `longest` more (`'as-is', 'scare', 'longest', 'longest'`). No assertion changed.
+- p14 pairs: the generator was biased toward low combo indices. Fixed with a weighted `oneof` (weight 3 for the first `round(sqrt(combos))` indices, weight 17 for the rest). The pairs and per-combo coverage checks are unchanged.
+
+### Design decisions
+- `abort('gentle')` ends the moment with `endReturnMoment(100)`, inside the 800 ms of Req 8.10 (`abort('away')` uses 80 ms).
+- `extraRandom` and `effects` are engine deps (`EngineWiringDeps`). `extraRandom` is separate from `random`, so the lead and companion draw sequence does not change. Default: a fixed-seed generator.
+- Approved additions: `subscribeChapter` (optional, on `ReadingContext`) and `regions` (optional, on `StartInfo` and as an engine dep).
+- `layersToRun` takes `mode`, so Gentle runs no layer.
+- `.haunt-layer > svg` is sized with `max-width` in `HauntStage.css`.
+- `readSoFar` covers the current chapter only.
+- `EMPTY_PLAN` (frozen, in `planParts.ts`): `durationMs` 0, `qualifying` false, `ambientFadeMs` 600 (the engine's own fade, Req 3.9), `ghostStep` 0, `ghostLingerMs` 0, and `falseCalmMs`, `jumpscare`, `glitch`, `fade`, `evidence` and `spoiler` null. gd09 asserts deep equality to it.
+- The reduced-motion fade is 600 ms (`CHOSEN_FADE_MS` in gd10; the design floor is 500 ms).
+- The planner does not record history. The Return controller records each outcome (task 5.7). Gentle returns are not recorded (gd12 checks it).
+- The knock under reduced motion plays at 0.175 gain against a 0.5 target, because the layer is still fading in when the pulse plays. It never exceeds the layer's gain target, so the rule holds.
+
+### Coverage notes
+- Flags under 4 SD where the flag is an independent binomial: the gd10 mode flags at about 3.7 SD; the p15 initial, OS and app toggle flags; and the ensemble jump-heard and jumpscare-ran flags in p14. None fell below its floor in measurement.
+- gd28 shaping (inputs only): the callback share went to 5:1 and some macro weights changed.
+
+### Open items for later tasks
+- The evidence pool is empty until task 9, so requirement 4.7 is covered trivially.
+- `stop` does not clear evidence or spoiler until tasks 9 and 10.
+- Without `subscribeChapter`, a return to an earlier chapter with no look-away in between is not detected.
+- The `HauntStage.css` header comment says z-index 10, but the rule is `z-index: 5`.
+- `engineGd28Run.ts` is 612 lines. It is a test helper; the 200-line rule applies to components.
+
+### Full run
+- `npx vitest --run`, twice: 109 test files and 759 tests passed both times, 0 failed (17.06 s and 18.72 s).
+- `npx tsc -b`: exit 0, no errors. `npm run lint` (oxlint): exit 0. `npm run build` (vite build): exit 0.
+- No counterexamples and no coverage misses in these runs. Nothing was changed during them. The temporary JSON reports in `/tmp` (used for the per-file test counts) were deleted. No `.vitest/` folder exists, and `git status` shows only modified or new files under `src/`, `docs/` and `.kiro/specs/ghost-dread/`.

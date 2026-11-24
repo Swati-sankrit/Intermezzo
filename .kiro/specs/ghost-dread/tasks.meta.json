@@ -54,6 +54,10 @@
     "4.8 Write property test that Nightmare scares at least as often as Classic": {
       "status": "passed",
       "lastRunTimestamp": 1795452984977
+    },
+    "5.9 Write property test for engine behaviour over any script": {
+      "status": "passed",
+      "lastRunTimestamp": 1795509331742
     }
   },
   "executionHistory": {
@@ -674,6 +678,102 @@
         "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795493903420
+      },
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795498719756
+      },
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795501014700
+      }
+    ],
+    "5.9 Write property test for engine behaviour over any script": [
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795501014757
+      },
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795509876891
+      }
+    ],
+    "5. Haunt files, Return controller and engine wiring": [
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795509876933
+      }
+    ],
+    "6.1 Implement `src/ui/readingContext.ts`": [
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795509876984
+      },
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795510220988
+      }
+    ],
+    "6.2 Wire `HauntLayer` and `HauntStage`": [
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795510221671
+      },
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795511970079
+      }
+    ],
+    "6.3 Write the end-to-end integration test": [
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795511970158
+      },
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795512310150
+      }
+    ],
+    "6.4 Extend the existing property suites over the new haunts": [
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795512309964
+      },
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795514284493
+      }
+    ],
+    "6.5 Report results in `docs/BUILD_LOG.md`": [
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795514284927
+      },
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795514743503
+      }
+    ],
+    "6. Wire into the reading view and prove the flow end to end": [
+      {
+        "executionId": "ae866137-4d6a-4cfe-b554-b636a3f83024",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795514743573
       }
     ]
   }

@@ -6,6 +6,7 @@ import { LibraryScreen } from './LibraryScreen';
 import { PaceTimer } from './PaceTimer';
 import { ParagraphList } from './ParagraphList';
 import { ProgressBar } from './ProgressBar';
+import { useReadingContext } from './readingContext';
 import { useReader } from './useReader';
 import './theme.css';
 import './ReaderView.css';
@@ -14,6 +15,7 @@ const IDLE_MS = 2500;
 
 export function ReaderView() {
   const r = useReader();
+  const reading = useReadingContext(r);
   const [awake, setAwake] = useState(true);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -45,7 +47,7 @@ export function ReaderView() {
   const bookTitle = r.book.title;
 
   return (
-    <AttentionLayer suggestedSecs={r.suggestedSecs}>
+    <AttentionLayer suggestedSecs={r.suggestedSecs} reading={reading}>
       {(cameraIndicator) => (
         <div className="reader" onMouseMove={wake} onFocus={wake}>
           <header className={`reader__bar${awake ? ' reader__bar--awake' : ''}`}>
