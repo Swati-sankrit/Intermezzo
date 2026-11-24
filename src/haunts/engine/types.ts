@@ -6,6 +6,7 @@
 import type { HauntAudioContext } from './hauntAudio';
 import type { HauntMode } from './ghost/mode';
 import type { ReturnPort } from './returnTypes';
+import type { Rect } from './regions';
 
 export type {
   HauntAudioContext, HauntBufferSource, HauntFilter, HauntNode, HauntPanner, HauntParam, HauntSink, HauntSpatialPanner,
@@ -15,6 +16,7 @@ export type HauntLevel = 1 | 2 | 3;
 export type Unsubscribe = () => void;
 
 export type { HauntMode } from './ghost/mode';
+export type { ReturnEffect, ReturnPlan, ReturnPort } from './returnTypes';
 
 /** Extra start data. Existing haunts may ignore it. */
 export interface StartInfo {
@@ -22,6 +24,8 @@ export interface StartInfo {
   readonly ghostStep: 0 | 1 | 2 | 3 | 4;
   /** One random draw in [0, 1) per start. */
   readonly roll: number;
+  /** Side regions beside the Reading_Column, when the engine can measure them. */
+  readonly regions?: { readonly left: Rect; readonly right: Rect };
 }
 
 /** The shape of a haunt module's named exports. */

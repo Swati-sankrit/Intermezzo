@@ -182,9 +182,20 @@ const actionArb: fc.Arbitrary<Action> = fc.oneof(
   { weight: 1, arbitrary: fc.record({ k: fc.constant('reducedApp' as const), on: fc.boolean() }) },
 );
 
+/** Integers from `from` up to but not including `to`. */
+function indexRange(from: number, to: number): number[] {
+  return Array.from({ length: to - from }, (_, i) => from + i);
+}
+
 function scenarioArb(comboCount: number): fc.Arbitrary<Scenario> {
   return fc.record({
-    combo: fc.integer({ min: 0, max: comboCount - 1 }),
+    // Combos are [singles..., ordered pairs...], so there are sqrt(comboCount) singles. fc.integer is biased
+    // toward its lower bound, which favoured the singles; constantFrom is uniform. Pairs are drawn 85% of the
+    // time so the pair share has a wide margin over its floor (0.75 expected) and every combo still shows up.
+    combo: fc.oneof(
+      { weight: 3, arbitrary: fc.constantFrom(...indexRange(0, Math.round(Math.sqrt(comboCount)))) },
+      { weight: 17, arbitrary: fc.constantFrom(...indexRange(Math.round(Math.sqrt(comboCount)), comboCount)) },
+    ),
     levels: fc.tuple(levelArb, levelArb),
     capText: capTextArb,
     soundOn: fc.oneof({ weight: 9, arbitrary: fc.constant(true) }, { weight: 1, arbitrary: fc.constant(false) }),
@@ -235,7 +246,7 @@ interface Slot { haunt: Haunt; port: GatePort | null; active: boolean }
 
 async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<void> {
   const combo = combos[s.combo];
-  const { clock } = createFakeTime();
+  const { clock, scheduler } = createFakeTime();
   const factory = createFakeAudioContextFactory(clock);
   const unlockTarget = new EventTarget();
   const mm = createFakeMatchMedia(s.osReduced);
@@ -252,6 +263,7 @@ async function runScenario(combos: readonly Haunt[][], s: Scenario): Promise<voi
     storage,
     storageEvents: events.target,
     reducedMotion: createReducedMotion(mm.matchMedia),
+    scheduler,
   });
   const slots: Slot[] = combo.map((haunt) => ({ haunt, port: null, active: false }));
 

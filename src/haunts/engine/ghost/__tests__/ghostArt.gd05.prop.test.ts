@@ -5,6 +5,7 @@ import { classify, refStep, REF_UNITS, regionArb, stepArb } from './ghostArtArbi
 
 const NUM_RUNS = 300;
 const STEPS = [0, 1, 2, 3, 4];
+const XMLNS_ATTR = 'xmlns="http://www.w3.org/2000/svg"';
 
 /** Reference box: one px per unit at most, aspect ratio kept, inside the region. Null under 48 px wide. */
 function referenceBox(step: number, region: { width: number; height: number }) {
@@ -131,7 +132,12 @@ describe('ghostArt and ghostBox (ghost-dread)', () => {
   it('Property 5: the markup loads nothing and carries no script or motion', () => {
     fc.assert(
       fc.property(stepArb, (step) => {
-        const { markup } = ghostArt(step);
+        const { markup: full } = ghostArt(step);
+        // The root carries exactly this one namespace declaration and no other xmlns anywhere.
+        expect(full.startsWith(`<svg ${XMLNS_ATTR} `)).toBe(true);
+        expect([...full.matchAll(/\bxmlns(:[\w-]+)?\s*=/g)].length).toBe(1);
+        // Remove exactly that one attribute from the root <svg> tag, then run the scan unchanged.
+        const markup = full.replace(`<svg ${XMLNS_ATTR} `, '<svg ');
         expect(markup).not.toMatch(/<image|href|xlink|<script|<animate|<set\b|animation|@keyframes|http|<use|<foreignObject|\bon[a-z]+=|url\(/i);
         expect(markup.startsWith('<svg ')).toBe(true);
         expect(markup.endsWith('</svg>')).toBe(true);

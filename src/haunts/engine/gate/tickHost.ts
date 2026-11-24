@@ -24,13 +24,13 @@ export function clampTickPeriod(periodMs: number): number {
   return Number.isFinite(periodMs) ? Math.max(MIN_TICK_PERIOD_MS, periodMs) : MIN_TICK_PERIOD_MS;
 }
 
-export function createPortTicks(scheduler: TickScheduler | undefined, warn: (msg: string) => void): PortTicks {
+export function createPortTicks(scheduler: TickScheduler, warn: (msg: string) => void): PortTicks {
   const cancels = new Set<() => void>();
   let closed = false;
 
   return {
     onTick(cb, periodMs) {
-      if (closed || scheduler === undefined) return () => {};
+      if (closed) return () => {};
       const period = clampTickPeriod(periodMs);
       let cancelled = false;
       let timer: unknown = null;

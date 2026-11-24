@@ -154,73 +154,73 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     - Overlays are gone within 100 ms of `endReturnMoment`; the 3000 ms guard ends the state; a throwing `onTick` callback is reported and does not stop others; `setLabel` sets the label and unlabelled layers are `aria-hidden`; ticks stop at port close
     - _Requirements: 2.12, 3.2, 5.13, 9.8_
 
-- [ ] 4. Return_Planner for the Ghost and one Jumpscare
-  - [ ] 4.1 Implement `ghost/jumpscarePolicy.ts`
+- [x] 4. Return_Planner for the Ghost and one Jumpscare
+  - [x] 4.1 Implement `ghost/jumpscarePolicy.ts`
     - `allowed(mode, history)` (limit 1 in Classic, 2 in Nightmare over the last two outcomes) and `probability(mode)` (0.35 Classic, 0.6 Nightmare)
     - _Requirements: 5.5, 5.6, 5.7_
 
-  - [ ] 4.2 Implement `ghost/returnPlanner.ts` (Ghost, False_Calm, Jumpscare)
+  - [x] 4.2 Implement `ghost/returnPlanner.ts` (Ghost, False_Calm, Jumpscare)
     - `planReturn`: Gentle gives `EMPTY_PLAN`; qualifying at 10 s; Jumpscare when qualifying, allowed and the roll is below the probability; False_Calm of 300 to 800 ms with roll below 0.75; Jumpscare of 700 to 1200 ms, `render: 'fade'` of 1000 to 1400 ms under reduced motion; ambient fade 300 ms with a Jumpscare and 600 ms without; `durationMs = min(3000, max(2000, end + 300))`; reduced-motion `fade` of at least 500 ms; inputs and rolls sanitised; glitch, evidence and spoiler are `null` for now (the Glitch added in 8.5 must start after the Jumpscare ends, so keep the Jumpscare end time (`startMs + durationMs`) available to the planner)
     - _Requirements: 3.2, 3.3, 3.10, 5.1, 5.2, 5.4, 5.7, 5.8, 5.12, 11.2, 11.3, 11.4, 11.5, 11.6, 11.9_
 
-  - [ ] 4.3 Write property test for plan bounds and determinism
+  - [x] 4.3 Write property test for plan bounds and determinism
     - File: `ghost/__tests__/planner.gd08.prop.test.ts`
     - **Property 8: Return plan bounds and determinism**
     - **Validates: Requirements 3.2, 3.3, 5.8, 11.2, 11.4, 11.9, 11.16**
 
-  - [ ] 4.4 Write property test for empty Gentle plans
+  - [x] 4.4 Write property test for empty Gentle plans
     - File: `ghost/__tests__/planner.gd09.prop.test.ts`
     - **Property 9: Gentle plans are empty**
     - **Validates: Requirements 5.2, 11.5**
 
-  - [ ] 4.5 Write property test for reduced motion plans
+  - [x] 4.5 Write property test for reduced motion plans
     - File: `ghost/__tests__/planner.gd10.prop.test.ts`
     - **Property 10: Reduced motion plans have no Glitch and no close-up**
     - **Validates: Requirements 3.10, 5.12, 11.16**
 
-  - [ ] 4.6 Write property test that a Jumpscare needs a Qualifying_Return
+  - [x] 4.6 Write property test that a Jumpscare needs a Qualifying_Return
     - File: `ghost/__tests__/planner.gd11.prop.test.ts`
     - **Property 11: A Jumpscare needs a Qualifying_Return**
     - **Validates: Requirements 5.1, 11.6**
 
-  - [ ] 4.7 Write property test for Jumpscare frequency
+  - [x] 4.7 Write property test for Jumpscare frequency
     - File: `ghost/__tests__/planner.gd12.prop.test.ts` (500 cases; feeds each outcome into the next history)
     - **Property 12: Jumpscare frequency over any three Qualifying_Returns**
     - **Validates: Requirements 5.4, 5.5, 5.6, 11.7, 11.8, 11.9**
 
-  - [ ] 4.8 Write property test that Nightmare scares at least as often as Classic
+  - [x] 4.8 Write property test that Nightmare scares at least as often as Classic
     - File: `ghost/__tests__/planner.gd13.prop.test.ts`
     - **Property 13: Nightmare is more likely to scare than Classic**
     - **Validates: Requirements 5.7**
 
 - [ ] 5. Haunt files, Return controller and engine wiring
-  - [ ] 5.1 Implement `src/haunts/footsteps.ts`
-    - Layer, Classic and Nightmare, `minLevel` 1; looped footstep buffer from `buildPulseTrain`, filter, spatial panner (fall back to stereo panner, then none); `onTick` every 500 ms schedules position ramps 1500 ms ahead; `setLevel` re-reads `footstepSpec`; `stop` disconnects every node. Imports only types, `noise` and `./engine/ghost/`
+  - [x] 5.1 Implement `src/haunts/footsteps.ts`
+    - Layer, Classic and Nightmare, `minLevel` 1; looped footstep buffer from `buildPulseTrain`, filter, spatial panner (`createSpatialPanner()` may return `null`; on `null` fall back to stereo panner, then none); `onTick` every 500 ms schedules position ramps 1500 ms ahead; `setLevel` re-reads `footstepSpec`; `stop` disconnects every node. Imports only types, `noise` and `./engine/ghost/`
     - _Requirements: 1.1, 1.4, 1.5, 1.8, 1.13, 1.14, 1.15_
 
-  - [ ] 5.2 Implement `src/haunts/breathing.ts`
-    - Layer, Classic and Nightmare, `minLevel` 1; alternates side each look-away, fixed position from `breathingSpec`, slow breath pulses through a band-pass filter; no movement
+  - [x] 5.2 Implement `src/haunts/breathing.ts`
+    - Layer, Classic and Nightmare, `minLevel` 1; alternates side each look-away, fixed position from `breathingSpec` on the spatial panner (`createSpatialPanner()` may return `null`; on `null` fall back to stereo panner, then none), slow breath pulses through a band-pass filter; no movement
     - _Requirements: 1.2, 1.4, 1.5, 1.13, 1.14, 1.15_
 
-  - [ ] 5.3 Implement `src/haunts/knock.ts`
+  - [x] 5.3 Implement `src/haunts/knock.ts`
     - Layer, Classic and Nightmare, `minLevel` 3; one knock buffer scheduled 0.35 s after `whenReady`, so it starts within 500 ms and after the 300 ms fade-in; plays once per `start`
     - _Requirements: 1.3, 1.9, 1.14_
 
-  - [ ] 5.4 Implement `src/haunts/ghostFigure.ts`
+  - [x] 5.4 Implement `src/haunts/ghostFigure.ts`
     - As a layer: draws `ghostArt(info.ghostStep)` in a side region inside `ghostBox`, calls `setLabel('A ghost stands nearby')`, draws nothing in Gentle or when `ghostBox` is `null`. As a return effect: `span(plan)`, `begin` draws a `'ghost'` overlay for `ghostLingerMs`, `end` removes it
     - _Requirements: 2.1, 2.2, 2.7, 2.9, 2.10, 2.11, 2.12, 2.13, 3.4, 3.5_
 
-  - [ ] 5.5 Implement `src/haunts/jumpscare.ts`
+  - [x] 5.5 Implement `src/haunts/jumpscare.ts`
     - Return effect with `jumpSound: true`: `span(plan)` from `plan.jumpscare`; `begin` draws a `'jumpscare'` overlay using `ghostArt(4)` with no saturated red, builds a jump buffer with `buildPulseTrain` (`kind: 'jump'`), plays it once through the jump channel; plays no sound when sound is off or locked; `end` stops, disconnects and closes the channel
     - _Requirements: 5.9, 5.10, 5.12, 5.13, 5.14_
 
-  - [ ] 5.6 Write unit tests for the new haunt files
+  - [x] 5.6 Write unit tests for the new haunt files
     - File: `src/haunts/__tests__/ghostHaunts.unit.test.ts`
-    - Each file satisfies the `Haunt` or `ReturnEffect` type; every created node is disconnected and every layer removed on `stop` or `end`; every panner is HRTF and the wrapper exposes no `destination`; a throwing `createPanner` or `createAudioContext` leaves the Ghost layer drawn and raises no error; Gentle adds no element; the knock starts one source at under 0.5 s; sound off gives the close-up without sound
+    - Each file satisfies the `Haunt` or `ReturnEffect` type; every created node is disconnected and every layer removed on `stop` or `end`; every panner is HRTF and the wrapper exposes no `destination`; a throwing `createPanner` (`createSpatialPanner` returns `null`, the haunt falls back to the stereo panner, then none) or `createAudioContext` leaves the Ghost layer drawn and raises no error; Gentle adds no element; the knock starts one source at under 0.5 s; sound off gives the close-up without sound
     - _Requirements: 1.3, 1.5, 1.6, 1.11, 1.13, 1.15, 2.10, 2.11, 5.13, 5.14_
 
-  - [ ] 5.7 Implement `engine/returnMoment.ts` (Return controller)
-    - `begin(args, retireAmbient)`: build the pool and input, `planReturn`, record history, call `retireAmbient(plan.ambientFadeMs)`, then `gate.beginReturnMoment()`, then schedule each effect whose `modes` allow the mode at its `span`, then schedule the end at `durationMs`; each effect call wrapped, throws sent to `warn`; `abort('away' | 'gentle' | 'stop')` runs synchronously (80 ms fade for `away`, 800 ms for `gentle`); returns `null` in Gentle or when one is running
+  - [x] 5.7 Implement `engine/returnMoment.ts` (Return controller)
+    - `begin(args, retireAmbient)`: build the pool and input, `planReturn`, record history, call `retireAmbient(plan.ambientFadeMs)`, then `gate.beginReturnMoment()`, then schedule each effect whose `modes` allow the mode at its `span`, then schedule the end at `durationMs`; each effect call wrapped, throws sent to `warn`; `abort('away' | 'gentle' | 'stop')` runs synchronously (80 ms fade for `away`, 100 ms for `gentle`, within the 800 ms of Req 8.10); returns `null` in Gentle or when one is running
     - Evidence and spoiler calls are wired in tasks 9 and 10; the controller already accepts the hosts
     - _Requirements: 3.1, 3.3, 3.5, 3.6, 3.7, 3.9, 3.11, 5.3, 5.13, 8.10, 9.8_
 

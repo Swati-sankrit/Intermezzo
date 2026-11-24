@@ -1016,3 +1016,13 @@ Code was fixed with the user's approval each time. Assertions were not changed.
 - `npx vitest --run`, twice: 93 test files and 624 tests passed both times, 0 failed (15.13 s and 14.21 s).
 - `npx tsc -b`: exit 0. `npm run lint` (oxlint): exit 0. `npm run build` (vite build): exit 0.
 - No counterexamples and no coverage misses in these runs. Nothing was changed during them. A temporary `.vitest/` folder made by a JSON-reporter run for the test counts was deleted.
+
+## ghost-dread: decisions after task 3
+Both items were in "Open decisions from tasks 3.2 to 3.7". They are now resolved. The other open decisions in that list are still open.
+- (a) `createSpatialPanner` returns `HauntSpatialPanner | null`. The user kept it. `design.md` and tasks 5.1, 5.2 and 5.6 were updated to say haunts check for `null` and fall back to the stereo panner, then to no panner.
+- (b) `GateDeps.scheduler` is required (it was optional). The path HauntLayer -> `useHauntEngine` -> `createGate` fails to compile without it.
+  - Removed: the guard in `beginReturnMoment` that refused, with a warning, when there was no scheduler. It was dead code once the field became required.
+  - Deleted test: "refuses to begin without a scheduler" in `gateReturnWiring.unit.test.ts`. It can no longer compile, and the behaviour it checked no longer exists. No other assertion was changed.
+  - Compile error that triggered the test changes: `error TS2741: Property 'scheduler' is missing in type ... but required in type 'GateDeps'`.
+  - Seven test files now pass the fake scheduler: `audible.unit`, `colorRule.unit`, `fadeDeadline.unit`, `gate.unit`, `gateCap.p14.prop`, `reducedMotion.p15.prop`, `network.unit`.
+  - `design.md` now says the gate takes a required scheduler in `GateDeps`. The line "`createGate(deps)` has no scheduler today" was removed.

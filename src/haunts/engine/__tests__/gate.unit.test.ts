@@ -29,7 +29,7 @@ async function flush(): Promise<void> {
 }
 
 async function makeEnv(reduced = false): Promise<Env> {
-  const { clock } = createFakeTime();
+  const { clock, scheduler } = createFakeTime();
   const factory = createFakeAudioContextFactory(clock);
   const unlockTarget = new EventTarget();
   const root = document.createElement('div');
@@ -43,6 +43,7 @@ async function makeEnv(reduced = false): Promise<Env> {
     storage: createFakeStorage({ [KEYS.volumeCap]: '1' }),
     storageEvents: null,
     reducedMotion: createReducedMotion(createFakeMatchMedia(reduced).matchMedia),
+    scheduler,
   });
   unlockTarget.dispatchEvent(new Event('pointerdown'));
   await flush();

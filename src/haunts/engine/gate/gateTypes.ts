@@ -22,9 +22,9 @@ export interface GateDeps {
   /** `prefers-reduced-motion` source. */
   readonly reducedMotion: ReducedMotionAdapter;
   /**
-   * Timer source for `AudioOut.onTick`. Optional: without it `onTick` returns a no-op
-   * cancel and never calls back.
+   * Timer source for `AudioOut.onTick` and the 3000 ms Return_Moment guard. Required: a gate
+   * without it could not end a Return_Moment on its own.
    */
-  readonly scheduler?: TickScheduler;
+  readonly scheduler: TickScheduler;
   readonly warn?: (msg: string) => void;
 }

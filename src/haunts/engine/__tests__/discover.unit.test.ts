@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { discovered } from '../discover';
-import { buildRegistry, loadHaunts } from '../registry';
+import { buildRegistry, loadHaunts, loadRegistry } from '../registry';
 
 const hauntsDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -48,7 +48,21 @@ describe('haunt discovery', () => {
     const haunts = loadHaunts((m) => warnings.push(m));
     expect(haunts.map((h) => h.id)).toContain('candle');
     expect(warnings).toEqual([]);
-    expect(haunts).toHaveLength(Object.keys(discovered).length);
+    // loadHaunts returns haunts only: effect-only files (jumpscare) are excluded.
+    expect(haunts.map((h) => h.id)).not.toContain('jumpscare');
+    expect(haunts.map((h) => h.id)).toContain('ghostFigure');
+
+    // Every valid file is a haunt, an effect, or both (ghostFigure counts once).
+    const registryWarnings: string[] = [];
+    const { haunts: hs, effects } = loadRegistry((m) => registryWarnings.push(m));
+    expect(registryWarnings).toEqual([]);
+    const haunted = new Set(hs.map((h) => h.id));
+    const effectIds = new Set(effects.map((e) => e.id));
+    expect(new Set([...haunted, ...effectIds]).size).toBe(Object.keys(discovered).length);
+    expect(effectIds.has('jumpscare')).toBe(true);
+    expect(haunted.has('jumpscare')).toBe(false);
+    expect(haunted.has('ghostFigure')).toBe(true);
+    expect(effectIds.has('ghostFigure')).toBe(true);
   });
 
   it('a synthetic extra valid module appears without any engine change', () => {
@@ -59,10 +73,11 @@ describe('haunt discovery', () => {
       setLevel: () => undefined,
       stop: () => undefined,
     };
-    const { haunts, warnings } = buildRegistry({ ...discovered, '../synthetic.ts': synthetic });
+    const { haunts, effects, warnings } = buildRegistry({ ...discovered, '../synthetic.ts': synthetic });
     expect(warnings).toEqual([]);
     expect(haunts.map((h) => h.id)).toContain('synthetic-test-haunt');
     expect(haunts.map((h) => h.id)).toContain('candle');
-    expect(haunts).toHaveLength(Object.keys(discovered).length + 1);
+    const ids = new Set([...haunts.map((h) => h.id), ...effects.map((e) => e.id)]);
+    expect(ids.size).toBe(Object.keys(discovered).length + 1);
   });
 });

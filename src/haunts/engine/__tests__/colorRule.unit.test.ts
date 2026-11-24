@@ -114,7 +114,7 @@ async function makeScene(reduced: boolean): Promise<Scene> {
   if (hosts === null) throw new Error('HauntStage did not expose its hosts');
   const stageHosts: VisualHosts = hosts;
 
-  const { clock } = createFakeTime();
+  const { clock, scheduler } = createFakeTime();
   const factory = createFakeAudioContextFactory(clock);
   const unlock = new EventTarget();
   const gate = createGate({
@@ -123,6 +123,7 @@ async function makeScene(reduced: boolean): Promise<Scene> {
     storage: createFakeStorage({ [KEYS.volumeCap]: '1' }),
     storageEvents: null,
     reducedMotion: createReducedMotion(createFakeMatchMedia(reduced).matchMedia),
+    scheduler,
   });
   unlock.dispatchEvent(new Event('pointerdown'));
   await flush();

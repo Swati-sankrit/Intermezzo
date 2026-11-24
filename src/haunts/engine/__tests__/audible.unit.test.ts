@@ -19,7 +19,7 @@ interface Env {
 }
 
 function makeEnv(): Env {
-  const { clock } = createFakeTime();
+  const { clock, scheduler } = createFakeTime();
   const factory = createFakeAudioContextFactory(clock);
   const unlock = new EventTarget();
   const root = document.createElement('div');
@@ -32,6 +32,7 @@ function makeEnv(): Env {
     storage: createFakeStorage({ [KEYS.volumeCap]: '1' }),
     storageEvents: null,
     reducedMotion: createReducedMotion(createFakeMatchMedia(false).matchMedia),
+    scheduler,
   });
   return { gate, factory, unlock };
 }

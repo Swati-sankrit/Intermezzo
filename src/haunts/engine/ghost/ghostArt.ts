@@ -70,7 +70,7 @@ export function ghostArt(step: number): GhostArt {
   for (let n = 1; n <= s; n++) if (n !== 3) layers.push(detail(n, h));
   layers.push(eyes());
   const markup =
-    `<svg viewBox="0 0 ${GHOST_WIDTH_UNITS} ${h}" width="100%" height="100%" preserveAspectRatio="xMidYMax meet" focusable="false">`
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${GHOST_WIDTH_UNITS} ${h}" width="100%" height="100%" preserveAspectRatio="xMidYMax meet" focusable="false">`
     + layers.join('')
     + '</svg>';
   return { markup, heightUnits: h, detailCount: s };

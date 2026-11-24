@@ -22,7 +22,7 @@ interface Env {
   unlock(): Promise<void>;
 }
 
-function makeEnv(opts: { reduced?: boolean; scheduler?: boolean } = {}): Env {
+function makeEnv(opts: { reduced?: boolean } = {}): Env {
   const { clock, scheduler } = createFakeTime();
   const factory = createFakeAudioContextFactory(clock);
   const root = document.createElement('div');
@@ -38,7 +38,7 @@ function makeEnv(opts: { reduced?: boolean; scheduler?: boolean } = {}): Env {
     storage: createFakeStorage({ [KEYS.volumeCap]: '0.5' }),
     storageEvents: null,
     reducedMotion: createReducedMotion(createFakeMatchMedia(opts.reduced === true).matchMedia),
-    scheduler: opts.scheduler === false ? undefined : scheduler,
+    scheduler,
     warn: (m) => void warnings.push(m),
   });
   return {
@@ -78,12 +78,6 @@ describe('Return_Moment state', () => {
     expect(overlays(root)).toHaveLength(0);
   });
 
-  it('refuses to begin without a scheduler (no guard possible) and says why', () => {
-    const { gate, warnings } = makeEnv({ scheduler: false });
-    gate.beginReturnMoment();
-    expect(gate.openReturn('ghostFigure')).toBeNull();
-    expect(warnings.join(' ')).toContain('scheduler');
-  });
 });
 
 describe('endReturnMoment', () => {

@@ -159,7 +159,7 @@ async function flush(): Promise<void> {
 }
 
 async function makeEnv(osReduced: boolean): Promise<Env> {
-  const { clock } = createFakeTime();
+  const { clock, scheduler } = createFakeTime();
   const factory = createFakeAudioContextFactory(clock);
   const unlockTarget = new EventTarget();
   const mm = createFakeMatchMedia(osReduced);
@@ -174,6 +174,7 @@ async function makeEnv(osReduced: boolean): Promise<Env> {
     storage: createFakeStorage({ [KEYS.volumeCap]: '1' }),
     storageEvents: null,
     reducedMotion: createReducedMotion(mm.matchMedia),
+    scheduler,
   });
   unlockTarget.dispatchEvent(new Event('pointerdown'));
   await flush();

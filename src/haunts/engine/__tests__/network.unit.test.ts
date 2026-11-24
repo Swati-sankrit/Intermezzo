@@ -119,6 +119,7 @@ describe('network and storage spies (Req 16.6, 16.7)', () => {
       storage: localStorage,
       storageEvents: window,
       reducedMotion: createReducedMotion(createFakeMatchMedia(false).matchMedia),
+      scheduler,
     });
     const settings = createSettingsStore(localStorage);
     const sendSignal: { current: ((s: AttentionSignalLike) => void) | null } = { current: null };

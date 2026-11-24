@@ -13,7 +13,7 @@ import {
 } from './fakes';
 
 async function setup(cap: string) {
-  const { clock } = createFakeTime();
+  const { clock, scheduler } = createFakeTime();
   const factory = createFakeAudioContextFactory(clock);
   const unlockTarget = new EventTarget();
   const root = document.createElement('div');
@@ -27,6 +27,7 @@ async function setup(cap: string) {
     storage: createFakeStorage({ [KEYS.volumeCap]: cap }),
     storageEvents: null,
     reducedMotion: createReducedMotion(createFakeMatchMedia(false).matchMedia),
+    scheduler,
   });
   unlockTarget.dispatchEvent(new Event('pointerdown'));
   for (let i = 0; i < 5; i++) await Promise.resolve();

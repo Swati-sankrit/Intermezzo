@@ -1,7 +1,7 @@
 /**
  * Return_Moment state of the Safety_Gate. `openReturn` hands out a ReturnPort only between
  * `begin` and `end`. A 3000 ms guard on the injected scheduler ends the state if the controller
- * never does. Without a scheduler there is no guard, so `begin` refuses (fails closed).
+ * never does. The scheduler is a required dependency of the gate, so the guard always exists.
  * `end` fades every ReturnPort (audio and overlays) and closes it within `fadeMs` (at most 100 ms).
  * Nothing outlives 3000 ms from `begin`: the guard starts the end fade early (3000 minus the
  * default fade, state still open), and a hard deadline at 3000 closes every port and overlay at
@@ -21,7 +21,7 @@ export const MAX_END_FADE_MS = 100;
 export interface ReturnHostDeps {
   /** The gate's own port opener; `jumpSound` opens a jump channel. */
   openPort(id: string, jumpSound: boolean): GatePort;
-  readonly scheduler: TickScheduler | undefined;
+  readonly scheduler: TickScheduler;
   readonly root: HTMLElement;
   reduced(): boolean;
   warn(msg: string): void;
@@ -57,7 +57,7 @@ export function createReturnHost(deps: ReturnHostDeps): ReturnHost {
   let guardFading = false;
 
   function clear(t: { id: unknown } | null): null {
-    if (t !== null) scheduler?.clearTimeout(t.id);
+    if (t !== null) scheduler.clearTimeout(t.id);
     return null;
   }
 
@@ -86,7 +86,7 @@ export function createReturnHost(deps: ReturnHostDeps): ReturnHost {
       deadline = clear(deadline);
       return;
     }
-    if (ms <= 0 || scheduler === undefined) {
+    if (ms <= 0) {
       finalize();
       return;
     }
@@ -108,10 +108,6 @@ export function createReturnHost(deps: ReturnHostDeps): ReturnHost {
   return {
     begin() {
       if (disposed || active) return;
-      if (scheduler === undefined) {
-        deps.warn('return moment refused: the gate has no scheduler for the 3000 ms guard');
-        return;
-      }
       finalize(); // ports left over from an earlier end are closed now
       active = true;
       guard = {

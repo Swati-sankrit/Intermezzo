@@ -38,6 +38,22 @@
       "status": "failed",
       "failingExample": "After the gate fix (hard deadline at begin+3000), the strict test and the main property pass in 3 runs. The coverage test fails: \"scripts with: guardWithEffects: expected 0 to be greater than or equal to 180\" (gateReturn.gd24.prop.test.ts:140, floor 0.45 at line 150). guardWithEffects is set in gateReturnWorld.ts syncModel only when effects are still present when 3000 ms passes, which the fixed gate now makes impossible. This is not a counterexample to the property; the coverage flag encodes the old timing.",
       "lastRunTimestamp": 1795438978313
+    },
+    "4.3 Write property test for plan bounds and determinism": {
+      "status": "passed",
+      "lastRunTimestamp": 1795451988527
+    },
+    "4.5 Write property test for reduced motion plans": {
+      "status": "passed",
+      "lastRunTimestamp": 1795452365936
+    },
+    "4.6 Write property test that a Jumpscare needs a Qualifying_Return": {
+      "status": "passed",
+      "lastRunTimestamp": 1795452548563
+    },
+    "4.8 Write property test that Nightmare scares at least as often as Classic": {
+      "status": "passed",
+      "lastRunTimestamp": 1795452984977
     }
   },
   "executionHistory": {
@@ -355,6 +371,16 @@
         "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795429266737
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795447995309
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795448806742
       }
     ],
     "3.5 Add the jump channel to the gain plan and audio adapter": [
@@ -379,6 +405,16 @@
         "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795429992884
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795447995402
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795451042344
       }
     ],
     "3.7 Implement the Return_Moment state, ReturnPort and overlays": [
@@ -444,6 +480,200 @@
         "executionId": "323bec48-1420-4f2f-9b7c-e5d867d378b2",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795447645821
+      }
+    ],
+    "4.1 Implement `ghost/jumpscarePolicy.ts`": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795451043003
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795451220293
+      }
+    ],
+    "4.2 Implement `ghost/returnPlanner.ts` (Ghost, False_Calm, Jumpscare)": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795451221277
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795451695556
+      }
+    ],
+    "4.3 Write property test for plan bounds and determinism": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795451695757
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452031338
+      }
+    ],
+    "4.4 Write property test for empty Gentle plans": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452031429
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452219539
+      }
+    ],
+    "4.5 Write property test for reduced motion plans": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452219922
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452387872
+      }
+    ],
+    "4.6 Write property test that a Jumpscare needs a Qualifying_Return": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452388504
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452569988
+      }
+    ],
+    "4.7 Write property test for Jumpscare frequency": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452570911
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452799537
+      }
+    ],
+    "4.8 Write property test that Nightmare scares at least as often as Classic": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795452799788
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795453007808
+      }
+    ],
+    "4. Return_Planner for the Ghost and one Jumpscare": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795453007899
+      }
+    ],
+    "5.1 Implement `src/haunts/footsteps.ts`": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795453015953
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795453633409
+      }
+    ],
+    "5.2 Implement `src/haunts/breathing.ts`": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795453633567
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795455830420
+      }
+    ],
+    "5.3 Implement `src/haunts/knock.ts`": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795455831020
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795484362063
+      }
+    ],
+    "5.4 Implement `src/haunts/ghostFigure.ts`": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795484362576
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795485080065
+      }
+    ],
+    "5.5 Implement `src/haunts/jumpscare.ts`": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795485080211
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795485367314
+      }
+    ],
+    "5.6 Write unit tests for the new haunt files": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795485367701
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795487716239
+      }
+    ],
+    "5.7 Implement `engine/returnMoment.ts` (Return controller)": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795487716920
+      },
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795493903332
+      }
+    ],
+    "5.8 Wire the engine": [
+      {
+        "executionId": "2ba0a6cf-6b8f-4c90-a601-96e446b2cd10",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795493903420
       }
     ]
   }

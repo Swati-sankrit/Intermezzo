@@ -1,37 +1,18 @@
 /**
  * Generators for the ghost-dread property tests.
  *
- * `ReturnRolls` and `ReturnInput` belong to `ghost/returnPlanner.ts` (task 4.2), which does not
- * exist yet. They are declared here as local copies of the design shapes. When the planner exists,
- * replace these two interfaces with a type import from `../returnPlanner`.
+ * `ReturnRolls` and `ReturnInput` belong to `ghost/returnPlanner.ts`; they are imported as types.
  */
 import fc from 'fast-check';
 import type { HauntMode } from '../mode';
+import type { ReturnInput, ReturnRolls } from '../returnPlanner';
 import { modeArb } from '../../__tests__/arbitraries';
 import { messagePoolArb, paragraphArb, spoilerSourceArb } from './textArbitraries';
 
 export * from './textArbitraries';
 export * from './scriptArbitraries';
 
-/** Local copy of the design's `ReturnRolls`. Each field is in [0, 1). */
-export interface ReturnRolls {
-  jump: number; calm: number; calmLen: number; jumpLen: number;
-  glitchLen: number; flickers: number;
-  evidence: number; evidenceMsg: number; evidenceRun: number; spoiler: number;
-}
-
-/** Local copy of the design's `ReturnInput`. */
-export interface ReturnInput {
-  readonly mode: HauntMode;
-  readonly awayMs: number;
-  readonly history: readonly boolean[];
-  readonly rolls: ReturnRolls;
-  readonly reducedMotion: boolean;
-  readonly paragraph: string;
-  readonly lookAwayCount: number;
-  readonly spoiler: { finalChapterSentences: readonly string[]; otherChapterSentences: readonly string[] } | null;
-  readonly messages: readonly string[];
-}
+export type { ReturnInput, ReturnRolls };
 
 /** A unit fraction in [0, 1): n / 1_000_000 for n in 0..999_999. */
 export const unitFractionArb: fc.Arbitrary<number> = fc
