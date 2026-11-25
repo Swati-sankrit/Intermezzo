@@ -64,13 +64,4 @@ describe('LIBRARY', () => {
       }
     }
   });
-
-  it('ships The Yellow Wallpaper by Charlotte Perkins Gilman', () => {
-    expect(LIBRARY).toContainEqual({
-      title: 'The Yellow Wallpaper',
-      author: 'Charlotte Perkins Gilman',
-      filePath: '/books/the-yellow-wallpaper.txt',
-      format: 'txt',
-    });
-  });
 });

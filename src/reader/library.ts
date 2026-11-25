@@ -19,12 +19,6 @@ export interface LibraryEntry {
 
 export const LIBRARY: readonly LibraryEntry[] = [
   {
-    title: 'The Yellow Wallpaper',
-    author: 'Charlotte Perkins Gilman',
-    filePath: '/books/the-yellow-wallpaper.txt',
-    format: 'txt',
-  },
-  {
     title: 'Dracula',
     author: 'Bram Stoker',
     filePath: '/books/Dracula.epub',
