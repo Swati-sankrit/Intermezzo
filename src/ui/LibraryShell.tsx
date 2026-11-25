@@ -6,8 +6,10 @@ import type { ReaderSession } from './bookSession';
 import { useDataStore } from './dataStoreContext';
 import { LIBRARY_MESSAGES as MSG } from './libraryMessages';
 import { LibraryScreen } from './LibraryScreen';
+import { Onboarding } from './Onboarding';
 import { ReaderView } from './ReaderView';
 import { useLibrary } from './useLibrary';
+import { useProfileActions } from './useProfileActions';
 
 /** The library and the reader, joined by the Book_Id of the book being read. */
 export function LibraryShell() {
@@ -50,18 +52,40 @@ export function LibraryShell() {
     if (stored) open(stored);
   };
 
+  const { onboardingEnded, finishOnboarding } = useProfileActions(lib.updateModel);
+  const showOnboarding = lib.status === 'ready' && !lib.model.profile.onboardingCompleted;
+  const unsavedNotice = onboardingEnded && lib.message === MSG.profileSaveFailed ? MSG.onboardingNotSaved : null;
+
   return (
     <ReaderView
       session={session}
       onLeave={() => setBookId(null)}
-      saveFailure={lib.message === MSG.positionSaveFailed ? lib.message : null}
+      saveFailure={lib.message === MSG.positionSaveFailed || lib.message === MSG.statsSaveFailed ? lib.message : null}
       onDismissSaveFailure={lib.dismissMessage}
-      library={(status, back) => (
+      library={(status, back) =>
+        showOnboarding ? (
+          <main className="library">
+            <Onboarding
+              onDone={(choices, then) => {
+                finishOnboarding(choices);
+                if (then === 'browse') {
+                  requestAnimationFrame(() =>
+                    document.getElementById('catalogue-heading')?.parentElement?.focus(),
+                  );
+                }
+              }}
+              onOpenFile={(file, choices) => {
+                finishOnboarding(choices);
+                void openFile(file);
+              }}
+            />
+          </main>
+        ) : (
         <LibraryScreen
           lib={lib}
           open={status}
           failedBookId={status.failure ? bookId : null}
-          notice={notice}
+          notice={notice ?? unsavedNotice}
           onOpenCatalogue={openCatalogue}
           onOpenFile={(file) => void openFile(file)}
           onContinue={(id) => {
@@ -73,7 +97,8 @@ export function LibraryShell() {
             back();
           }}
         />
-      )}
+        )
+      }
     />
   );
 }

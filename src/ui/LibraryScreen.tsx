@@ -1,12 +1,15 @@
-import { useMemo, useRef, type ChangeEvent } from 'react';
+import { useCallback, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { ErrorBanner } from './ErrorBanner';
 import { CatalogueGrid } from './CatalogueGrid';
 import { ContinueCard } from './ContinueCard';
 import { OpenOwnBook } from './OpenOwnBook';
+import { ProfileSettings } from './ProfileSettings';
+import { ShelfView } from './ShelfView';
 import { Skeleton } from './Skeleton';
 import { WelcomeHeader } from './WelcomeHeader';
 import type { OpenStatus } from './readerState';
 import type { useLibrary } from './useLibrary';
+import { useProfileActions } from './useProfileActions';
 import './theme.css';
 import './LibraryScreen.css';
 
@@ -42,6 +45,9 @@ export function LibraryScreen({
   const reopenInput = useRef<HTMLInputElement>(null);
   const reopenFor = useRef<string | null>(null);
   const { model, status, catalogue, currentBook } = lib;
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const closeSettings = useCallback(() => setSettingsOpen(false), []);
+  const profileActions = useProfileActions(lib.updateModel);
 
   const progress = useMemo(
     () => Object.fromEntries(Object.entries(model.positions).map(([id, p]) => [id, p.progress])),
@@ -62,7 +68,18 @@ export function LibraryScreen({
 
   return (
     <main className="library">
-      <WelcomeHeader displayName={model.profile.displayName} />
+      <WelcomeHeader displayName={model.profile.displayName} candleColour={model.profile.candleColour} />
+      <button
+        type="button"
+        className="library__button library__settings-button"
+        disabled={status !== 'ready'}
+        onClick={() => setSettingsOpen(true)}
+      >
+        Settings
+      </button>
+      {settingsOpen && (
+        <ProfileSettings profile={model.profile} actions={profileActions} message={lib.message} onClose={closeSettings} />
+      )}
       <ErrorBanner error={open.failure === 'epub' ? open.error : null} />
       {open.failure === 'epub' && (
         <button type="button" className="library__button" onClick={onBack}>
@@ -101,6 +118,17 @@ export function LibraryScreen({
           onChange={handleReopen}
         />
       </div>
+
+      {status === 'ready' && (
+        <ShelfView
+          shelfBooks={lib.shelfBooks}
+          progress={progress}
+          onOpen={onContinue}
+          onMove={lib.moveBook}
+          onRemove={lib.removeBook}
+          onChooseBook={focusGrid}
+        />
+      )}
 
       <section ref={gridRef} tabIndex={-1} className="library__catalogue" aria-labelledby="catalogue-heading">
         <h2 id="catalogue-heading" className="library__heading">

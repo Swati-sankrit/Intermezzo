@@ -145,4 +145,14 @@ describe('validate', () => {
     ok.profile.displayName = 'x'.repeat(40);
     expect(validate(ok).ok).toBe(true);
   });
+
+  it('measures the name after trimming spaces', () => {
+    const padded = baseModel();
+    padded.profile.displayName = `  ${'x'.repeat(40)}  `;
+    expect(validate(padded).ok).toBe(true);
+
+    const tooLong = baseModel();
+    tooLong.profile.displayName = `  ${'x'.repeat(41)}  `;
+    expect(problemsOf(tooLong).some((p) => p.startsWith('profile.displayName'))).toBe(true);
+  });
 });

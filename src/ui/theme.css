@@ -6,5 +6,11 @@
   --accent: #e0a64a;
   --danger: #c0564b;
   --shadow: rgba(0, 0, 0, 0.6);
+  --candle-amber: #e0a64a;
+  --candle-rose: #d9788a;
+  --candle-violet: #a58bd6;
+  --candle-teal: #4fb3a9;
+  --candle-ash: #a39d94;
+  --candle-moss: #8fae5f;
   --glow: color-mix(in srgb, var(--accent) 20%, transparent);
 }

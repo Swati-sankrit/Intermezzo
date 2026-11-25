@@ -9,6 +9,7 @@ import { readAsArrayBuffer } from '../reader/fileIO';
 import { loadFromFile } from './loadSource';
 import { useDataStore } from './dataStoreContext';
 import { LIBRARY_MESSAGES as MSG } from './libraryMessages';
+import { useShelfActions } from './useShelfActions';
 
 export type CatalogueState =
   | { status: 'ready'; entries: readonly CatalogueEntry[] }
@@ -23,7 +24,7 @@ function readCatalogue(): CatalogueState {
   }
 }
 
-export type SaveKind = 'position' | 'profile';
+export type SaveKind = 'position' | 'profile' | 'stats';
 export interface UpdateOptions {
   /** Wait before the write. Defaults to MODEL_SAVE_DELAY_MS. */
   delayMs?: number;
@@ -35,7 +36,8 @@ export interface UpdateOptions {
  * The Library_Screen's view of the Data_Model. Screens never touch storage.
  * Public API for 5.2-5.4: `model`, `status`, `currentBook`, `catalogue`,
  * `retryCatalogue`, `openCatalogueBook`, `openUpload`, `updateModel`,
- * `message`, `dismissMessage`.
+ * `message`, `dismissMessage`, plus shelf actions from useShelfActions:
+ * `shelfBooks`, `shelfOf`, `moveBook`, `removeBook`.
  */
 export function useLibrary() {
   const store = useDataStore();
@@ -55,9 +57,11 @@ export function useLibrary() {
       () => modelRef.current,
       (failure: FailureKind | null) => {
         if (cancelled) return;
-        if (failure === null) setMessage((m) => (m === MSG.positionSaveFailed || m === MSG.profileSaveFailed ? null : m));
+        if (failure === null) lastKind.current = 'profile';
+        if (failure === null) setMessage((m) => (m === MSG.positionSaveFailed || m === MSG.profileSaveFailed || m === MSG.statsSaveFailed ? null : m));
         else if (failure === 'newer_version') setMessage(MSG.newerVersion);
-        else setMessage(lastKind.current === 'position' ? MSG.positionSaveFailed : MSG.profileSaveFailed);
+        else if (lastKind.current === 'position') setMessage(MSG.positionSaveFailed);
+        else setMessage(lastKind.current === 'stats' ? MSG.statsSaveFailed : MSG.profileSaveFailed);
       },
     );
     saverRef.current = saver;
@@ -92,7 +96,9 @@ export function useLibrary() {
     if (next === modelRef.current) return;
     modelRef.current = next;
     setModel(next);
-    lastKind.current = opts.kind ?? 'profile';
+    // A stats write never hides a pending position write's failure message.
+    const kind = opts.kind ?? 'profile';
+    if (kind !== 'stats' || lastKind.current !== 'position') lastKind.current = kind;
     saverRef.current?.schedule(opts.delayMs ?? MODEL_SAVE_DELAY_MS);
   }, []);
 
@@ -160,6 +166,7 @@ export function useLibrary() {
   );
 
   const currentBook = useMemo(() => pickCurrentBook(model), [model]);
+  const shelf = useShelfActions({ store, model, modelRef, readyRef, saverRef, setModel, setMessage, updateModel });
   const dismissMessage = useCallback(() => setMessage(null), []);
 
   return {
@@ -173,5 +180,6 @@ export function useLibrary() {
     openCatalogueBook,
     openUpload,
     updateModel,
+    ...shelf,
   };
 }

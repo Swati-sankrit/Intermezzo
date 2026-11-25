@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { countWords, suggestedSeconds, updateAveragePace } from '../reader/paceCalc';
 import { absoluteIndex, calculateProgress, countTotalParagraphs } from '../reader/progress';
 import { splitIntoParagraphs } from '../reader/splitter';
+import { setPaceGuide } from '../library/profileOps';
 import { loadPaceGuide, savePaceGuide } from '../reader/storage';
 import type { Paragraph } from '../reader/types';
 import {
@@ -52,6 +53,7 @@ export function useReader(session?: ReaderSession, options: { legacy?: boolean }
         error: null,
         notice: at.malformed ? READER_MESSAGES.positionLost : null,
         averagePace: session?.model.profile.averagePace ?? prev.averagePace,
+        paceGuideEnabled: session?.model.profile.paceGuideEnabled ?? prev.paceGuideEnabled,
       }));
     },
     onFailed: (failure) =>
@@ -124,6 +126,8 @@ export function useReader(session?: ReaderSession, options: { legacy?: boolean }
   const togglePaceGuide = useCallback(() => {
     const next = { ...s, paceGuideEnabled: !s.paceGuideEnabled };
     savePaceGuide(next.paceGuideEnabled);
+    // In library mode the Profile is the source of truth; the old key is kept in step above.
+    sessionRef.current?.updateModel((m) => setPaceGuide(m, next.paceGuideEnabled));
     persist(next);
     setS(next);
   }, [s, persist]);

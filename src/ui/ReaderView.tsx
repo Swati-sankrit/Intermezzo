@@ -65,8 +65,12 @@ export function ReaderView({ session, library, onLeave, saveFailure = null, onDi
   const chapter = r.book.chapters[r.chapterIndex];
   const bookTitle = r.book.title;
 
+  const stats = session && library
+    ? { session, chapterIndex: r.chapterIndex, paragraphIndex: r.paragraphIndex, chapterComplete: r.chapterComplete }
+    : undefined;
+
   return (
-    <AttentionLayer suggestedSecs={r.suggestedSecs} reading={reading}>
+    <AttentionLayer suggestedSecs={r.suggestedSecs} reading={reading} stats={stats}>
       {(cameraIndicator) => (
         <div className="reader" onMouseMove={wake} onFocus={wake}>
           <header className={`reader__bar${awake ? ' reader__bar--awake' : ''}`}>

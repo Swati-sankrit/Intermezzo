@@ -49,8 +49,8 @@ function checkProfile(v: unknown, problems: string[]): void {
   checkKeys(v, PROFILE_KEYS, 'profile', problems);
   if (typeof v.displayName !== 'string') {
     problems.push('profile.displayName: must be a string');
-  } else if (v.displayName.length > MAX_DISPLAY_NAME) {
-    problems.push(`profile.displayName: longer than ${MAX_DISPLAY_NAME} characters`);
+  } else if (v.displayName.trim().length > MAX_DISPLAY_NAME) {
+    problems.push(`profile.displayName: longer than ${MAX_DISPLAY_NAME} characters after trimming`);
   }
   if (typeof v.candleColour !== 'string' || !(CANDLE_COLOURS as readonly string[]).includes(v.candleColour)) {
     problems.push('profile.candleColour: not one of the allowed colours');

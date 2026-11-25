@@ -1,5 +1,11 @@
 .welcome-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
   margin-bottom: 1.5rem;
+}
+.welcome-header__text {
+  min-width: 0;
 }
 
 .welcome-header__title {

@@ -539,6 +539,195 @@
         "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
         "timestamp": 1795587120978
       }
+    ],
+    "7.1 Extend `useLibrary` with shelf actions": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795587417367
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795587547901
+      }
+    ],
+    "7.2 Create `ShelfView` and wire it into `LibraryScreen`": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795587548469
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588148074
+      }
+    ],
+    "7. Shelves": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588148129
+      }
+    ],
+    "7.3 Write example tests for the Shelf view": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588148330
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588415017
+      }
+    ],
+    "8.1 Create `src/library/profileOps.ts` (pure)": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588415180
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588515356
+      }
+    ],
+    "8.2 Add the six candle colours, `Avatar`, and the personalised `WelcomeHeader`": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588516019
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588603008
+      }
+    ],
+    "8.3 Create `Onboarding` and wire first-visit flow": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588603719
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588810354
+      }
+    ],
+    "8.4 Create `ProfileSettings` and profile actions in `useLibrary`": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795588809684
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589047026
+      }
+    ],
+    "8. Profile and onboarding": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589047055
+      }
+    ],
+    "8.5 Write example tests for profile and onboarding": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589047120
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589259942
+      }
+    ],
+    "9.4 Add the local-date helper and stats selectors": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589260634
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589390392
+      }
+    ],
+    "9.5 Wire stats into the reader": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589389877
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589595577
+      }
+    ],
+    "9.6 Write example tests for stats": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589595262
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589732058
+      }
+    ],
+    "9. Reading stats": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589595605
+      }
+    ],
+    "10. Checkpoint - Phase 2 shelves, profile, onboarding, stats": [
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795589732735
+      },
+      {
+        "executionId": "d5382014-1c84-478d-9f4e-b40b7dfc46b8",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795590006295
+      }
+    ],
+    "18.11 Fix slow first book open in continueFlow test": [
+      {
+        "executionId": "5c4c1fbe-c3d9-4b24-b58c-f461de3bff24",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795594580118
+      },
+      {
+        "executionId": "5c4c1fbe-c3d9-4b24-b58c-f461de3bff24",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795595049926
+      }
+    ],
+    "18.12 Fix flaky coverage floors in planner.gd08 property test": [
+      {
+        "executionId": "5c4c1fbe-c3d9-4b24-b58c-f461de3bff24",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795595050127
+      },
+      {
+        "executionId": "5c4c1fbe-c3d9-4b24-b58c-f461de3bff24",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795595455490
+      }
     ]
   }
 }

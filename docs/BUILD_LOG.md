@@ -1215,3 +1215,29 @@ All fixes were approved by the user. No assertion was weakened.
   - would-scare: 46 / floor 15 to 40.9 / 5.5 / min 28 (z 4.7)
 - Before this change the thinnest margins were blocked-by-history (z 2.4) and scares (z 2.7); the other floors were 3 SD or more away. The "Floors" comment in the test now records the new measurements.
 - Result: file run alone 40 times, 0 failures. Full `npx vitest --run` twice: 123 files, 860 tests passed both times. `npx tsc -b` clean, `npm run lint` has only the existing dataStoreContext.tsx warning. The temporary statistics test was deleted.
+## library-v2 task 18.11: slow first book open in continueFlow test
+- Symptom: "opening a catalogue book creates one entry on reading..." sometimes timed out on `findByTestId('active-paragraph')`, even with the 5 s wait from 18.7.
+- Timing (scratch test, removed): `import('epubjs')` 28 ms, `import('jszip')` 10 ms, `LibraryShell` module 109 ms. The 18.7 diagnosis (slow dynamic import) was wrong. A `beforeAll` warm-up of epubjs, jszip and one full EPUB parse did not fix it: 1 failure in 20 alone runs, then another in 16.
+- Cause: a race, not slowness. The DOM at failure was still the library screen, so the book was never opened. The cover grid renders while `useLibrary` is still loading the store, and `LibraryShell.openCatalogue` returns early when `lib.status !== 'ready'`. The test clicked the cover as soon as it appeared; when `store.load()` resolved late, the click was dropped and no wait length would help. The other tests wait for the Continue button, which appears only when ready, so they were not affected.
+- Change (test only): the `coverButton()` helper first awaits the "Continue reading" region (its skeleton is replaced only when the library is ready), then returns the cover. Warm-up removed. Both waits went back to the default 1 s, because the open now takes 216 to 255 ms. No assertion changed.
+- Product note, not fixed: a real user who clicks a cover during the brief store load gets no response. The covers could be disabled or the click queued until ready. This is a small change, but it is outside this test fix.
+- Results: file alone 40 times, 0 failures, test 216 to 255 ms. Full `npx vitest --run` 3 times: 127 files, 894 tests passed each run (20.7 s, 21.2 s, 21.8 s).
+## library-v2 task 18.12: planner.gd08 coverage floor flake
+- Flake: `planner.gd08.prop.test.ts` "Property 8 coverage" once failed with `history:full: expected 165 to be >= 168` (passed 9 of 10 alone).
+- Cause: same as 18.8. Floors were mean - 4 SD from 10 batches, which undercounted the spread. Measured over 300 batches of 300 inputs, many floors were thin: history:empty z 2.1, history:full z 2.3, mode:nightmare z 3.0, away:9999 z 3.0, away:10001 z 3.4, jump:nightmare z 3.4, away:10000 z 3.8, falsecalm:absent z 4.0, mode:gentle z 4.2, mode:classic z 4.3.
+- Why weights alone were not enough: history:empty (floor 83) and history:full (floor 168) together need 84% of the sample, and with independent draws they cannot both reach z 4.5 (best about 3.0). A mode drawn at one third each has SD 8.2 against floor 74 (max z 3.2). The three away boundary values and nqualifying/not-qualifying (floors 42/36/39, 78, 119) also conflict under one weighting.
+- Change (test only; floors, run counts, assertions and the planner untouched): the coverage test now uses `coverageSample()`. It draws inputs from `plannerInputArb` and sets by position: mode (round-robin), history shape (2 of 5 empty, 3 of 5 with at least 2 entries), reduced motion (alternating in threes) and awayMs (9999 x2, 10000 x3, 10001 x3, 2 drawn, per 10). It also draws the calm roll from a local arbitrary weighted toward values at or above 0.75 and with some dirty values. The property tests still use the shared `plannerInputArb`. Trade-off: the coverage test no longer exercises `modeArb` or the shared history/away weights; it covers the planner's tag space.
+- Margins over 300 batches (mean / SD / min), before to after, z = (mean - floor) / SD:
+  - history:full: 186.6 / 8.0 / 159, floor 168 (z 2.3) to 180 / 0 / 180 (exact)
+  - history:empty: 99.9 / 7.9 / 79, floor 83 (z 2.1) to 120 / 0 / 120 (exact)
+  - mode:nightmare / gentle / classic: 100 / 8.5 / 70-79, floors 74/65/63 (z 3.0/4.2/4.3) to 100 / 0 / 100 (exact)
+  - away:9999: 63.7 / 7.2 / 41, floor 42 (z 3.0) to 72.8 / 3.3 / 65 (z 9.3)
+  - away:10000: 64.4 / 7.5 / 34, floor 36 (z 3.8) to 102.7 / 3.2 / 95 (z 20.8)
+  - away:10001: 63.3 / 7.5 / 43, floor 39 (z 3.4) to 102.7 / 3.0 / 92 (z 21.2)
+  - jump:nightmare: 51.5 / 6.6 / 35, floor 29 (z 3.4) to 57.7 / 3.7 / 45 (z 7.7)
+  - falsecalm:absent: 33.3 / 5.1 / 21, floor 13 (z 4.0) to 52.4 / 5.9 / 36 (z 6.7)
+  - reduced:on / off: 149 to 151 / 8.5, floors 108/104 (z 4.9/5.5) to 150 / 0 (exact)
+  - qualifying 78 / not-qualifying 119: z 5.9 / 5.1 to 23.7 / 11.9
+  - jump:classic z 5.5 to 9.9; jump:reduced z 6.3 to 10.8; falsecalm:present z 7.1 to 7.8; dirty z 6.0 to 6.5
+- The "Floors" comment in the test records the new measurements. The temporary measuring test was deleted.
+- Result: file run alone 40 times, 0 failures (7 of 7 tests each). `npx tsc -b` clean, `npm run lint` only the existing dataStoreContext.tsx warning, full `npx vitest --run` once: 127 files, 894 tests passed.

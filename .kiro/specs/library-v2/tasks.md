@@ -175,46 +175,46 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
 - [x] 6. Checkpoint - Phase 1 complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Shelves
-  - [ ] 7.1 Extend `useLibrary` with shelf actions
+- [x] 7. Shelves
+  - [x] 7.1 Extend `useLibrary` with shelf actions
     - `moveBook(bookId, shelf)`, `removeBook(bookId)`, and shelf selectors. Removal deletes the book text first. Only after that succeeds does it write the model with the entry, position, and stats gone. Daily stats records stay. On any failure, leave all four unchanged and show "This book could not be removed. You can try again."
     - _Requirements: 6.4, 6.5, 6.6, 6.11_
 
-  - [ ] 7.2 Create `ShelfView` and wire it into `LibraryScreen`
+  - [x] 7.2 Create `ShelfView` and wire it into `LibraryScreen`
     - Three shelves (Reading, Want to read, Finished) listing cover, title, author (blank if empty), and progress. Each book has a "Move to ..." button that omits its own shelf, and a remove control with a confirmation.
     - An empty shelf shows "Nothing on this shelf yet" and a button that moves focus to the catalogue grid. No horizontal scroll from 360 px.
     - _Requirements: 6.7, 6.8, 6.13, 5.7, 6.10, 13.4_
 
-  - [ ]* 7.3 Write example tests for the Shelf view
+  - [x]* 7.3 Write example tests for the Shelf view
     - Move buttons omit the current shelf. A move updates both shelves in one render. Removal confirmed removes the book. Removal failure leaves everything unchanged and shows the message. Empty-shelf message and focus button.
     - _Requirements: 6.5, 6.6, 6.8, 13.4, 23.5_
 
-- [ ] 8. Profile and onboarding
-  - [ ] 8.1 Create `src/library/profileOps.ts` (pure)
+- [x] 8. Profile and onboarding
+  - [x] 8.1 Create `src/library/profileOps.ts` (pure)
     - `updateProfile` (trim the name, reject over 40 characters and keep the previous name), `resetProfile` (First_Visit_State, keeps books, shelves, positions, stats), `recordPace` (clamp Average_Pace to 50 to 1000), `setPaceGuide`.
     - _Requirements: 7.1, 7.4, 7.5, 7.8, 7.10, 7.11, 7.12, 21.2_
 
-  - [ ] 8.2 Add the six candle colours, `Avatar`, and the personalised `WelcomeHeader`
+  - [x] 8.2 Add the six candle colours, `Avatar`, and the personalised `WelcomeHeader`
     - Add `--candle-amber`, `--candle-rose`, `--candle-violet`, `--candle-teal`, `--candle-ash`, `--candle-moss` to `src/ui/theme.css`. Verify each is at least 3:1 against `--surface` with a small script or test, and tune hues if not.
     - `Avatar` draws a small candle in the chosen colour. The header greets by name, or without a name or placeholder when none is set.
     - _Requirements: 4.1, 4.2, 4.3, 7.2, 7.14, 11.2_
 
-  - [ ] 8.3 Create `Onboarding` and wire first-visit flow
+  - [x] 8.3 Create `Onboarding` and wire first-visit flow
     - At most three steps, each at most 40 words. Step 1 takes an optional name and a candle colour. A later step explains click-to-open and the room growing haunted. The last step offers a catalogue book or "Open your own book". "Skip introduction" is on every step. Focus moves to the first control of each new step.
     - Show it when the Profile is in the First_Visit_State. Finishing or skipping sets the completed flag and saves. If saving fails, show the Library_Screen, keep choices in memory, and show the "will not be saved after the tab closes" message.
     - Leave the photosensitivity notice before the first session untouched. Works with camera off and no account.
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 8.12, 22.3_
 
-  - [ ] 8.4 Create `ProfileSettings` and profile actions in `useLibrary`
+  - [x] 8.4 Create `ProfileSettings` and profile actions in `useLibrary`
     - Change display name, candle colour, and the pace guide setting. Saves complete within 1 second. On failure, keep the previous saved values and in-session values and show the retry message. Show the name-too-long message at over 40 characters.
     - "Delete my profile" opens a confirmation stating the name and colour will be removed and that books, shelves, positions, and stats are kept, with "Cancel" and a confirm button. Escape cancels. Confirming resets to First_Visit_State, so the onboarding shows again.
     - _Requirements: 7.3, 7.5, 7.6, 7.7, 7.8, 7.9, 7.12, 7.13, 8.8_
 
-  - [ ]* 8.5 Write example tests for profile and onboarding
+  - [x]* 8.5 Write example tests for profile and onboarding
     - Name length rule and message. Onboarding has at most three steps. "Skip introduction" completes it and the flag persists. "Delete my profile" keeps books, shelves, positions, stats, and cancel or Escape keeps the profile. Pace clamped to 50 and 1000. Candle colour options show text names.
     - _Requirements: 7.5, 7.7, 7.8, 7.9, 7.11, 7.14, 8.2, 8.6, 23.5_
 
-- [ ] 9. Reading stats
+- [x] 9. Reading stats
   - [x] 9.1 Extend the model, validator, and serializer with daily stats
     - In `src/library/model.ts`, add `awaySeconds` to `Stats` and `daily: Record<string, Stats>` (keyed by Local_Date `YYYY-MM-DD`) to `DataModel` and `EMPTY_DATA_MODEL`. Schema_Version stays 2 and no migration is added, because the model is not released yet.
     - In `validator.ts`, accept `daily`. Reject a key that is not a real `YYYY-MM-DD` calendar date, and reject any negative, fractional, or non-finite count in `stats` or `daily`, naming the offending date or count. Daily keys need no matching Book_Entry.
@@ -237,21 +237,21 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - **Validates: Requirements 20.18**
     - Report properties added, cases run, and any counterexample.
 
-  - [ ] 9.4 Add the local-date helper and stats selectors
+  - [x] 9.4 Add the local-date helper and stats selectors
     - A small UI-layer helper returns today's Local_Date from the device's local time zone (not UTC). Selectors return per-book, per-day, and overall Stats, with zero for every value (including away seconds) when nothing is recorded.
     - _Requirements: 20.6, 20.12, 20.15_
 
-  - [ ] 9.5 Wire stats into the reader
+  - [x] 9.5 Wire stats into the reader
     - Count paragraphs the first time a chunk opens per session, chapters finished once, session once per page load, and active seconds while the attention signal is `present` (update at least every 5 seconds). Record each event for the book and for the reader's local date through `recordEvent`.
     - Record away seconds while the signal is `away` and a book is open, updating at least every 5 seconds, and record a look-away on each `present` to `away` change. Record neither during a break the reader started. Use the existing attention signal only, including the camera-off tab-switch and idle signal. Do not touch the camera and store no frames, face data, or text.
     - On a stats save failure, keep session stats in memory, keep reading, and show "progress stats were not saved".
     - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5, 20.8, 20.9, 20.11, 20.13, 20.14, 20.15, 20.16_
 
-  - [ ]* 9.6 Write example tests for stats
+  - [x]* 9.6 Write example tests for stats
     - A short fixed event sequence where no count decreases. Overall equals the per-book sum. Removing a book drops its contribution to overall but leaves the daily records unchanged. Empty stats show zero for every value. Events on two local dates land in two daily records. Away seconds are counted while `away` and not during a break.
     - _Requirements: 20.6, 20.7, 20.10, 20.12, 20.13, 20.14, 23.4_
 
-- [ ] 10. Checkpoint - Phase 2 shelves, profile, onboarding, stats
+- [x] 10. Checkpoint - Phase 2 shelves, profile, onboarding, stats
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Migration, clear my data, and legacy cleanup
@@ -404,6 +404,18 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - In `src/library/catalogueData.ts`, set the Poe entry title to "Short Fiction" (author "Edgar Allan Poe") and the Polidori entry title to "The Vampire". Slugs and file stems stay the same.
     - Update the tests that assert these titles, for example `src/library/__tests__/catalogueData.unit.test.ts`, and the README titles if present.
     - _Requirements: 1.11_
+
+  - [x] 18.11 Fix slow first book open in continueFlow test
+    - Find why the first book open in `src/ui/__tests__/continueFlow.test.tsx` is slow under full-suite load. Fix it without raising the timeout. If the cause is the one-time import of `epubjs` (or `jszip`), warm it in a `beforeAll` that imports the module before the first test.
+    - Run the file alone 20 times and the full suite 3 times, and confirm 0 failures.
+    - Log the cause, fix, and run results in `docs/BUILD_LOG.md`.
+    - _Requirements: 5.1, 5.2, 23.5_
+
+  - [x] 18.12 Fix flaky coverage floors in planner.gd08 property test
+    - In `src/haunts/engine/ghost/__tests__/planner.gd08.prop.test.ts` ("Property 8 coverage"), a floor was seen failing with `history:full: expected 165 to be >= 168`. Reshape the generator inputs the same way as `planner.gd11` (task 18.8), without lowering any floor.
+    - Test-only change: do not change the planner.
+    - Run the file alone 40 times and confirm 0 failures. Log the cause, fix, and run count in `docs/BUILD_LOG.md`.
+    - _Requirements: 23.2, 23.5_
 
 - [ ] 19. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
@@ -614,6 +626,18 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
       "id": 24,
       "tasks": [
         "18.10"
+      ]
+    },
+    {
+      "id": 25,
+      "tasks": [
+        "18.11"
+      ]
+    },
+    {
+      "id": 26,
+      "tasks": [
+        "18.12"
       ]
     }
   ]

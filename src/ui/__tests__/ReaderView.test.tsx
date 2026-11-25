@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { createMemoryStore } from '../../library/memoryStore';
+import { createOnboardedStore } from './onboardedStore';
 import { DataStoreProvider } from '../dataStoreContext';
 import { LibraryShell } from '../LibraryShell';
 
 describe('LibraryShell', () => {
   it('shows the library, with no reading controls, when no book is open', async () => {
     render(
-      <DataStoreProvider store={createMemoryStore()}>
+      <DataStoreProvider store={createOnboardedStore()}>
         <LibraryShell />
       </DataStoreProvider>,
     );

@@ -7,12 +7,15 @@ import { NoticeBanner } from './NoticeBanner';
 import { HauntLayer } from './HauntLayer';
 import { useAttention } from './useAttention';
 import { useHauntSettings } from './useHauntSettings';
+import { useStatsRecorder, type StatsInput } from './useStatsRecorder';
 
 interface AttentionLayerProps {
   /** Suggested reading time for the active paragraph; sets the idle limit. */
   suggestedSecs: number;
   /** Passed to the haunt layer. */
   reading: ReadingContext;
+  /** Library mode only: records reading stats from the attention signal. */
+  stats?: StatsInput;
   /** Receives the camera indicator so the caller can place it in the top bar. */
   children: (cameraIndicator: ReactNode) => ReactNode;
 }
@@ -21,10 +24,11 @@ interface AttentionLayerProps {
  * Owns the single useAttention() call, so the controller runs only while the
  * reading view (not the library) is mounted. Never blocks reading.
  */
-export function AttentionLayer({ suggestedSecs, reading, children }: AttentionLayerProps) {
+export function AttentionLayer({ suggestedSecs, reading, stats, children }: AttentionLayerProps) {
   const { status, chooseCamera, setCameraOn, setIdleLimit, subscribeSignal } = useAttention();
 
   const { settings } = useHauntSettings();
+  useStatsRecorder(stats, subscribeSignal);
 
   useEffect(() => {
     setIdleLimit(3 * suggestedSecs * 1000);
