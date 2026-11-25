@@ -39,6 +39,17 @@ Fonts are bundled from npm via Fontsource and served from this app. Nothing load
 
 Interface labels use the system UI font. The `license` field in both packages' package.json reads `OFL-1.1`.
 
+## Images and audio (`public/ghosts/`, `public/sounds/`)
+
+Every bundled image or sound file is CC0 or the project's own work, contains no copyrighted character and no identifiable real person, and is served only from this app's own origin.
+
+| File | Source | Licence |
+|---|---|---|
+| `public/ghosts/ghost-standing.png` | Made by the project owner with an AI image tool (tool name: TODO, pending confirmation that its terms permit bundling the output) | Own work |
+| `public/ghosts/ghost-face.png` | Made by the project owner with an AI image tool (tool name: TODO, pending confirmation that its terms permit bundling the output) | Own work |
+
+A backup of the original, unprocessed files is kept outside `public/`, in `assets-src/ghosts/`, so later cleanup work stays reversible.
+
 ---
 
 Currently, two official plugins are available:

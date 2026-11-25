@@ -20,7 +20,9 @@ Design decisions, with reasons:
 | `HauntSettings.gentle: boolean` becomes `mode: HauntMode`, with a migration from the old key. A new key `rod_haunt_mode` is written. The old key is only read. | Req 8.7 and 8.8. Existing readers who chose Gentle keep it. |
 | Glitch and flicker budgets use a ledger of recent flashes in the gate, not a haunt-side count. | Req 6.4, 6.5 and 9.3. The gate sees every effect, so only the gate can keep the combined rate at or below 3 per second. |
 
-No new dependency is added. The feature uses Vite, React, Vitest, fast-check and jsdom, which are already in `package.json`, so no new licence applies. Ghost and Jumpscare art is SVG markup written in code, with no image file.
+No new dependency is added. The feature uses Vite, React, Vitest, fast-check and jsdom, which are already in `package.json`, so no new licence applies. Ghost and Jumpscare art was originally SVG markup written in code; this amendment adds `ghost-standing.png` and `ghost-face.png` as the primary Ghost art, with the SVG kept only as the load-failure fallback (see "Image layer and Ghost transform" below).
+
+**Known open issue.** Both bundled images are fully opaque PNGs with a checkerboard pattern painted into their pixels rather than a real alpha channel. Task 18 (image preparation) tried a structural matte keyed to the checker's measured tile grid and could not separate the checker from the figure's fine tendrils without visible damage, because the images also carry a soft painted shadow close in value to the tendrils' anti-aliased edges. This is reported in `docs/BUILD_LOG.md` with three options for the user (re-export with real transparency, crop/mask instead of matte, or hand correction outside this project's dependencies). The design and the tasks below treat the two files as opaque rectangles for now; the Image_Layer transform and placement rules do not depend on the background being transparent, but the visible checker remains until the user chooses an option.
 
 ### Research findings
 
@@ -220,6 +222,21 @@ src/ui/
   ParagraphList.tsx           renders evidence display copy                        (~190)
   HauntStage.css              + glitch and overlay keyframes, ghost step styles
 docs/BUILD_LOG.md             counterexamples
+src/haunts/
+  heartbeat.ts                layer, Classic and Nightmare, minLevel 2         (~85)
+  creak.ts                    layer, Classic and Nightmare, minLevel 1         (~75)
+  drone.ts                    layer, Classic and Nightmare, minLevel 2         (~70)
+  engine/ghost/
+    assets.ts                 GHOST_ASSETS, HAUNT_SOUNDS, isAllowedAsset, assetUrl  (~40)
+    assetLoader.ts            createAssetLoader                                     (~90)
+    imageTransform.ts         ghostImageTransform, jumpscareRushTransform, redCoverage (~90)
+    smokeEntrance.ts          smoke markup and timing                               (~50)
+    mix.ts                    hasEventHeadroom, gainToDb, EVENT_HEADROOM_DB         (~30)
+public/
+  ghosts/                     ghost-standing.png, ghost-face.png
+  sounds/                     footsteps.mp3, breathing.mp3, heartbeat.mp3, creak.mp3,
+                               knock.mp3, scream.mp3, drone.mp3
+assets-src/ghosts/            original, unprocessed source images
 ```
 
 `engine.ts`, `gate.ts` and `visualAdapter.ts` are the files most likely to pass 200 lines; the split files above are where the new code goes, so the existing files only gain wiring lines.
@@ -752,6 +769,97 @@ Storage keys (all `'true'` or `'false'` except the mode):
 
 Constants: `BREACH_MS 20000`, `REVEAL_MS 60000`, `QUALIFYING_MS 10000`, `RETURN_MAX_MS 3000`, `JUMP_ATTACK_MIN_MS 20`, `MAX_GHOST_STEP 4`, spoiler card display time after the Return_Moment `10000`, evidence maximum `1500`.
 
+### Asset allowlist and loader (`engine/ghost/assets.ts`, `engine/ghost/assetLoader.ts`)
+
+Bundled files live in `public/ghosts/` (images) and `public/sounds/` (audio), as named in `tech.md`. Both are served by Vite from the app's own origin, so every URL the loader builds is a relative path (`/ghosts/...`, `/sounds/...`) with no scheme and no host, and the Haunt_Engine contains no literal `http://` or `https://` URL that points at a Ghost_Asset or a Haunt_Sound, meaning one that names `/ghosts/`, `/sounds/` or an allowlisted file name. Other URLs, such as the SVG and XLink namespace identifiers, are allowed (Req 14.1, 14.2, 14.4).
+
+```ts
+export const GHOST_ASSETS = ['ghost-standing.png', 'ghost-face.png'] as const;
+export type GhostAssetName = (typeof GHOST_ASSETS)[number];
+export const HAUNT_SOUNDS = [
+  'footsteps.mp3', 'breathing.mp3', 'heartbeat.mp3', 'creak.mp3', 'knock.mp3', 'scream.mp3', 'drone.mp3',
+] as const;
+export type HauntSoundName = (typeof HAUNT_SOUNDS)[number];
+
+/** Pure. True only for an exact entry of GHOST_ASSETS or HAUNT_SOUNDS, not a case-insensitive or partial match. */
+export function isAllowedAsset(name: string, list: readonly string[]): boolean;
+/** Pure. '/ghosts/<name>' or '/sounds/<name>', or null when `name` is not in the allowlist. */
+export function assetUrl(kind: 'ghost' | 'sound', name: string): string | null;
+```
+
+`assetUrl` is the only place that builds a request path for these files, and it returns `null` instead of a URL for any name outside the allowlist, so a typo or a future bad name is refused before `fetch` or `Image()` is ever called (Req 14.3, 11.18). The static scan (task 1.9's `ALLOWED_HAUNT_IMPORTS`, extended again here) checks that no non-test file under `src/haunts/` contains an `http://` or `https://` URL that names `/ghosts/`, `/sounds/` or an allowlisted asset file name, as a second line of defence.
+
+```ts
+export interface AssetLoader {
+  /** Resolves to an HTMLImageElement once decoded, or null if the fetch, decode, or name lookup fails. Cached by name. */
+  loadImage(name: GhostAssetName): Promise<HTMLImageElement | null>;
+  /** Resolves to a decoded AudioBuffer via the Restricted_Audio_Context, or null on any failure. Cached by name. */
+  loadSound(name: HauntSoundName, ctx: HauntAudioContext): Promise<AudioBuffer | null>;
+}
+export function createAssetLoader(fetchImpl: typeof fetch, createImage: () => HTMLImageElement): AssetLoader;
+```
+
+`loadImage` sets `img.src = assetUrl('ghost', name)`, and resolves on the image's `load` event and `null` on its `error` event (Req 15.19), the pattern documented for the `HTMLImageElement` load lifecycle. `loadSound` calls same-origin `fetch`, then `arrayBuffer()`, then `ctx.decodeAudioData(buf)`; a rejection at any step (including a synchronous throw from `decodeAudioData` in older browsers) resolves `null` instead of throwing (Req 16.1, 16.3). Both caches keep only a resolved promise, so a second request for the same name does not refetch. Both run on the Asset_Allowlist from `assets.ts`, so a loader given a name outside the list resolves `null` without any request (Req 14.3).
+
+### Image layer and Ghost transform (`engine/ghost/imageTransform.ts`, `VisualLayer.setImage`)
+
+```ts
+// added to VisualLayer (engine/types.ts):
+/**
+ * Shows a decoded image in place of or layered under the markup, at `opts.opacity`,
+ * `opts.scale` (1 = natural region fit) and `opts.offset` (fraction of the region, -1..1).
+ * `null` removes the image. The gate applies the same fade and reduced-motion floors as `setOpacity`.
+ */
+setImage(img: HTMLImageElement | null, opts?: { scale?: number; offsetX?: number; offsetY?: number }): void;
+
+export interface GhostTransform { readonly scale: number; readonly offsetX: number; readonly offsetY: number }
+/** Pure. Scale strictly increases with step; the transform never lets the rendered box exceed the region. */
+export function ghostImageTransform(step: 0 | 1 | 2 | 3 | 4, region: { width: number; height: number }): GhostTransform;
+/** Pure. The jumpscare rush transform at progress 0..1 (0 = normal size, 1 = full rush), bounded by maxScale. */
+export function jumpscareRushTransform(progress: number, maxScale: number): GhostTransform;
+```
+
+`ghostImageTransform` keeps the same region-fit contract as `ghostBox` (Req 2.2, 15.3, 11.17): it reads the natural aspect ratio of `ghost-standing.png` (1376:768) as a constant, fits it inside the side region at a scale that grows with the step, and never returns a box larger than the region. `jumpscareRushTransform` is used only inside a Return_Moment overlay, which may cover the Reading_Column (Req 15.9, 15.10), with `maxScale` set to a larger constant for Nightmare's `ghost-face.png` rush than for Classic's `ghost-standing.png` rush (Req 15.10). Both functions are pure: the adapter reads the region size from the DOM and passes it in, the functions never touch the DOM themselves.
+
+`ghostFigure.ts` and `jumpscare.ts` call `layer.setImage(img, transform)` after `assetLoader.loadImage(name)` resolves. When it resolves `null`, the haunt falls back to `layer.setMarkup(ghostArt(step).markup)`, the existing SVG path (Req 15.19, 11.22): the Image_Layer and the SVG markup share one `VisualLayer`, so "no image" means the markup path runs exactly as it does today, with no new element left behind. The red-eye bound (Req 15.6) is a build-time measurement of `ghost-face.png`'s Red_Coverage at the largest permitted Jumpscare scale, recorded in `docs/BUILD_LOG.md`; `redCoverage(img, scale)` (pure, reads a cached pixel sample taken once at load) is the runtime guard that `jumpscare.ts` checks before using the full rush scale, falling back to the SVG close-up if the measured coverage ever exceeds the bound (for example after an image is swapped).
+
+### Smoke entrance and Rim_Glow (`ghost/smokeEntrance.ts`, `HauntStage.css`, `engine/settings.ts`)
+
+The Smoke_Entrance is a second, short-lived `VisualLayer` that `ghostFigure.ts` creates beside the Ghost's own layer: `setMarkup` draws two or three soft, blurred, theme-coloured blob shapes (`fill="var(--shadow)"`, `filter="blur(...)"`), `setOpacity` fades it in over 400 ms and out over 600 ms before the Ghost layer's own fade starts, and `remove()` clears it once the Ghost is visible (Req 15.12). Under Reduced_Motion the gate's existing fade floor (`planFadeIn`, at least 1000 ms) replaces the two-stage timing with one fade and no blur animation, because the blur radius is a static attribute value, not an animated one (Req 15.13).
+
+The Rim_Glow is drawn as part of the same SVG markup `ghostArt` already returns (a `<filter>` with `feGaussianBlur` and `feColorMatrix` tinting the silhouette's edge with `var(--accent)` at low opacity, matching the existing `ALLOWED_ELEMENTS` list in `svgMarkup.ts`), so it needs no new gate capability. `ghostArt(step, { rimGlow })` takes the setting as an argument and omits the filter reference when it is off. The glow never exceeds the flash rate because it has no animation of its own (Req 15.17); it exists only on the Ghost layer, which stays beside the Reading_Column outside a Return_Moment, same as every other Ghost pixel (Req 15.18).
+
+`HauntSettings` gains `rimGlow: boolean`, default `true` (Req 15.16), under a new key:
+
+```ts
+// added to KEYS in engine/settings.ts:
+rimGlow: 'rod_haunt_rim_glow',
+```
+
+`parseSettings` reads it as `'true'`/`'false'` with any other value defaulting to `true`, the same pattern as `sound`. `HauntControl` gains a labelled checkbox ("Ghost outline") beside the mode and sound controls, keyboard-reachable with a visible focus ring, that calls `settings.set({ rimGlow })` (Req 15.15).
+
+### Mix rules (`ghost/mix.ts`, `heartbeat.ts`, `creak.ts`)
+
+```ts
+export const EVENT_HEADROOM_DB = 6;
+/** Pure. True when `eventPeakDb` is at least EVENT_HEADROOM_DB above `continuousDb`, and `eventPeakDb <= capDb`. */
+export function hasEventHeadroom(eventPeakDb: number, continuousDb: number, capDb: number): boolean;
+/** Pure. Converts a linear gain in (0, 1] to dB; 0 or less maps to -Infinity. */
+export function gainToDb(gain: number): number;
+```
+
+6 dB is chosen because it is the smallest step a listener reliably hears as "louder, not just different" against a steady bed, and it is small enough that the drone (already the quietest layer by its own gain budget) never has to be silenced to make room for an event; a bigger headroom (10 to 12 dB, the usual broadcast-ducking figure) would force the drone's gain so low under the cap that it stopped reading as a layer at all when an event played continuously, as it can at Haunt_Level 3. `hasEventHeadroom` is checked in the property test against the gains `footsteps.ts`, `breathing.ts`, `knock.ts`, `heartbeat.ts`, `creak.ts` and the new `drone.ts` request, not enforced by a new gate rule: the existing cap and scaling already bound every channel, and this function only confirms the chosen per-layer gain constants keep the headroom once scaled.
+
+Whispers stop being a Continuous_Layer in Classic and Nightmare (Req 17.1): `whispers.ts` gains `modes: ['gentle']`, so `selectByMode` (task 5, already mode-aware) excludes it from Classic and Nightmare without an engine edit; Gentle keeps today's whisper behaviour unchanged (Req 17.2), because Gentle's `modes` list and gain constants are untouched.
+
+`breathing.ts` changes from one continuous bandpassed noise loop to a scheduled sequence of short breath-pulse buffers (`buildPulseTrain({ kind: 'breath' })`, already pulse-shaped) separated by scheduled silence, using the existing `onTick` port (Req 17.3): each tick checks the elapsed time against a breath period and starts the next pulse only when the gap has elapsed, so no sample plays between pulses above the noise floor (Req 11.21).
+
+`drone.ts` is a new layer, `role: 'layer'`, `modes: ['classic', 'nightmare']`, `minLevel: 2`, using the `HAUNT_SOUNDS` entry `drone.mp3` when it decodes and a low generated hum otherwise, at a fixed gain constant set below every event layer's gain constant by at least `EVENT_HEADROOM_DB` once both are scaled by the same cap (Req 17.4).
+
+`heartbeat.ts` (new layer, `role: 'layer'`, `modes: ['classic', 'nightmare']`, `minLevel: 2`) uses `heartbeat.mp3` when present, else a generated low double-thump pulse; its requested gain rises with `HauntLevel` the same way `breathing.ts`'s does (Req 16.9). `creak.ts` (new layer, `role: 'layer'`, `modes: ['classic', 'nightmare']`, `minLevel: 1`) uses `creak.mp3` when present, else a generated single creak pulse, scheduled once per look-away at a random delay rather than looping, matching the Event_Sound shape of `knock.ts` rather than a Continuous_Layer (Req 16.10). Both are one file each in `src/haunts/`, read by the existing registry and engine with no further edit (Req 16.11), the same contract `footsteps.ts` and `knock.ts` already use.
+
+`footsteps.ts`'s generated fallback (used when `footsteps.mp3` is absent or fails to decode) is retuned rather than redesigned: the existing `buildPulseTrain` call for the `'footstep'` kind gains a lower-frequency biquad low-pass stage (around 180 Hz, under the current bandpass-only chain) for the step's body, and the single pulse per step becomes two pulses close together (`heel`, quieter and first, then `toe`, the existing pulse), both still built by the pure `buildPulseTrain` function so the attack and peak bounds of Property 7 continue to apply unchanged (Req 17.6).
+
 ### Amendments to the haunt-feature spec (Req 13)
 
 These edits are made to `.kiro/specs/haunt-feature/` in the task list, not in this document. The design lists them so the two specs stop contradicting each other.
@@ -948,6 +1056,54 @@ These edits are made to `.kiro/specs/haunt-feature/` in the task list, not in th
 
 **Validates: Requirements 1.3, 1.14, 2.4, 2.13, 3.1, 3.5, 3.6, 3.7, 3.9, 3.11, 4.7, 5.3, 8.10, 9.8, 9.9, 9.13**
 
+### Property 29: The asset allowlist accepts only exact names
+
+*For any* string, `isAllowedAsset` returns true exactly when the string equals one of the listed names, character for character, including case; a string that differs by case, by an added path segment, by a query string, or by surrounding whitespace is rejected. *For any* accepted name, `assetUrl` returns a relative, same-origin path beginning with `/ghosts/` or `/sounds/` with no scheme and no host; for any rejected name it returns `null`.
+
+**Validates: Requirements 14.1, 14.2, 14.3, 11.18**
+
+### Property 30: Ghost image transform stays in bounds and grows with the step
+
+*For any* step from 0 to 4 and any region of positive width and height, `ghostImageTransform` returns a scale and offset whose rendered box width and height are each at most the region's, and *for any* steps `s < t`, the scale at `t` is strictly greater than at `s`. *For any* progress from 0 to 1 and `maxScale` greater than 1, `jumpscareRushTransform` returns a scale between 1 and `maxScale` that is non-decreasing in progress.
+
+**Validates: Requirements 15.2, 15.3, 11.17**
+
+### Property 31: The rush ends inside the Return_Moment
+
+*For any* planned Jumpscare span from the Return_Planner, the Jumpscare's `startMs` and `startMs + durationMs` both fall within `[0, durationMs]` of the enclosing plan, so a rush transform driven by that span never runs outside the Return_Moment's 3000 ms bound.
+
+**Validates: Requirements 15.9, 15.10**
+
+### Property 32: Red coverage stays under the bound at every permitted scale
+
+*For any* scale from 1 up to the largest permitted Jumpscare scale, the measured Red_Coverage of `ghost-face.png` at that scale is at most 15 percent of the viewport area.
+
+**Validates: Requirements 15.6, 11.19**
+
+### Property 33: Event headroom holds at every layer combination
+
+*For any* non-negative event and continuous gain values and any cap in (0, 1], `hasEventHeadroom` returns true only when the event's level in dB is at least `EVENT_HEADROOM_DB` above the continuous level in dB and the event's level does not exceed the cap's level in dB; it returns false otherwise. *For any* gain of 0 or less, `gainToDb` returns `-Infinity`.
+
+**Validates: Requirements 17.5, 11.20**
+
+### Property 34: Breath gaps stay silent
+
+*For any* breath-pulse schedule (a period and a pulse duration, pulse duration less than period), every sample index that falls strictly between the end of one pulse and the start of the next is at or below the layer's declared noise floor.
+
+**Validates: Requirements 17.3, 11.21**
+
+### Property 35: The image fallback is used exactly when the load fails
+
+*For any* sequence of `loadImage` outcomes (resolve with an image, resolve null, or reject), the Ghost_Figure_Layer shows the Image_Layer exactly for the outcomes that resolve with an image, and shows the SVG markup fallback for every outcome that resolves null or rejects, with no outcome producing both or neither.
+
+**Validates: Requirements 15.19, 11.22**
+
+### Property 36: The Rim_Glow setting round-trips
+
+*For any* boolean, saving it as the Rim_Glow setting and reading the setting back returns the same boolean; *for any* stored value other than `'true'` or `'false'`, reading the setting returns `true`.
+
+**Validates: Requirements 15.16, 11.23**
+
 ## Error Handling
 
 | Situation | Handling |
@@ -968,6 +1124,11 @@ These edits are made to `.kiro/specs/haunt-feature/` in the task list, not in th
 | `reading.readSoFar()` is large | `nameCandidates` is memoised by reading position. If it throws, the evidence pool is the fixed messages only. |
 | The reader changes mode to Gentle mid-return | `abort('gentle')`: effects end, evidence restores, the gate ends its return state with an 800 ms fade, and the card is hidden. |
 | `start` is given no `StartInfo` (an older caller or a test) | Haunts use mode Classic, step 0 and roll 0. The argument is optional. |
+| A Ghost_Asset name is not in `GHOST_ASSETS`, or a Haunt_Sound name is not in `HAUNT_SOUNDS` | `assetUrl` returns `null` and the loader resolves `null` without any `fetch` or `Image()` call. |
+| `loadImage` rejects, resolves `null`, or the image's `error` event fires | The haunt calls `layer.setMarkup(ghostArt(step).markup)`, the existing SVG path, with no error shown to the reader. |
+| `loadSound` rejects, resolves `null`, `fetch` throws, or `decodeAudioData` throws or rejects | The haunt uses its generated fallback buffer from `buildPulseTrain`, with no error shown to the reader. |
+| The measured Red_Coverage of a Jumpscare image at the requested scale exceeds the bound | `jumpscare.ts` falls back to the SVG close-up for that Jumpscare instead of the image rush. |
+| Saving or reading the Rim_Glow setting throws, or the stored value is not `'true'` or `'false'` | The setting defaults to `true` (on), the same pattern as `sound` and `mode`. |
 
 Errors are never shown to the reader during reading. The only reader-visible additions are the Safety_Notice mode choice, the Haunt_Control choice, the card, and the save-failure line.
 
@@ -999,6 +1160,11 @@ Unit and example tests:
 - **Reduced motion over real effects (workspace rule: no flashing effect under reduced motion):** each real return effect runs on a jsdom stage with reduced motion on, and the test asserts that none of the classes `is-guttering`, `is-sweeping` or `is-glitching` is ever added and that `grantedFlickers` is 0.
 - **Haunt-feature tests to update:** `levelLogic.p01` to `p08` and `engine.p20` use `gentle`; they move to `mode` with the same assertions plus Property 2. `settings.p16` moves to Property 1. `registry.p17` gains the new exports. `colorRule` runs the new layers outside a Return_Moment. The existing engine fakes gain `reading`, `evidence` and `spoiler`.
 - **Manual checks:** listen to footsteps, breathing, knock and the jump sound with the cap at its default and at 1, with headphones and speakers, check the spoiler blur strength: at the card's font size, with Classic legibility just under 0.7 (the maximum, 0.69, which gives about 4.3 px), confirm the sentence cannot be read, and tune `MAX_BLUR_PX` if it can; also check it in the overlay placement on a narrow viewport, watch a Glitch and a Jumpscare with and without reduced motion, check that no effect covers the text outside the Return_Moment, and make a keyboard-only pass through notice, reading, a return and the card.
+- **Image and sound assets (Req 15, 16, 17):** `assets.ts`, `imageTransform.ts` and `mix.ts` are pure and property-tested (Properties 29 to 36). `assetLoader.ts` is covered by unit tests with a fake `fetch` and a fake `Image` constructor: a successful load resolves the element, a `404` or a thrown fetch resolves `null`, a `decodeAudioData` rejection resolves `null`, and a second call for the same name does not call `fetch` again. The static scan gains a rule that no non-test file under `src/haunts/` contains an `http://` or `https://` URL that names `/ghosts/`, `/sounds/` or an allowlisted asset file name. A manual pass views both Ghost_Asset files at every Ghost_Distance step and at Jumpscare scale in both Haunt_Modes, listens to every Haunt_Sound with its generated fallback (by temporarily renaming the file) to confirm the fallback is not jarring, and confirms the drone is audible but clearly under the event layers at Haunt_Level 3.
+
+Open points carried from the user's follow-up (recorded for the user, not resolved by this document alone):
+
+4. The two images in `public/ghosts/` have the checkerboard baked into their opaque pixels rather than real transparency. Task 18 attempted a structural matte and reports in `docs/BUILD_LOG.md` that it could not remove it without visible damage to the fine tendrils. The images are used as-is (rectangular, opaque) in this design's Image_Layer, with the checker background a known visible defect until the user picks one of the three options recorded in that log entry.
 
 Open points for the reader of this design:
 

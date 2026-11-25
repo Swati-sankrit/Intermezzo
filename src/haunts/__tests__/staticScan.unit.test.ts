@@ -71,6 +71,37 @@ const GHOST_FILE_RULES: Rule[] = [
 ];
 
 const MEDIA_FILE_RE = /\.(?:mp3|wav|ogg|m4a)\b/i;
+/** The only file under src/haunts allowed to hold media file names (Req 14.4). */
+const ASSETS_FILE = 'haunts/engine/ghost/assets.ts';
+/** Written out here on purpose (not imported), so an extra entry in assets.ts fails this scan. */
+const ALLOWED_MEDIA_NAMES = [
+  'ghost-standing.png',
+  'ghost-face.png',
+  'footsteps.mp3',
+  'breathing.mp3',
+  'heartbeat.mp3',
+  'creak.mp3',
+  'knock.mp3',
+  'scream.mp3',
+  'drone.mp3',
+];
+const MEDIA_NAME_RE = /[\w.-]+\.(?:mp3|wav|ogg|m4a|png)\b/gi;
+/** A literal request path; only assetUrl in assets.ts may build one. */
+const ASSET_PATH_RULE: Rule = { label: 'literal /ghosts/ or /sounds/ path', re: /\/(?:ghosts|sounds)\// };
+
+/** Media file names in `code` that are not an exact allowlist entry. */
+export function mediaNameProblems(code: string): string[] {
+  return (code.match(MEDIA_NAME_RE) ?? []).filter((n) => !ALLOWED_MEDIA_NAMES.includes(n));
+}
+
+/** Req 14.4: an http(s) URL that names /ghosts/, /sounds/ or an allowlisted asset file. */
+const URL_RE = /https?:\/\/[^\s'"`]+/gi;
+export function assetUrlProblems(code: string): string[] {
+  return (code.match(URL_RE) ?? []).filter(
+    (u) => /\/(?:ghosts|sounds)\//i.test(u) || ALLOWED_MEDIA_NAMES.some((n) => u.toLowerCase().includes(n)),
+  );
+}
+
 const FORBIDDEN_IMPORT_RE = /attention|(?:^|[/\\])ui(?:[/\\]|$)|camera|video|detector|mediapipe/i;
 
 /** Specifiers a haunt file (src/haunts/*.ts) may import. hauntAudio holds types only. */
@@ -178,6 +209,30 @@ describe('static source scan: scanner self-checks', () => {
     expect(scanRules(ok, GHOST_FILE_RULES)).toEqual([]);
   });
 
+  it('flags a media string that is not an exact allowlist name, and accepts the nine real ones', () => {
+    const allNine = ALLOWED_MEDIA_NAMES.map((n) => `'${n}'`).join(', ');
+    expect(mediaNameProblems(`const a = [${allNine}];`)).toEqual([]);
+    expect(mediaNameProblems(`const a = [${allNine}, 'extra.mp3'];`)).toEqual(['extra.mp3']);
+    expect(mediaNameProblems("const a = 'creak.MP3';")).toEqual(['creak.MP3']);
+    expect(mediaNameProblems("const a = 'ghost-extra.png';")).toEqual(['ghost-extra.png']);
+    expect(mediaNameProblems("const a = 'x.wav'; const b = 'y.ogg'; const c = 'z.m4a';")).toHaveLength(3);
+  });
+
+  it('flags a literal /ghosts/ or /sounds/ path, also inside a template string', () => {
+    expect(scanRules("const u = '/ghosts/a.png';", [ASSET_PATH_RULE])).toHaveLength(1);
+    expect(scanRules('const u = `/sounds/${n}`;', [ASSET_PATH_RULE])).toHaveLength(1);
+    expect(scanRules(stripComments("const u = assetUrl('ghost', n); // /ghosts/a.png"), [ASSET_PATH_RULE])).toEqual([]);
+    expect(scanRules("const u = '/ghostsx/a'; const v = 'sounds/a';", [ASSET_PATH_RULE])).toEqual([]);
+  });
+
+  it('flags an http(s) URL that names an asset path or file, and accepts a namespace URI', () => {
+    for (const bad of ['https://cdn.example.com/ghosts/ghost-face.png', 'http://x/sounds/knock.mp3', 'https://evil.test/scream.mp3']) {
+      expect(assetUrlProblems(`const u = '${bad}';`), bad).toEqual([bad]);
+    }
+    expect(assetUrlProblems("const ns = 'http://www.w3.org/2000/svg';")).toEqual([]);
+    expect(assetUrlProblems("const ns = 'http://www.w3.org/1999/xlink'; const p = '/ghosts/ghost-face.png';")).toEqual([]);
+  });
+
   it('flags disallowed imports and allows the permitted ones', () => {
     const bad = "import { x } from './engine/levelLogic';\nimport '../attention/signal';\nconst m = import('../ui/App');";
     expect(hauntImportProblems(bad)).toHaveLength(3);
@@ -245,10 +300,31 @@ describe('static source scan: real source', () => {
     expect(withDestination).toContain('haunts/engine/gate/audioGraph.ts');
   });
 
-  it('no .mp3, .wav, .ogg or .m4a string appears under src/haunts', () => {
-    const hits = hauntsSources.flatMap((p) =>
-      scanRules(load(p), [{ label: 'audio file extension', re: MEDIA_FILE_RE }]).map((f) => `${rel(p)}:${f.line}`),
-    );
+  it('no .mp3, .wav, .ogg or .m4a string appears under src/haunts, except the allowlist in engine/ghost/assets.ts', () => {
+    const hits = hauntsSources
+      .filter((p) => rel(p) !== ASSETS_FILE)
+      .flatMap((p) => scanRules(load(p), [{ label: 'audio file extension', re: MEDIA_FILE_RE }]).map((f) => `${rel(p)}:${f.line}`));
+    expect(hits).toEqual([]);
+  });
+
+  it('assets.ts holds exactly the nine allowlisted media names and no other media string', () => {
+    const assets = hauntsSources.filter((p) => rel(p) === ASSETS_FILE);
+    expect(assets).toHaveLength(1);
+    const code = load(assets[0]);
+    expect(mediaNameProblems(code)).toEqual([]);
+    // Not vacuous: every allowlisted name is really present.
+    for (const name of ALLOWED_MEDIA_NAMES) expect(code.includes(`'${name}'`), name).toBe(true);
+  });
+
+  it('no file under src/haunts has an http:// or https:// URL that points at a Ghost_Asset or Haunt_Sound', () => {
+    const hits = hauntsSources.flatMap((p) => assetUrlProblems(load(p)).map((u) => `${rel(p)}: ${u}`));
+    expect(hits).toEqual([]);
+  });
+
+  it('engine/ghost/ files other than assets.ts contain no literal /ghosts/ or /sounds/ path', () => {
+    const hits = ghostFiles
+      .filter((p) => rel(p) !== ASSETS_FILE)
+      .flatMap((p) => scanRules(load(p), [ASSET_PATH_RULE]).map((f) => `${rel(p)}:${f.line}`));
     expect(hits).toEqual([]);
   });
 });

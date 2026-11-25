@@ -1140,4 +1140,28 @@ All fixes were approved by the user. No assertion was weakened.
 - `npx vitest --run`, twice: 111 test files and 783 tests passed both times, 0 failed.
 - `npx tsc -b`: exit 0. `npm run lint` (oxlint): exit 0. `npm run build`: exit 0.
 - No counterexamples. Nothing was changed during the checkpoint.
-- Manual check is pending with the user: `npm run dev`, look away with the camera off (switch tabs) and listen for footsteps, breathing and the knock; return after more than 10 s of away time and check the Return_Moment and a Jumpscare. A Jumpscare is forced only from the browser console in the local run, never in code.
+
+### Manual check (user)
+- The Ghost works technically, but it looks like a friendly cartoon, not scary.
+- The audio is annoying rather than scary.
+- The continuous noise from the whispers and breathing layers drowns out the footsteps and knocks.
+- The footsteps sound thin.
+- Outcome: Checkpoint A is closed. The automated results stand as already logged (111 files and 783 tests passing, twice; tsc, lint and build clean).
+- Follow-up: the user asked for new spec tasks. They cover bundled image and CC0 audio assets, image ghosts with a smoke entrance and a face close-up Jumpscare, recorded sounds with the generated sounds as fallback, and a mix with no continuous noise bed, separate breaths, a low drone from level 2, and events clearly audible. These will be added to the ghost-dread spec and implemented one at a time.
+
+## ghost-dread: image preparation (task 18) — matte removal stopped, reported
+
+- Backed up the two user-supplied images unchanged to `assets-src/ghosts/ghost-standing.png` and `assets-src/ghosts/ghost-face.png` before any edit. Checksums match the files in `public/ghosts/` at the time of backup (`ec808d8f...` standing, `f6af2222...` face).
+- Measured the alpha channel of both PNGs: every pixel has alpha 255 (fully opaque, 1,056,768 pixels for ghost-standing.png, 1,081,344 for ghost-face.png). The checkerboard the user saw is painted into the opaque RGB pixels, not real transparency, confirming the user's suspicion.
+- Measured the checkerboard: a regular grid with an 11 px tile (22 px period), confirmed by pixel sampling and by autocorrelation on a clean background row (peak at lag ~23, trough at lag ~11). Reference tile colours from a confirmed-clean region: ghost-standing.png light tile ≈ RGB(237,237,235), dark tile ≈ RGB(152,152,151).
+- Tried a structural matte: compute the expected checker colour at each pixel from its tile position, mark a pixel as background when its colour is within a tolerance of the expected tile colour, otherwise foreground. Tested hard and soft (distance-based) alpha at several tolerances (10 to 30).
+- Result: both images have a soft, dark vignette/shadow painted into the checkerboard immediately around the figure (visible in the top-left and background crops as a ring where the checker is tinted darker than the reference tiles, not a flat colour). This shadow is close in luminance to parts of the fine hair tendrils that fan out from the figure. No single tolerance separated the two cleanly:
+  - A loose tolerance (needed to clear the shadow ring) also kept it as background, but it is close enough in value to the faint tendril anti-aliasing that a tighter pass right at the figure's edge would need per-tile hand tuning, not a single global rule.
+  - A tighter tolerance (needed to protect the tendrils) left visible fragments of checker and shadow around the whole silhouette, a visible "halo" of leftover grid, which is the "visible damage" this task is told to avoid shipping.
+- Decision: per the task instruction ("If that cannot be done without visible damage, STOP and report rather than shipping a bad matte"), the matte removal is stopped here. `public/ghosts/ghost-standing.png` and `public/ghosts/ghost-face.png` are left as the original files (opaque, with the painted checkerboard) for now. No compression or cropping was applied either, since both would need to be redone once a real matte exists, and compressing a background that is about to change is wasted work.
+- Not done, carried forward as an open item for the user: the two light specks on the left side of both images were located visually (a short horizontal streak around y≈1/3 of `ghost-face.png`'s left-middle region, and lighter patches in `ghost-standing.png`'s left region) but were not edited, since edits were paused once the background removal itself could not be completed safely. The bottom-right sparkle watermark on `ghost-face.png` was left untouched as instructed.
+- Options for the user to choose from, none of which were applied without confirmation:
+  1. Ship the images as fully opaque PNGs with a CSS mask/crop that only ever shows a tightly cropped region of the figure (no visible checker) and never scales to show the full canvas. This avoids a pixel matte entirely but constrains the art direction (crop, not silhouette fade).
+  2. Regenerate or re-export the two images from the original AI tool with a true alpha channel (most tools offer a "transparent background" export), which removes the need for any matte.
+  3. Hand-correct the matte in an external editor (outside this project's dependencies) using the measured checker tile size and colours above as a starting point, with manual touch-up at the tendril edges, then re-run the compression and quality-check steps of this task.
+- No tool used in this investigation (Python's Pillow and numpy, already present on the machine) was added to `package.json` or any project dependency file.

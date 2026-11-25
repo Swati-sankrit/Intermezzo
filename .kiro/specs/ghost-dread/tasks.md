@@ -256,7 +256,7 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     - Append a section for tasks 3 to 6: properties 8 to 13, 23, 24, 26 and 28, cases run, any counterexample with seed and shrunk input, the API findings from 3.1, and a confirmation that adding the five new haunt files needed no further edit in the engine beyond the one-time contract reading
     - _Requirements: none (testing rule)_
 
-- [-] 7. Checkpoint A - Ghost, Return_Moment and Jumpscare work end to end
+- [ ] 7. Checkpoint A - Ghost, Return_Moment and Jumpscare work end to end
   - Run `npx vitest --run`, `npm run lint` and `npm run build`. Ensure all tests pass, ask the user if questions arise. Remind the user of the manual check: run `npm run dev`, look away with the camera off (switch tabs) and listen with headphones for footsteps, breathing and the knock; return after 12 s and check the Return_Moment and a Jumpscare (raise the roll through a temporary debug seed only in the local run, not in code).
 
 - [ ] 8. Glitch at the return
@@ -441,12 +441,174 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
 - [ ] 16. Final checkpoint - Ensure all tests pass
   - Run `npx vitest --run`, `npm run lint` and `npm run build`. Ensure all tests pass, ask the user if questions arise.
 
+- [ ] 17. Assets policy
+  - [x] 17.1 Implement `engine/ghost/assets.ts`
+    - `GHOST_ASSETS`, `HAUNT_SOUNDS`, `isAllowedAsset`, `assetUrl('ghost' | 'sound', name)`; pure, no DOM, no fetch
+    - _Requirements: 14.1, 14.2, 14.3, 14.4_
+
+  - [ ] 17.2 Write property test for the allowlist
+    - File: `ghost/__tests__/assets.gd29.prop.test.ts`
+    - **Property 29: The asset allowlist accepts only exact names**
+    - **Validates: Requirements 14.1, 14.2, 14.3, 11.18**
+
+  - [x] 17.3 Extend the static scan for literal asset URLs
+    - `staticScan.unit.test.ts`: no file under `src/haunts/` contains a literal `http://` or `https://`; `engine/ghost/` files build asset paths only through `assetUrl`
+    - _Requirements: 14.4_
+
+  - [ ] 17.4 Update the README and `tech.md` licence table
+    - Add the `public/ghosts/` and `public/sounds/` entries to the README's asset table as each file is added in tasks 18 and 20, with source and licence; confirm `tech.md`'s asset-folder and licence wording from this amendment is present
+    - _Requirements: 14.6_
+
+  - [ ]* 17.5 Write unit test for the README asset table
+    - File: `src/__tests__/readmeAssets.unit.test.ts` (or existing doc-check location)
+    - Every file name in `GHOST_ASSETS` and `HAUNT_SOUNDS` that exists under `public/` appears in the README's asset table with a non-empty source and licence cell
+    - _Requirements: 14.6_
+
+- [ ] 18. Image preparation (done first, non-destructive)
+  - [ ] 18.1 Back up the originals
+    - Copy `public/ghosts/ghost-standing.png` and `public/ghosts/ghost-face.png` to `assets-src/ghosts/` unchanged; verify by checksum
+    - _Requirements: none (asset preparation, not covered by an acceptance criterion)_
+
+  - [ ] 18.2 Measure transparency and the checkerboard
+    - Read the alpha channel histogram of both files; measure the checkerboard's tile size and reference colours from a confirmed-clean region; report both measurements in `docs/BUILD_LOG.md`
+    - _Requirements: none (asset preparation)_
+
+  - [ ] 18.3 Attempt matte removal, or stop and report
+    - Build a matte from the measured checker grid; check whether it separates the background from the fine tendrils without visible damage. If it does, apply it, keeping the two PNG names. If it does not, STOP: make no pixel edit to `public/ghosts/*.png`, and report the attempt and the reason in `docs/BUILD_LOG.md` with options for the user
+    - _Requirements: none (asset preparation)_
+
+  - [ ] 18.4 Remove the light specks, leave the sparkle
+    - Only if 18.3 produced a usable matte or the user has approved an interim edit to the opaque images: remove the light specks on the left side of both images; do not touch the bottom-right sparkle on `ghost-face.png`
+    - _Requirements: none (asset preparation)_
+
+  - [ ] 18.5 Compress and report sizes
+    - Only once the background is resolved (matted or the user has approved shipping the opaque originals): compress both PNGs for the web with no visible quality loss in the opaque figure area; trimming transparent margins is allowed; report before and after file sizes and a perceptual difference check over the opaque area in `docs/BUILD_LOG.md`
+    - _Requirements: none (asset preparation)_
+
+- [ ] 19. Ghost images, smoke entrance and rim glow
+  - [ ] 19.1 Implement `engine/ghost/imageTransform.ts`
+    - `ghostImageTransform(step, region)`, `jumpscareRushTransform(progress, maxScale)`, `redCoverage(img, scale)` (reads a cached pixel sample)
+    - _Requirements: 15.2, 15.3, 15.6, 15.9, 15.10_
+
+  - [ ] 19.2 Write property tests for the image transform and red coverage
+    - Files: `ghost/__tests__/imageTransform.gd30.prop.test.ts`, `ghost/__tests__/imageTransform.gd31.prop.test.ts`, `ghost/__tests__/imageTransform.gd32.prop.test.ts`
+    - **Property 30: Ghost image transform stays in bounds and grows with the step**
+    - **Property 31: The rush ends inside the Return_Moment**
+    - **Property 32: Red coverage stays under the bound at every permitted scale**
+    - **Validates: Requirements 15.2, 15.3, 15.6, 15.9, 15.10, 11.17, 11.19**
+
+  - [ ] 19.3 Implement `engine/ghost/assetLoader.ts`
+    - `createAssetLoader(fetchImpl, createImage)`: `loadImage` via `Image()` load/error events, `loadSound` via `fetch` + `decodeAudioData`; both cached by name, both resolve `null` on any failure
+    - _Requirements: 16.1, 16.3_
+
+  - [ ] 19.4 Write property test for the image fallback and unit tests for the loader
+    - File: `ghost/__tests__/assetLoader.gd35.prop.test.ts`; unit tests in `engine/__tests__/assetLoader.unit.test.ts` with a fake `fetch` and a fake `Image` constructor (success, 404, thrown fetch, failed decode, cache hit on a second call)
+    - **Property 35: The image fallback is used exactly when the load fails**
+    - **Validates: Requirements 15.19, 16.1, 16.3, 11.22**
+
+  - [ ] 19.5 Add `setImage` to the visual layer and adapter
+    - `types.ts`: `VisualLayer.setImage(img, opts?)`; `visualLayer.ts`: draws the image inside the layer's element at the given scale and offset, applying the gate's existing fade and reduced-motion floors; `null` removes the image and leaves any markup in place
+    - _Requirements: 15.7, 15.11_
+
+  - [ ] 19.6 Wire `ghostFigure.ts` to the image, the SVG fallback and the smoke entrance
+    - On start, call `assetLoader.loadImage('ghost-standing.png')`; on success call `setImage` with `ghostImageTransform(step, region)`; on failure call `setMarkup(ghostArt(step).markup)` as before; play `smokeEntrance.ts` markup before the Ghost's own fade-in, replaced by a single fade under Reduced_Motion
+    - _Requirements: 15.1, 15.3, 15.7, 15.12, 15.13, 15.19_
+
+  - [ ] 19.7 Implement `engine/ghost/smokeEntrance.ts`
+    - Theme-coloured blurred-shape SVG markup and the fade-in/fade-out timing values used by 19.6
+    - _Requirements: 15.12, 15.13_
+
+  - [ ] 19.8 Wire `jumpscare.ts` to the per-mode image rush
+    - Nightmare: `assetLoader.loadImage('ghost-face.png')`, `jumpscareRushTransform(progress, NIGHTMARE_MAX_SCALE)`; Classic: `ghost-standing.png`, `jumpscareRushTransform(progress, CLASSIC_MAX_SCALE)` with `CLASSIC_MAX_SCALE < NIGHTMARE_MAX_SCALE`; either falls back to the existing SVG close-up on a failed load or when `redCoverage` exceeds the bound; Reduced_Motion replaces the rush with a fade of at least 1000 ms and no scale change
+    - _Requirements: 15.9, 15.10, 15.11, 15.19_
+
+  - [ ] 19.9 Add the Rim_Glow setting
+    - `engine/settings.ts`: `rimGlow: boolean`, key `rod_haunt_rim_glow`, default `true`; `ghostArt(step, { rimGlow })` includes or omits the glow filter reference
+    - _Requirements: 15.14, 15.15, 15.16_
+
+  - [ ] 19.10 Write property test for the Rim_Glow round trip
+    - File: `src/haunts/engine/__tests__/settings.gd36.prop.test.ts`
+    - **Property 36: The Rim_Glow setting round-trips**
+    - **Validates: Requirements 15.16, 11.23**
+
+  - [ ] 19.11 Add the Rim_Glow control to `HauntControl`
+    - A labelled, keyboard-reachable checkbox ("Ghost outline") with a visible focus ring, calling `settings.set({ rimGlow })`
+    - _Requirements: 15.15_
+
+  - [ ]* 19.12 Write unit and integration tests for images, smoke and rim glow
+    - Files: `src/haunts/__tests__/ghostImage.unit.test.ts`, `src/ui/__tests__/HauntControl.rimGlow.unit.test.tsx`
+    - A successful `loadImage` shows the image layer; a failed one shows the SVG markup; the Ghost stays outside the Reading_Column while away; Reduced_Motion shows no scale change on the Ghost or the Jumpscare rush; the Rim_Glow checkbox toggles and persists; a full-screen measurement of `ghost-face.png` at Jumpscare scale contains no saturated-red flash claim beyond Property 32's bound
+    - _Requirements: 15.4, 15.5, 15.6, 15.8, 15.18_
+
+- [ ] 20. Recorded sounds
+  - [ ] 20.1 Confirm the audio and image APIs in current documentation
+    - Use Context7 or MDN for same-origin `fetch` of a binary asset, `decodeAudioData`, the `HTMLImageElement` `load`/`error` events, and CSS `filter: blur()` and `drop-shadow()`; record findings in `docs/BUILD_LOG.md`
+    - _Requirements: 16.1_
+
+  - [ ] 20.2 Wire `footsteps.ts`, `breathing.ts` and `knock.ts` to recordings with fallback
+    - Each haunt tries `assetLoader.loadSound(name, ctx)` for its own file (`footsteps.mp3`, `breathing.mp3`, `knock.mp3`); on success it plays the decoded buffer in place of `buildPulseTrain`'s output; on failure it keeps the existing generated buffer unchanged
+    - _Requirements: 16.2, 16.3, 16.6, 16.7_
+
+  - [ ] 20.3 Retune the generated footstep fallback
+    - Add a low-pass stage (~180 Hz) for the step's body and a two-pulse heel-toe shape to the `'footstep'` `buildPulseTrain` path, keeping the existing attack and peak bounds
+    - _Requirements: 17.6_
+
+  - [ ] 20.4 Implement `heartbeat.ts` and `creak.ts`
+    - As described in the design's "Mix rules" section: `heartbeat.ts` a layer with level rising with Haunt_Level, `minLevel` 2; `creak.ts` an occasional Event_Sound, `minLevel` 1; both use their recording when it decodes and a generated fallback otherwise
+    - _Requirements: 16.2, 16.3, 16.9, 16.10, 16.11_
+
+  - [ ] 20.5 Wire the Jumpscare's Jump_Sound to `scream.mp3`
+    - `jumpscare.ts` tries `assetLoader.loadSound('scream.mp3', ctx)`; on success it plays the decoded buffer as the Jump_Sound in both Haunt_Modes, with the existing attack and cap rules; on failure it keeps the generated Jump_Sound
+    - _Requirements: 16.4, 16.5, 16.8_
+
+  - [ ]* 20.6 Write unit tests for recorded-sound wiring and the retuned footstep
+    - File: `src/haunts/__tests__/recordedSounds.unit.test.ts`
+    - Each haunt plays the decoded buffer when `loadSound` resolves one, and its unchanged generated buffer when it resolves `null`; the Classic and Nightmare Jump_Sound use the same buffer source; the retuned footstep fallback still satisfies Property 7's attack and peak bounds; `heartbeat.ts` and `creak.ts` satisfy the `Haunt` contract and are skipped by the registry in Gentle
+    - _Requirements: 16.2, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8, 16.9, 16.10, 16.11, 17.6_
+
+- [ ] 21. Mix
+  - [ ] 21.1 Implement `engine/ghost/mix.ts`
+    - `gainToDb`, `hasEventHeadroom`, `EVENT_HEADROOM_DB`
+    - _Requirements: 17.5_
+
+  - [ ] 21.2 Write property tests for the mix functions
+    - Files: `ghost/__tests__/mix.gd33.prop.test.ts`, `ghost/__tests__/mix.gd34.prop.test.ts`
+    - **Property 33: Event headroom holds at every layer combination**
+    - **Property 34: Breath gaps stay silent**
+    - **Validates: Requirements 17.3, 17.5, 11.20, 11.21**
+
+  - [ ] 21.3 Remove the continuous whisper bed in Classic and Nightmare
+    - `whispers.ts`: add `modes: ['gentle']`; confirm Gentle's whisper behaviour and gain constants are unchanged
+    - _Requirements: 17.1, 17.2_
+
+  - [ ] 21.4 Change `breathing.ts` to separate breath pulses
+    - Replace the continuous bandpassed loop with scheduled `buildPulseTrain({ kind: 'breath' })` pulses on the `onTick` port, gated by a breath period so no sample plays in the gap
+    - _Requirements: 17.3_
+
+  - [ ] 21.5 Implement `drone.ts`
+    - Layer, Classic and Nightmare, `minLevel` 2; uses `drone.mp3` when it decodes, else a low generated hum; gain constant set below every event layer's gain constant by at least `EVENT_HEADROOM_DB` once scaled
+    - _Requirements: 17.4_
+
+  - [ ]* 21.6 Write unit tests confirming the mix constants satisfy headroom
+    - File: `src/haunts/__tests__/mix.unit.test.ts`
+    - For each Haunt_Level and each Event_Sound's requested gain against the drone's requested gain, `hasEventHeadroom` returns true once both are scaled by the default cap; the whisper layer is absent from the registry's Classic and Nightmare selection and present in Gentle; the breathing layer's output contains no sample above the noise floor between two scheduled pulses
+    - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
+
+  - [ ] 21.7 Report results in `docs/BUILD_LOG.md`
+    - Append a section for tasks 17 to 21: properties 29 to 36, cases run per property, any counterexample with seed and shrunk input, the API findings from 20.1, and the image-preparation outcome from task 18 (matted, or stopped and reported)
+    - _Requirements: none (testing rule)_
+
+- [ ] 22. Checkpoint A2 - Assets, images, sounds and mix complete
+  - Run `npx vitest --run`, `npm run lint` and `npm run build`. Ensure all tests pass, ask the user if questions arise. Remind the user of the manual checks: view both ghost images at every Ghost_Distance step and at Jumpscare scale in Classic and Nightmare, with and without Reduced_Motion; listen to footsteps, breathing, knock, heartbeat, creak and the scream with recordings present and with each one temporarily renamed to hear its generated fallback, at the default and maximum Volume_Cap, with headphones and speakers; confirm the drone is audible but clearly quieter than the event sounds at Haunt_Level 3; toggle the Rim_Glow control with the keyboard; and revisit the image preparation open item from task 18 if it was not resolved.
+
 ## Notes
 
-- Only the taunts sub-tasks (14.1 to 14.6) are optional. Property tests, unit tests and static scans for everything else are required, as the workspace testing rule demands.
-- Each task references specific requirements for traceability. Checkpoints 7 and 13 close the phases.
-- Properties 14 and 15 of the haunt-feature spec (`reducedMotion.p15`, `gateCap.p14`) iterate the registry, so they cover each new haunt file as it is added.
-- A new ghost, layer or return effect after this plan is one new file in `src/haunts/`; the engine is edited once, in task 5.8, to read `role`, `modes`, `minLevel`, `span`, `begin` and `end`.
+- Only the taunts sub-tasks (14.1 to 14.6) and the sub-tasks postfixed with `*` in tasks 17 to 21 are optional. Property tests, unit tests and static scans for everything else are required, as the workspace testing rule demands.
+- Each task references specific requirements for traceability. Checkpoints 7, 13 and 22 close the phases. Checkpoint 16 is the final checkpoint for tasks 1 to 16; checkpoint 22 is the final checkpoint for the assets, images, sounds and mix amendment (tasks 17 to 21).
+- Properties 14 and 15 of the haunt-feature spec (`reducedMotion.p15`, `gateCap.p14`) iterate the registry, so they cover each new haunt file as it is added, including `heartbeat.ts`, `creak.ts` and `drone.ts`.
+- A new ghost, layer or return effect after this plan is one new file in `src/haunts/`; the engine is edited once, in task 5.8, to read `role`, `modes`, `minLevel`, `span`, `begin` and `end`. `heartbeat.ts`, `creak.ts` and `drone.ts` need no further engine edit.
+- Task 18 (image preparation) may stop and report instead of completing its matte sub-task (18.3), per its own instructions. The remaining tasks in 18 to 22 proceed with the images as opaque rectangles when that happens, as the design's "Known open issue" describes.
+- Properties are numbered 1 to 36 across the whole spec; properties 29 to 36 belong to tasks 17 to 21.
 
 ## Task Dependency Graph
 
@@ -465,17 +627,26 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
     { "id": 9, "tasks": ["5.9", "6.2"] },
     { "id": 10, "tasks": ["6.3", "6.4"] },
     { "id": 11, "tasks": ["6.5"] },
-    { "id": 12, "tasks": ["8.1", "9.1", "10.1"] },
-    { "id": 13, "tasks": ["8.2", "8.3", "9.2", "10.2", "10.3", "10.4", "11.1", "11.2"] },
-    { "id": 14, "tasks": ["8.4", "8.5", "9.5", "10.6", "11.3"] },
-    { "id": 15, "tasks": ["8.6", "9.3", "10.7", "10.8"] },
-    { "id": 16, "tasks": ["9.4", "9.6", "10.5", "10.9", "10.10"] },
-    { "id": 17, "tasks": ["11.4", "12.1", "12.2", "12.3"] },
-    { "id": 18, "tasks": ["12.4"] },
-    { "id": 19, "tasks": ["14.1"] },
-    { "id": 20, "tasks": ["14.2", "14.3", "14.4", "14.5"] },
-    { "id": 21, "tasks": ["14.6"] },
-    { "id": 22, "tasks": ["15.1"] }
+    { "id": 12, "tasks": ["17.1", "18.1"] },
+    { "id": 13, "tasks": ["17.2", "17.3", "18.2"] },
+    { "id": 14, "tasks": ["17.4", "18.3"] },
+    { "id": 15, "tasks": ["17.5", "18.4", "19.1", "19.3", "20.1", "21.1"] },
+    { "id": 16, "tasks": ["18.5", "19.2", "19.4", "19.5", "20.3", "21.2", "21.3"] },
+    { "id": 17, "tasks": ["19.6", "19.7", "19.9", "20.2", "20.4", "21.4", "21.5"] },
+    { "id": 18, "tasks": ["19.8", "19.10", "19.11", "20.5"] },
+    { "id": 19, "tasks": ["19.12", "20.6", "21.6"] },
+    { "id": 20, "tasks": ["21.7"] },
+    { "id": 21, "tasks": ["8.1", "9.1", "10.1"] },
+    { "id": 22, "tasks": ["8.2", "8.3", "9.2", "10.2", "10.3", "10.4", "11.1", "11.2"] },
+    { "id": 23, "tasks": ["8.4", "8.5", "9.5", "10.6", "11.3"] },
+    { "id": 24, "tasks": ["8.6", "9.3", "10.7", "10.8"] },
+    { "id": 25, "tasks": ["9.4", "9.6", "10.5", "10.9", "10.10"] },
+    { "id": 26, "tasks": ["11.4", "12.1", "12.2", "12.3"] },
+    { "id": 27, "tasks": ["12.4"] },
+    { "id": 28, "tasks": ["14.1"] },
+    { "id": 29, "tasks": ["14.2", "14.3", "14.4", "14.5"] },
+    { "id": 30, "tasks": ["14.6"] },
+    { "id": 31, "tasks": ["15.1"] }
   ]
 }
 ```

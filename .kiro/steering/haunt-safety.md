@@ -90,5 +90,5 @@ These rules apply to every haunt, sound, and animation, in every haunt mode.
 ## Content
 
 - No gore. No real people, and nothing aimed at a real person or group.
-- No copyrighted characters. Ghosts are original drawings.
+- No copyrighted characters. Ghosts are original or CC0 images.
 - Keyboard-only use must work for the whole reading flow.

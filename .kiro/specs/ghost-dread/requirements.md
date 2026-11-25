@@ -64,6 +64,18 @@ Assumptions:
 - **Taunt_Template**: An original sentence with a `{name}` slot, or a Name_Free_Template without a slot.
 - **Name_Free_Template**: An original taunt sentence with no `{name}` slot.
 - **Reading_Position**: The position of the active paragraph in the book.
+- **Ghost_Asset**: An image file, PNG or WebP, in `public/ghosts/`, listed in the Asset_Allowlist.
+- **Asset_Allowlist**: The fixed, hard-coded list of exact Ghost_Asset and Haunt_Sound file names the application may load. No other file name may be requested.
+- **Haunt_Sound**: A recorded MP3 file in `public/sounds/`, listed in the Asset_Allowlist, decoded into an audio buffer and played by a haunt through the Restricted_Audio_Context.
+- **Asset_Loader**: The module that fetches a Ghost_Asset or Haunt_Sound by same-origin relative URL, decodes it, and caches the result, falling back when the fetch, the decode, or the image load fails.
+- **Image_Layer**: A VisualLayer extension that can show one Ghost_Asset at a given opacity, scale, and position, in place of or alongside SVG markup.
+- **Rim_Glow**: A faint pale outline drawn around the Ghost silhouette so the dark figure reads against the dark background, using a theme colour.
+- **Smoke_Entrance**: A brief, theme-coloured, blurred-shape animation that plays just before the Ghost image fades in.
+- **Red_Coverage**: The share of on-screen pixels, at a given scale, that fall within the saturated-red colour band used for the Ghost's eyes.
+- **Mix**: The set of rules governing which sound layers play together, at what relative loudness, in each Haunt_Mode.
+- **Continuous_Layer**: A Haunt_Sound layer that plays without gaps while it runs (for example a drone).
+- **Event_Sound**: A Haunt_Sound that plays as a discrete occurrence rather than continuously (footsteps, breathing, knock, heartbeat, creak).
+- **Event_Headroom**: The minimum gap, in decibels, between an Event_Sound's peak level and the combined level of all Continuous_Layers playing at the same instant.
 
 ## Requirements
 
@@ -250,7 +262,7 @@ Assumptions:
 11. THE Haunt_Engine SHALL keep the reading text at a contrast ratio of at least 4.5:1 against `--bg` at every Haunt_Level outside the Return_Moment.
 12. THE Haunt_Engine SHALL use only the theme colours from `src/ui/theme.css` or colours derived from them, and SHALL show no full-screen flash of saturated red.
 13. WHILE the Safety_Notice has not been dismissed, THE Haunt_Engine SHALL show no Ghost and play no sound.
-14. THE Haunt_Engine SHALL send no data over the network and SHALL store or log no video frame and no camera data.
+14. THE Haunt_Engine SHALL send no data over the network and SHALL store or log no video frame and no camera data, WHERE the only network requests the Haunt_Engine makes are same-origin requests for a Ghost_Asset or a Haunt_Sound whose file name is an exact entry of the Asset_Allowlist.
 15. THE Haunt_Engine SHALL receive Attention_Signal values only through `subscribeSignal` and SHALL import no camera, detector or video code.
 
 ### Requirement 10: Safety notice and headphones tip
@@ -290,6 +302,13 @@ Assumptions:
 14. FOR ALL Away_Durations in Classic, THE Return_Planner SHALL return a Legibility below 1.
 15. FOR ALL counts of Look_Aways in a chapter, THE Ghost_Distance function SHALL return an integer step between 0 and 4 inclusive that does not fall as the count grows.
 16. FOR ALL inputs, THE Return_Planner SHALL return a Glitch duration below 1000 ms and at most 3 flickers per second, and with Reduced_Motion on SHALL return a slow fade with no flicker and no sudden movement.
+17. FOR ALL Ghost_Distance steps and side-region sizes, THE Image_Layer transform function SHALL return a scale and a position that keep the Image_Layer's rendered bounds within the side region, and SHALL return a strictly larger scale for a higher step than for a lower step.
+18. FOR ALL file names, THE Asset_Allowlist lookup function SHALL accept exactly the file names listed in the Asset_Allowlist and SHALL reject every other string, including a string that differs only by case, by an added path segment, or by a query string.
+19. FOR ALL scales at or below the largest permitted on-screen scale, THE Red_Coverage function for `ghost-face.png` SHALL return a value at or below the bound of requirement 15 criterion 6.
+20. FOR ALL Event_Sound and Continuous_Layer gain combinations, THE Event_Headroom function SHALL return true only when the Event_Sound's peak level is at least 6 dB above the combined Continuous_Layer level, and SHALL keep the Event_Sound's level at or below the Volume_Cap.
+21. FOR ALL Breathing_Layer pulse schedules, THE gap between one breath pulse and the next SHALL contain no sample above the layer's noise floor.
+22. FOR ALL Ghost_Asset load outcomes, THE Ghost_Figure_Layer SHALL show the Image_Layer when the load and decode succeed, and SHALL show the SVG fallback when and only when the load or the decode fails.
+23. FOR ALL values of the Rim_Glow user setting, saving the setting and reading it back SHALL return the same value (round-trip property).
 
 ### Requirement 12: Taunts that refer to the book (optional, built last)
 
@@ -308,7 +327,7 @@ Assumptions:
 9. WHERE a non-empty list of cached taunts is provided by a later spec, THE Taunt_Builder SHALL choose taunts from the cached taunts that remain after discarding, in place of Taunt_Templates.
 10. IF a cached taunt contains a `{` or `}` character or has more than 8 words, THEN THE Taunt_Builder SHALL discard that cached taunt and SHALL keep the other cached taunts.
 11. IF the cached taunt list is empty, missing, or has every entry discarded, THEN THE Taunt_Builder SHALL use Taunt_Templates.
-12. WHEN the Taunt_Builder builds a taunt, THE Taunt_Builder SHALL make zero network requests and SHALL send no book text over the network.
+12. WHEN the Taunt_Builder builds a taunt, THE Taunt_Builder SHALL make zero network requests and SHALL send no book text over the network, WHERE this criterion does not restrict the same-origin Asset_Allowlist requests permitted by requirement 9 criterion 14.
 13. FOR ALL texts and Reading_Positions, every Name_Candidate SHALL appear in the text before the Reading_Position.
 14. FOR ALL texts and templates, THE Taunt_Builder SHALL return a taunt with no `{` and no `}` character.
 15. FOR ALL texts with no Name_Candidate, THE Taunt_Builder SHALL return a Name_Free_Template.
@@ -326,3 +345,75 @@ Assumptions:
 5. THE haunt-feature spec SHALL amend criterion 8.2 so that the Safety_Notice text describes ghosts and glitching, and contains no description of a moving shadow.
 6. THE Restricted_Audio_Context SHALL provide one panner wrapper for the HRTF PannerNode, and SHALL provide no other new path to the audio device.
 7. WHERE a sound is played through the panner wrapper, THE Restricted_Audio_Context SHALL apply the user volume cap and the fade-in and attack limits of the haunt-safety rule to that sound, the same as for every other sound.
+
+### Requirement 14: Bundled image and audio assets
+
+**User Story:** As a developer, I want ghost images and recorded sounds to load only from this app, so that the reader's privacy and the app's safety rules are never put at risk by a third-party asset host.
+
+#### Acceptance Criteria
+
+1. THE Asset_Loader SHALL request a Ghost_Asset or a Haunt_Sound only by a relative, same-origin URL beginning with `/ghosts/` or `/sounds/`.
+2. THE Asset_Loader SHALL make no request to any origin other than the application's own origin when loading a Ghost_Asset or a Haunt_Sound.
+3. THE Asset_Loader SHALL accept only a file name that is an exact entry of the Asset_Allowlist, and SHALL reject every other file name without making a request.
+4. THE Haunt_Engine SHALL contain no literal `http://` or `https://` URL pointing at a Ghost_Asset or a Haunt_Sound.
+5. THE Haunt_Sound files SHALL contain no speech and no lyrics.
+6. WHERE a Ghost_Asset or a Haunt_Sound is added to the repository, THE README SHALL list that file with its source and its licence.
+7. THE Haunt_Engine SHALL load every Ghost_Asset as a PNG or WebP file and every Haunt_Sound as an MP3 file, with no other media file type bundled under `public/ghosts/` or `public/sounds/`.
+
+### Requirement 15: Ghost images
+
+**User Story:** As a reader, I want the ghost to look like a real drawn or photographed figure, not a cartoon, so that it feels unsettling rather than silly.
+
+#### Acceptance Criteria
+
+1. WHILE the Attention_Signal is `away` AND the Haunt_Mode is Classic or Nightmare, THE Ghost_Figure_Layer SHALL draw the Ghost using the Ghost_Asset `ghost-standing.png` through an Image_Layer, with opacity, scale, and position set per the Ghost_Distance step.
+2. WHEN the Ghost_Distance increases by one step, THE Ghost_Figure_Layer SHALL increase the Image_Layer's rendered scale, so the Ghost appears closer at a higher step than at a lower step.
+3. THE Ghost_Figure_Layer SHALL keep every drawn pixel of the Image_Layer outside the Reading_Column bounds while the Attention_Signal is `away` and no Jumpscare is running.
+4. THE Safety_Gate SHALL limit the combined flashes contributed by any Image_Layer movement to at most 3 per second, counted together with every other running effect.
+5. THE Haunt_Engine SHALL show no Image_Layer and no SVG Ghost that produces a full-screen flash of saturated red at any scale.
+6. THE Haunt_Engine SHALL keep the Red_Coverage of the `ghost-face.png` Ghost_Asset, rendered at its largest permitted on-screen scale, at or below 15 percent of the viewport area.
+7. WHILE Reduced_Motion is on, THE Ghost_Figure_Layer SHALL show the Image_Layer with a fade of at least 1000 ms and no change in scale and no change in position during or after the fade.
+8. WHILE the Attention_Signal is `present` and no Return_Moment is running, THE Haunt_Engine SHALL keep the Reading_Column text at a contrast ratio of at least 4.5:1 against `--bg`, with every Image_Layer positioned beside the Reading_Column.
+9. WHEN the Jumpscare starts in Nightmare, THE Ghost_Figure_Layer SHALL show the Ghost_Asset `ghost-face.png` through an Image_Layer that scales up within the Return_Moment, starting and ending inside the Return_Moment's 3000 ms bound.
+10. WHEN the Jumpscare starts in Classic, THE Ghost_Figure_Layer SHALL show the Ghost_Asset `ghost-standing.png` through an Image_Layer that scales up at a smaller maximum scale than the Nightmare Jumpscare uses, starting and ending inside the Return_Moment's 3000 ms bound.
+11. WHILE Reduced_Motion is on, THE Ghost_Figure_Layer SHALL replace the Jumpscare Image_Layer rush with a fade of at least 1000 ms and no change in scale.
+12. WHEN the Ghost begins to fade in after a Look_Away starts, THE Ghost_Figure_Layer SHALL play a Smoke_Entrance of blurred, theme-coloured shapes that precedes the Ghost's own fade-in, with no flicker.
+13. WHILE Reduced_Motion is on, THE Ghost_Figure_Layer SHALL replace the Smoke_Entrance with a fade and SHALL introduce no additional movement.
+14. WHILE the Ghost is drawn, THE Ghost_Figure_Layer SHALL draw a Rim_Glow around the Ghost's silhouette using a theme colour, WHERE the Rim_Glow user setting is on.
+15. THE Haunt_Control SHALL expose a labelled, keyboard-accessible control for the Rim_Glow user setting, and THE Haunt_Engine SHALL store the setting under a documented localStorage key.
+16. THE Rim_Glow user setting SHALL default to on.
+17. THE Rim_Glow SHALL NOT flash faster than 3 times per second and SHALL NOT pulse faster than that rate.
+18. WHILE the Attention_Signal is `present` and no Return_Moment is running, THE Rim_Glow SHALL NOT appear over the Reading_Column text.
+19. IF a Ghost_Asset fails to load or fails to decode, THEN THE Ghost_Figure_Layer SHALL draw the existing SVG Ghost in its place, with no error shown to the reader during reading.
+
+### Requirement 16: Recorded sounds
+
+**User Story:** As a reader, I want footsteps, breathing, and other haunt sounds to sound real rather than synthetic, so that the haunting feels less annoying and more frightening.
+
+#### Acceptance Criteria
+
+1. THE Asset_Loader SHALL decode a Haunt_Sound from `public/sounds/` using a same-origin `fetch` followed by `decodeAudioData` into a buffer usable by the Restricted_Audio_Context.
+2. WHERE a Haunt_Sound recording for footsteps, breathing, knock, heartbeat, or creak is present and decodes without error, THE corresponding haunt SHALL play that recording in place of its generated fallback.
+3. IF a Haunt_Sound recording is missing, fails to fetch, or fails to decode, THEN THE corresponding haunt SHALL play its generated fallback sound, with no error shown to the reader during reading.
+4. THE Jumpscare SHALL play the Haunt_Sound `scream.mp3` as its Jump_Sound WHERE that recording is present and decodes without error, and SHALL play its generated fallback otherwise.
+5. WHEN the Classic Jumpscare plays its Jump_Sound, THE Jumpscare SHALL play the same `scream.mp3` recording (or the same generated fallback) used by the Nightmare Jumpscare, scaled to the same Volume_Cap rules, so the two Haunt_Modes differ only in the visual rush and the Jumpscare frequency.
+6. THE Haunt_Sound playback for every Event_Sound and every Continuous_Layer SHALL stay at or below the Volume_Cap at every instant, through the Safety_Gate.
+7. THE Haunt_Sound pulse within a running layer SHALL have an attack of at least 20 ms and SHALL never exceed that layer's current gain target.
+8. THE Jump_Sound built from a Haunt_Sound recording SHALL play only during a Return_Moment, with the same attack and cap rules as the generated Jump_Sound.
+9. WHERE a heartbeat Haunt_Sound is present, THE heartbeat haunt SHALL play in Classic and Nightmare only, starting at a Haunt_Level of 2 or higher, with its level rising as the Haunt_Level rises.
+10. WHERE a creak Haunt_Sound is present, THE creak haunt SHALL play in Classic and Nightmare only, starting at a Haunt_Level of 1 or higher, as an occasional Event_Sound rather than a Continuous_Layer.
+11. THE heartbeat and creak haunts SHALL each be one file in `src/haunts/`, requiring no edit to the engine to add.
+
+### Requirement 17: Sound mix
+
+**User Story:** As a reader, I want the haunt sounds to build dread instead of noise, so that footsteps, knocks, and other events stand out rather than being buried.
+
+#### Acceptance Criteria
+
+1. WHILE the Haunt_Mode is Classic or Nightmare, THE Haunt_Engine SHALL play no Continuous_Layer of whispers.
+2. WHERE the Haunt_Mode is Gentle, THE Haunt_Engine SHALL play the whisper layer exactly as it already plays before this amendment.
+3. WHILE the Breathing_Layer plays, THE Breathing_Layer SHALL play separate breath pulses with silence between them, and SHALL NOT play as a Continuous_Layer.
+4. WHILE the Haunt_Level is 2 or higher AND the Haunt_Mode is Classic or Nightmare, THE Haunt_Engine MAY play a low drone Continuous_Layer at a gain lower than every Event_Sound's layer target.
+5. FOR EVERY Event_Sound, WHILE that Event_Sound plays at the same instant as one or more Continuous_Layers, THE Haunt_Engine SHALL keep the Event_Sound's peak level at least 6 dB above the combined level of the Continuous_Layers at that instant, while the Event_Sound's level stays at or below the Volume_Cap.
+6. THE footsteps haunt SHALL play a footstep sound whose generated fallback has a lower-frequency body component and a two-part heel-toe pulse shape, so that the fallback is not thinner, in its low-frequency content, than the recorded footstep sound.
+7. THE Haunt_Engine SHALL keep the rules of Requirement 9 (Safety rules for every effect) unchanged for every sound introduced by this amendment.

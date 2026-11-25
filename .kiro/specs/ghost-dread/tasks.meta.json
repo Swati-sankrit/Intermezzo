@@ -811,6 +811,42 @@
         "executionId": "26acc6dc-40ba-4a5f-871d-c057f8d39fc2",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795518987518
+      },
+      {
+        "executionId": "4c0ddfdb-6102-43eb-b34c-2152f945f6ec",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795534355056
+      }
+    ],
+    "17.1 Implement `engine/ghost/assets.ts`": [
+      {
+        "executionId": "59c66b3e-3ba3-47bf-b57d-49858c31ed74",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795547146783
+      },
+      {
+        "executionId": "59c66b3e-3ba3-47bf-b57d-49858c31ed74",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795550700283
+      }
+    ],
+    "17.3 Extend the static scan for literal asset URLs": [
+      {
+        "executionId": "59c66b3e-3ba3-47bf-b57d-49858c31ed74",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795547303977
+      },
+      {
+        "executionId": "59c66b3e-3ba3-47bf-b57d-49858c31ed74",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795550700182
+      }
+    ],
+    "17.2 Write property test for the allowlist": [
+      {
+        "executionId": "59c66b3e-3ba3-47bf-b57d-49858c31ed74",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795550714078
       }
     ]
   }

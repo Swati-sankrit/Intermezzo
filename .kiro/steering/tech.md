@@ -38,6 +38,11 @@ src/
   visitor/     chapter visitor: context builder, chat, fallback
   ui/          components
 api/           the one serverless function for the AI call
+public/
+  ghosts/      bundled ghost images (PNG or WebP)
+  sounds/      bundled haunt audio (MP3, CC0 only)
+assets-src/    original, unprocessed source assets kept outside public/,
+               for non-destructive image and audio editing
 ```
 
 ## Rules
@@ -51,3 +56,9 @@ api/           the one serverless function for the AI call
   Adding a haunt must not require editing the engine.
 - No video frame is stored, logged, or sent anywhere.
 - Never add a dependency without stating its license.
+- Bundled images live in `public/ghosts/`; bundled audio lives in
+  `public/sounds/`. Every file there is CC0 or the project's own work, with
+  no copyrighted characters, no identifiable real person and no gore, and is
+  loaded only from the app's own origin through a relative, same-origin URL.
+  No third-party server is contacted to fetch an asset. Every file is listed
+  in the README with its source and licence, the same as a code dependency.
