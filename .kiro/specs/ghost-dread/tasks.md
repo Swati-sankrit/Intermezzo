@@ -441,25 +441,25 @@ Testing rules that apply to every task (workspace testing rule): no fake tests, 
 - [ ] 16. Final checkpoint - Ensure all tests pass
   - Run `npx vitest --run`, `npm run lint` and `npm run build`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 17. Assets policy
+- [x] 17. Assets policy
   - [x] 17.1 Implement `engine/ghost/assets.ts`
     - `GHOST_ASSETS`, `HAUNT_SOUNDS`, `isAllowedAsset`, `assetUrl('ghost' | 'sound', name)`; pure, no DOM, no fetch
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
 
-  - [ ] 17.2 Write property test for the allowlist
+  - [x] 17.2 Write property test for the allowlist
     - File: `ghost/__tests__/assets.gd29.prop.test.ts`
     - **Property 29: The asset allowlist accepts only exact names**
     - **Validates: Requirements 14.1, 14.2, 14.3, 11.18**
 
   - [x] 17.3 Extend the static scan for literal asset URLs
-    - `staticScan.unit.test.ts`: no file under `src/haunts/` contains a literal `http://` or `https://`; `engine/ghost/` files build asset paths only through `assetUrl`
+    - `staticScan.unit.test.ts`: no non-test file under `src/haunts/` contains an http(s) URL that names `/ghosts/`, `/sounds/` or an allowlisted file; namespace URIs are allowed; `engine/ghost/` files build asset paths only through `assetUrl`
     - _Requirements: 14.4_
 
-  - [ ] 17.4 Update the README and `tech.md` licence table
+  - [x] 17.4 Update the README and `tech.md` licence table
     - Add the `public/ghosts/` and `public/sounds/` entries to the README's asset table as each file is added in tasks 18 and 20, with source and licence; confirm `tech.md`'s asset-folder and licence wording from this amendment is present
     - _Requirements: 14.6_
 
-  - [ ]* 17.5 Write unit test for the README asset table
+  - [x]* 17.5 Write unit test for the README asset table
     - File: `src/__tests__/readmeAssets.unit.test.ts` (or existing doc-check location)
     - Every file name in `GHOST_ASSETS` and `HAUNT_SOUNDS` that exists under `public/` appears in the README's asset table with a non-empty source and licence cell
     - _Requirements: 14.6_

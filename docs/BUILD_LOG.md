@@ -1165,3 +1165,22 @@ All fixes were approved by the user. No assertion was weakened.
   2. Regenerate or re-export the two images from the original AI tool with a true alpha channel (most tools offer a "transparent background" export), which removes the need for any matte.
   3. Hand-correct the matte in an external editor (outside this project's dependencies) using the measured checker tile size and colours above as a starting point, with manual touch-up at the tendril edges, then re-run the compression and quality-check steps of this task.
 - No tool used in this investigation (Python's Pillow and numpy, already present on the machine) was added to `package.json` or any project dependency file.
+
+## Testing rule changed: proportionate testing
+- New rule (`.kiro/steering/testing.md`): keep tests proportionate to risk. Property tests are for logic where a bug could hurt the reader (timing, safety limits, saved progress, text never lost). Simple code such as fixed lists, layout and UI wiring needs only a few example tests. About 30 minutes at most per test file; if it needs more, stop and ask. Coverage floors are needed only for property tests that remain. The "no fake tests" and reporting rules are unchanged.
+- Date context: made before task 18 of ghost-dread, to fit the deadline.
+- Property 29 was simplified to one example test plus one 300-run property, with no coverage test.
+- `src/haunts/engine/ghost/__tests__/assetsArbitraries.ts` (committed in `3818dc5`) was deleted with `git rm`. A search found no imports of it, so it was dead code.
+- README asset rows for `ghost-standing.png` and `ghost-face.png` now read "Own work, generated with Google Gemini" (source and licence columns). The user confirmed Gemini's terms allow using the generated images in this app. The TODO is gone.
+- Existing tests and floors are unchanged. The rule applies to remaining work.
+
+### ghost-dread task 17 results
+- 17.1 `assets.ts` added.
+- 17.2 Property 29 (`assets.gd29.prop.test.ts`): 1 example test plus 300 runs, passed.
+- 17.3 Static scan changes: media-name ban except in `assets.ts`, asset paths only through `assetUrl`, and the 14.4 URL rule.
+- 17.4 and 17.5: README asset table and its test (`src/__tests__/readmeAssets.unit.test.ts`), passing.
+
+### Results after this change
+- `npx vitest --run`: 113 test files and 795 tests passed, 0 failed.
+- `npx tsc -b`: exit 0. `npm run lint`: exit 0.
+- No counterexamples.

@@ -58,6 +58,10 @@
     "5.9 Write property test for engine behaviour over any script": {
       "status": "passed",
       "lastRunTimestamp": 1795509331742
+    },
+    "17.2 Write property test for the allowlist": {
+      "status": "passed",
+      "lastRunTimestamp": 1795568911653
     }
   },
   "executionHistory": {
@@ -847,6 +851,52 @@
         "executionId": "59c66b3e-3ba3-47bf-b57d-49858c31ed74",
         "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
         "timestamp": 1795550714078
+      },
+      {
+        "executionId": "93867807-2f4b-4dac-9a9d-fc546d49edff",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795568411968
+      },
+      {
+        "executionId": "93867807-2f4b-4dac-9a9d-fc546d49edff",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795569324996
+      }
+    ],
+    "17.4 Update the README and `tech.md` licence table": [
+      {
+        "executionId": "93867807-2f4b-4dac-9a9d-fc546d49edff",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795569325090
+      },
+      {
+        "executionId": "93867807-2f4b-4dac-9a9d-fc546d49edff",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795569674480
+      },
+      {
+        "executionId": "c5751f29-b40d-4349-ba92-852b89532606",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795569843558
+      },
+      {
+        "executionId": "c5751f29-b40d-4349-ba92-852b89532606",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795569932327
+      }
+    ],
+    "17. Assets policy": [
+      {
+        "executionId": "93867807-2f4b-4dac-9a9d-fc546d49edff",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795569674559
+      }
+    ],
+    "17.5 Write unit test for the README asset table": [
+      {
+        "executionId": "93867807-2f4b-4dac-9a9d-fc546d49edff",
+        "chatSessionId": "sess_d0df0b51-cfbc-42de-9734-7e2716e26c3a",
+        "timestamp": 1795569675121
       }
     ]
   }

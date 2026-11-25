@@ -17,9 +17,22 @@ A green test must mean the behavior works.
 If a test fails and the cause is unclear, stop and report it. Do not "fix" it
 by changing the assertion.
 
+## Proportionate testing
+
+Keep tests proportionate to risk.
+
+- Use property tests for logic where a bug could hurt the reader: timing,
+  safety limits, saved progress, and text never being lost.
+- For simple code such as fixed lists, layout and UI wiring, a few example
+  tests are enough.
+- Spend about 30 minutes at most on any single test file. If it needs more,
+  stop and ask the user.
+- Coverage floors are needed only for property tests that remain.
+
 ## Property-based tests (fast-check)
 
-Write these for every pure-logic module. Starting list:
+Write these for pure-logic modules where a bug could hurt the reader (see
+Proportionate testing). Starting list:
 
 Reader
 - Splitting a book into paragraphs and joining them back loses no text.

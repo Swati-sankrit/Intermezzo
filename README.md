@@ -45,8 +45,8 @@ Every bundled image or sound file is CC0 or the project's own work, contains no 
 
 | File | Source | Licence |
 |---|---|---|
-| `public/ghosts/ghost-standing.png` | Made by the project owner with an AI image tool (tool name: TODO, pending confirmation that its terms permit bundling the output) | Own work |
-| `public/ghosts/ghost-face.png` | Made by the project owner with an AI image tool (tool name: TODO, pending confirmation that its terms permit bundling the output) | Own work |
+| `public/ghosts/ghost-standing.png` | Own work, generated with Google Gemini | Own work, generated with Google Gemini |
+| `public/ghosts/ghost-face.png` | Own work, generated with Google Gemini | Own work, generated with Google Gemini |
 
 A backup of the original, unprocessed files is kept outside `public/`, in `assets-src/ghosts/`, so later cleanup work stays reversible.
 
