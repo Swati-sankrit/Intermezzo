@@ -1,118 +1,68 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { loadSavedBook, saveBook } from '../reader/bookStore';
-import { restoreBook } from '../reader/bookCodec';
-import type { LibraryEntry } from '../reader/library';
-import { DEFAULT_WPM, countWords, suggestedSeconds, updateAveragePace } from '../reader/paceCalc';
-import { resolvePosition } from '../reader/position';
+import { countWords, suggestedSeconds, updateAveragePace } from '../reader/paceCalc';
 import { absoluteIndex, calculateProgress, countTotalParagraphs } from '../reader/progress';
 import { splitIntoParagraphs } from '../reader/splitter';
-import { loadPaceGuide, loadState, savePaceGuide, saveState } from '../reader/storage';
-import type { Book, Paragraph } from '../reader/types';
-import { loadFromFile, loadFromLibrary, type Loaded } from './loadSource';
+import { loadPaceGuide, savePaceGuide } from '../reader/storage';
+import type { Paragraph } from '../reader/types';
+import {
+  READER_MESSAGES,
+  savePositionUpdate,
+  type ReaderSession,
+} from './bookSession';
+import { INITIAL_READER_STATE, type ReaderState } from './readerState';
+import { useLegacyBook } from './useLegacyBook';
+import { useSessionLoad } from './useSessionLoad';
 
-export interface ReaderState {
-  book: Book | null;
-  chapterIndex: number;
-  paragraphIndex: number; // last revealed paragraph in the chapter
-  chapterComplete: boolean;
-  error: string | null;
-  averagePace: number;
-  paceGuideEnabled: boolean;
-}
+export type { ReaderState } from './readerState';
 
-const INITIAL: ReaderState = {
-  book: null,
-  chapterIndex: 0,
-  paragraphIndex: 0,
-  chapterComplete: false,
-  error: null,
-  averagePace: DEFAULT_WPM,
-  paceGuideEnabled: false,
-};
-
-export function useReader() {
-  const [s, setS] = useState<ReaderState>(() => ({ ...INITIAL, paceGuideEnabled: loadPaceGuide() ?? false }));
+/**
+ * Without a `session` the reader keeps its old single-book behaviour (localStorage, bookStore),
+ * unless `options.legacy` is false (the library app, before a book is chosen).
+ * With one, it opens `session.bookId`, restores that book's Position and saves progress to the model.
+ */
+export function useReader(session?: ReaderSession, options: { legacy?: boolean } = {}) {
+  const [s, setS] = useState<ReaderState>(() => ({ ...INITIAL_READER_STATE, paceGuideEnabled: loadPaceGuide() ?? false }));
   // When the active paragraph appeared. Set in the load handlers; no book is shown before then.
   const shownAt = useRef(0);
   const loadToken = useRef(0);
 
-  const persist = useCallback((next: ReaderState) => {
-    if (!next.book) return;
-    saveState({
-      fileName: next.book.fileName,
-      position: {
-        chapterIndex: next.chapterIndex,
-        paragraphIndex: next.paragraphIndex,
-        savedAt: Date.now(),
-      },
-      averagePace: next.averagePace,
-      paceGuideEnabled: next.paceGuideEnabled,
-    });
-  }, []);
-
-  // Restore the saved book and position on mount.
+  const sessionRef = useRef(session);
   useEffect(() => {
-    const token = ++loadToken.current;
-    let cancelled = false;
-    void (async () => {
-      const saved = await loadSavedBook();
-      if (!saved || cancelled || token !== loadToken.current) return;
-      const restored = restoreBook(saved.fileName, saved.text, saved.title);
-      if (!restored.ok) return; // unreadable: stay on the empty state (6.6)
-      const state = loadState();
-      const usable = state && state.fileName === saved.fileName ? state : null;
-      const pos = usable
-        ? resolvePosition(usable, restored.book)
-        : { chapterIndex: 0, paragraphIndex: 0 };
+    sessionRef.current = session;
+  });
+  const { persist } = useLegacyBook(
+    options.legacy ?? session === undefined,
+    setS,
+    shownAt,
+    loadToken,
+  );
+
+  useSessionLoad(session, {
+    onLoading: () => setS((prev) => ({ ...prev, book: null, loading: true, failure: null, notice: null })),
+    onOpened: (book, at) => {
       shownAt.current = Date.now();
       setS((prev) => ({
         ...prev,
-        book: restored.book,
-        ...pos,
+        book,
+        chapterIndex: at.chapterIndex,
+        paragraphIndex: at.paragraphIndex,
         chapterComplete: false,
+        loading: false,
+        failure: null,
         error: null,
-        averagePace: usable?.averagePace ?? prev.averagePace,
-        paceGuideEnabled: loadPaceGuide() ?? usable?.paceGuideEnabled ?? prev.paceGuideEnabled,
+        notice: at.malformed ? READER_MESSAGES.positionLost : null,
+        averagePace: session?.model.profile.averagePace ?? prev.averagePace,
       }));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const finishLoad = useCallback(
-    async (pending: Promise<Loaded>) => {
-      const token = ++loadToken.current;
-      const result = await pending;
-      if (token !== loadToken.current) return;
-      if (!result.ok) {
-        setS((prev) => ({ ...prev, error: result.error })); // keep the previous book
-        return;
-      }
-      await saveBook(result.book.fileName, result.storedText, result.book.title);
-      if (token !== loadToken.current) return;
-      shownAt.current = Date.now();
-      setS((prev) => {
-        const next: ReaderState = {
-          ...prev,
-          book: result.book,
-          chapterIndex: 0,
-          paragraphIndex: 0,
-          chapterComplete: false,
-          error: null,
-        };
-        persist(next);
-        return next;
-      });
     },
-    [persist],
-  );
-
-  const selectBook = useCallback((file: File) => finishLoad(loadFromFile(file)), [finishLoad]);
-  const selectLibraryBook = useCallback(
-    (entry: LibraryEntry) => finishLoad(loadFromLibrary(entry)),
-    [finishLoad],
-  );
+    onFailed: (failure) =>
+      setS((prev) => ({
+        ...prev,
+        book: null,
+        loading: false,
+        failure,
+        error: failure === 'text' ? READER_MESSAGES.textMissing : READER_MESSAGES.epubFailed,
+      })),
+  });
 
   const paragraphs: Paragraph[] = useMemo(
     () => (s.book ? splitIntoParagraphs(s.book.chapters[s.chapterIndex]?.text ?? '') : []),
@@ -136,6 +86,11 @@ export function useReader() {
     };
     persist(next);
     setS(next);
+    const sess = sessionRef.current;
+    if (sess) {
+      const lastChapter = s.chapterIndex + 1 >= s.book.chapters.length;
+      savePositionUpdate(sess, s.book, next, next.chapterComplete, next.chapterComplete && lastChapter);
+    }
   }, [s, paragraphs, persist]);
 
   const nextChapter = useCallback(() => {
@@ -149,12 +104,21 @@ export function useReader() {
     };
     persist(next);
     setS(next);
+    if (sessionRef.current) savePositionUpdate(sessionRef.current, s.book, next, false, false);
   }, [s, persist]);
 
   // Clears the book from view only. The saved book and position stay on the device.
   const closeBook = useCallback(() => {
     loadToken.current++;
-    setS((prev) => ({ ...prev, book: null, chapterComplete: false, error: null }));
+    setS((prev) => ({
+      ...prev,
+      book: null,
+      chapterComplete: false,
+      error: null,
+      loading: false,
+      failure: null,
+      notice: null,
+    }));
   }, []);
 
   const togglePaceGuide = useCallback(() => {
@@ -183,14 +147,15 @@ export function useReader() {
     chapterIndex: s.chapterIndex,
     paragraphIndex: s.paragraphIndex,
     error: s.error,
+    loading: s.loading,
+    notice: s.notice,
+    failure: s.failure,
     averagePace: s.averagePace,
     paceGuideEnabled: s.paceGuideEnabled,
     chapterComplete,
     hasNextChapter: !lastChapter,
     paragraphs,
     ...derived,
-    selectBook,
-    selectLibraryBook,
     advance,
     nextChapter,
     closeBook,

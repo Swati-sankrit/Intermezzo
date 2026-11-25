@@ -1,0 +1,15 @@
+.catalogue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 220px));
+  justify-content: center;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.catalogue-grid__item {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}

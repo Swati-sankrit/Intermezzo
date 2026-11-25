@@ -1,0 +1,460 @@
+{
+  "pbtResults": {
+    "1.2 Write property test for the Serializer round trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1795572716383
+    },
+    "1.5 Write property test for the Position round trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1795572925515
+    },
+    "1.6 Write property test for the shelf invariant": {
+      "status": "passed",
+      "lastRunTimestamp": 1795572999943
+    },
+    "9.3 Write property test for daily totals": {
+      "status": "passed",
+      "lastRunTimestamp": 1795577587977
+    }
+  },
+  "executionHistory": {
+    "1.1 Create `src/library/model.ts`, `validator.ts`, and `serializer.ts`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572406222
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572560805
+      }
+    ],
+    "1.2 Write property test for the Serializer round trip": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572567639
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572737372
+      }
+    ],
+    "1.3 Write example tests for the Validator": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572737963
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572795575
+      }
+    ],
+    "1.4 Create `src/library/shelfOps.ts` (pure model updates)": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572800417
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572873821
+      }
+    ],
+    "1. Data model, validation, serialization, and shelf operations": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572873876
+      }
+    ],
+    "1.5 Write property test for the Position round trip": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572880778
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572947076
+      }
+    ],
+    "1.6 Write property test for the shelf invariant": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795572954767
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573015386
+      }
+    ],
+    "1.7 Write example tests for shelf operations": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573020615
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573079917
+      }
+    ],
+    "2.1 Create `src/library/localStore.ts`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573080506
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573165038
+      }
+    ],
+    "2.2 Create `src/library/bookId.ts`, an in-memory `DataStore`, and the store context": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573169630
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573232592
+      }
+    ],
+    "2. Data_Store interface and Local_Store": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573232644
+      }
+    ],
+    "2.3 Write example tests for the Local_Store": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573238529
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573358522
+      }
+    ],
+    "2.4 Write example tests for Book_Id": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573358612
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573414958
+      }
+    ],
+    "3.1 Add `sharp` and create `scripts/fetch-catalogue.mjs`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573415561
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573594081
+      }
+    ],
+    "3.2 Create `src/library/catalogueData.ts`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573600010
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573705102
+      }
+    ],
+    "3.3 Run the Catalogue_Script and replace the old bundled books": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573710237
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573894810
+      }
+    ],
+    "3.4 List every bundled asset in the README and state dependency licences": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573900487
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573963535
+      }
+    ],
+    "3. Catalogue script, bundled data, and README listing": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573963560
+      }
+    ],
+    "3.5 Write example tests for catalogue data and README": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795573967630
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574020026
+      }
+    ],
+    "4.1 Create `src/library/readingTime.ts`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574023844
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574065950
+      }
+    ],
+    "4.2 Write example tests for the reading-time formatter": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574070176
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574124291
+      }
+    ],
+    "4.3 Create `Skeleton`, `PlaceholderCover`, `CoverCard`, and `CatalogueGrid` in `src/ui/`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574128380
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574242212
+      }
+    ],
+    "4.4 Create `HoverCard` and its placement logic": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574246457
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574662893
+      }
+    ],
+    "4. Cover grid and hover cards": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574662919
+      }
+    ],
+    "4.5 Write example tests for grid and hover card": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574666836
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574724505
+      }
+    ],
+    "5.1 Create `src/ui/useLibrary.ts`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574728649
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574980598
+      }
+    ],
+    "5.2 Adapt `src/ui/useReader.ts` to take a Book_Id and the `DataStore`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795574984834
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575217270
+      }
+    ],
+    "5.3 Create `WelcomeHeader` and `ContinueCard`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575221232
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575310910
+      }
+    ],
+    "5.4 Compose the new `LibraryScreen` and wire `App.tsx`": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575314573
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575588684
+      }
+    ],
+    "5. Continue reading card and per-book progress, end to end": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575588707
+      }
+    ],
+    "5.5 Write example tests for the Continue card and progress flow": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575589255
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575798831
+      }
+    ],
+    "6. Checkpoint - Phase 1 complete": [
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575802986
+      },
+      {
+        "executionId": "49ac994f-24da-4240-b501-06e805ff2ddb",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795575882971
+      }
+    ],
+    "18.1 Swap Alice's Adventures in Wonderland for The Invisible Man": [
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577012616
+      },
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577115830
+      }
+    ],
+    "18.2 Retitle Poe and match the Dracula file name exactly": [
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577120226
+      },
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577211053
+      }
+    ],
+    "18.3 Reader banner for a failed position save": [
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577211415
+      },
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577318440
+      }
+    ],
+    "18. Phase 1 follow-ups": [
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577318512
+      }
+    ],
+    "9.1 Extend the model, validator, and serializer with daily stats": [
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577318831
+      },
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577447165
+      }
+    ],
+    "9.2 Create `src/library/statsOps.ts` (pure)": [
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577447583
+      },
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577529286
+      }
+    ],
+    "9.3 Write property test for daily totals": [
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577529642
+      },
+      {
+        "executionId": "c374a363-e1b9-4964-a472-f72748246fbc",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795577661133
+      }
+    ]
+  }
+}

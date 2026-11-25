@@ -1,20 +1,38 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AttentionLayer } from './AttentionLayer';
 import { ErrorBanner } from './ErrorBanner';
 import { HauntControl } from './HauntControl';
-import { LibraryScreen } from './LibraryScreen';
+import { NoticeBanner } from './NoticeBanner';
 import { PaceTimer } from './PaceTimer';
 import { ParagraphList } from './ParagraphList';
 import { ProgressBar } from './ProgressBar';
+import { ReaderBanner } from './ReaderBanner';
 import { useReadingContext } from './readingContext';
+import type { ReaderSession } from './bookSession';
+import type { OpenStatus } from './readerState';
 import { useReader } from './useReader';
 import './theme.css';
 import './ReaderView.css';
 
 const IDLE_MS = 2500;
 
-export function ReaderView() {
-  const r = useReader();
+export interface ReaderViewProps {
+  /** The book to open. Without a `library`, the reader keeps its old single-book behaviour. */
+  session?: ReaderSession;
+  /** Shown while no book is open. Its presence turns the old single-book restore off. */
+  library?: (status: OpenStatus, back: () => void) => ReactNode;
+  /** Called after "Back to library" closes the book. */
+  onLeave?: () => void;
+  /** Set while a position save has failed. Shows the reader banner; the owner clears it on a later save. */
+  saveFailure?: string | null;
+  onDismissSaveFailure?: () => void;
+}
+
+const NOOP = () => {};
+
+export function ReaderView({ session, library, onLeave, saveFailure = null, onDismissSaveFailure = NOOP }: ReaderViewProps = {}) {
+  const r = useReader(session, { legacy: library === undefined });
+  const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
   const reading = useReadingContext(r);
   const [awake, setAwake] = useState(true);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -34,13 +52,14 @@ export function ReaderView() {
     };
   }, []);
 
+  const leave = () => {
+    r.closeBook();
+    onLeave?.();
+  };
+
   if (!r.book) {
-    return (
-      <>
-        <ErrorBanner error={r.error} />
-        <LibraryScreen onSelectFile={r.selectBook} onSelectLibraryBook={r.selectLibraryBook} />
-      </>
-    );
+    if (!library) return <ErrorBanner error={r.error} />;
+    return <>{library({ loading: r.loading, failure: r.failure, error: r.error }, leave)}</>;
   }
 
   const chapter = r.book.chapters[r.chapterIndex];
@@ -51,7 +70,7 @@ export function ReaderView() {
       {(cameraIndicator) => (
         <div className="reader" onMouseMove={wake} onFocus={wake}>
           <header className={`reader__bar${awake ? ' reader__bar--awake' : ''}`}>
-            <button type="button" className="reader__button" onClick={r.closeBook}>
+            <button type="button" className="reader__button" onClick={leave}>
               Back to library
             </button>
             <div className="reader__progress">
@@ -74,6 +93,12 @@ export function ReaderView() {
             <p className="reader__book">{bookTitle}</p>
             {chapter?.title ? <h1 className="reader__chapter">{chapter.title}</h1> : null}
             <ErrorBanner error={r.error} />
+            <NoticeBanner
+              text={r.notice !== dismissedNotice ? r.notice : null}
+              isError={false}
+              onDismiss={() => setDismissedNotice(r.notice)}
+            />
+            <ReaderBanner text={saveFailure} onDismiss={onDismissSaveFailure} />
             <ParagraphList
               paragraphs={r.paragraphs}
               activeIndex={r.paragraphIndex}

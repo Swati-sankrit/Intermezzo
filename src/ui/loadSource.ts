@@ -2,12 +2,19 @@
 // Returns the Book plus the text to keep in IndexedDB. Never throws.
 import { readAsArrayBuffer, readAsText } from '../reader/fileIO';
 import { stripGutenbergBoilerplate } from '../reader/gutenberg';
-import type { LibraryEntry } from '../reader/library';
 import { buildEpubBook, buildTxtBook } from '../reader/parser';
 import { chaptersToStoredText } from '../reader/bookCodec';
 import { stripHtml } from '../reader/stripHtml';
 import { resolveTitle } from '../reader/title';
 import type { Book } from '../reader/types';
+
+/** A book served from the app's own origin. `filePath` starts with "/". */
+export interface LibrarySource {
+  title: string;
+  author: string;
+  filePath: string;
+  format: 'txt' | 'epub';
+}
 
 export type Loaded = { ok: true; book: Book; storedText: string } | { ok: false; error: string };
 
@@ -43,7 +50,7 @@ export async function loadFromFile(file: File): Promise<Loaded> {
   }
 }
 
-export async function loadFromLibrary(entry: LibraryEntry): Promise<Loaded> {
+export async function loadFromLibrary(entry: LibrarySource): Promise<Loaded> {
   const fileName = entry.filePath.split('/').pop() ?? entry.title;
   try {
     // Relative to our own origin only (library paths start with "/books/").

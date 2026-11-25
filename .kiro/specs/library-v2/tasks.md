@@ -15,48 +15,48 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
 
 ## Tasks
 
-- [ ] 1. Data model, validation, serialization, and shelf operations
-  - [ ] 1.1 Create `src/library/model.ts`, `validator.ts`, and `serializer.ts`
+- [x] 1. Data model, validation, serialization, and shelf operations
+  - [x] 1.1 Create `src/library/model.ts`, `validator.ts`, and `serializer.ts`
     - Define `DataModel`, `Profile`, `BookEntry`, `Position`, `Stats`, `CandleColour`, `EMPTY_DATA_MODEL` (First_Visit_State, schema version 2).
     - `validate(unknown)` returns an accepted model or a list of problems that name the offending Book_Id, record type, or field. Cover all checks of Requirement 16.
     - `serialize` (stable key order) and `parse` (returns `undefined` on bad JSON, never throws).
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8, 16.10, 18.5_
 
-  - [ ]* 1.2 Write property test for the Serializer round trip
+  - [x]* 1.2 Write property test for the Serializer round trip
     - **Property 8: Serialization round trip**
     - Generate valid `DataModel` values with fast-check, then check `validate(parse(serialize(m)))` equals `m`.
     - **Validates: Requirements 18.5**
     - Report properties added, cases run, and any counterexample (record it in `docs/BUILD_LOG.md` before changing code or test).
 
-  - [ ]* 1.3 Write example tests for the Validator
+  - [x]* 1.3 Write example tests for the Validator
     - A few cases per rejection rule (dangling Book_Id in shelves, positions, or stats; duplicate shelf entry; bad position; negative stats; bad candle colour; 41-character name) plus one accepted model. Assert the problem names the offending field or Book_Id.
     - This stands in for design Property 7, which the testing rule does not list as a property test.
     - _Requirements: 16.4, 16.5, 16.6, 16.7, 16.8, 16.10, 7.5_
 
-  - [ ] 1.4 Create `src/library/shelfOps.ts` (pure model updates)
+  - [x] 1.4 Create `src/library/shelfOps.ts` (pure model updates)
     - `addBookEntry`, `savePosition`, `moveToShelf`, `removeBook`, `currentBook`.
     - Each returns a new model, does not mutate its input, and returns the model unchanged for an unknown Book_Id.
     - `moveToShelf` removes and adds in one returned value. `removeBook` also drops the Book_Id's position and stats.
     - `addBookEntry` places a new Book_Id on `reading` and reuses an existing entry without creating a second one.
     - _Requirements: 5.1, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5, 4.6, 21.2, 21.6_
 
-  - [ ]* 1.5 Write property test for the Position round trip
+  - [x]* 1.5 Write property test for the Position round trip
     - **Property 1: Position save/restore round trip**
     - **Validates: Requirements 5.3**
     - Report properties added, cases run, and any counterexample.
 
-  - [ ]* 1.6 Write property test for the shelf invariant
+  - [x]* 1.6 Write property test for the shelf invariant
     - **Property 4: Shelf invariant holds across any sequence of operations**
     - Fold random sequences of add, finish, move, and remove over the empty model. After every step each Book_Id is on at most one shelf, and a removed Book_Id is on none.
     - **Validates: Requirements 6.11**
     - Report properties added, cases run, and any counterexample.
 
-  - [ ]* 1.7 Write example tests for shelf operations
+  - [x]* 1.7 Write example tests for shelf operations
     - Saving one Position leaves others unchanged (design Property 2), one move leaves the Book_Id on exactly the target shelf (design Property 3), unknown Book_Id returns the model unchanged, inputs are not mutated, `currentBook` picks the latest `savedAt` and falls back to the latest `addedAt`.
     - _Requirements: 5.4, 6.4, 4.6, 21.2, 21.6_
 
-- [ ] 2. Data_Store interface and Local_Store
-  - [ ] 2.1 Create `src/library/localStore.ts`
+- [x] 2. Data_Store interface and Local_Store
+  - [x] 2.1 Create `src/library/localStore.ts`
     - Export `Result`, `FailureKind`, `DataStore`, and `createLocalStore()` (the single creation point).
     - `load` reads localStorage, parses, and validates. With no record it returns `EMPTY_DATA_MODEL` as success. With an invalid record it returns an `invalid` failure and leaves the stored record unchanged. With a newer schema version it returns `newer_version` and refuses `save` for the session.
     - `save` validates first and writes the whole model as one record. A rejected model is never written.
@@ -65,23 +65,23 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - Catalogue EPUBs are never copied into IndexedDB.
     - _Requirements: 16.9, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 17.8, 17.9, 17.10, 18.1, 18.2, 18.3, 18.4, 18.6, 18.7, 18.8, 18.10, 19.10_
 
-  - [ ] 2.2 Create `src/library/bookId.ts`, an in-memory `DataStore`, and the store context
+  - [x] 2.2 Create `src/library/bookId.ts`, an in-memory `DataStore`, and the store context
     - `hashBytes(ArrayBuffer)` returns lowercase SHA-256 hex via `crypto.subtle`, or `null` on failure.
     - `src/library/memoryStore.ts` is an in-memory `DataStore` implementation used by tests and as a fallback.
     - `src/ui/dataStoreContext.ts` provides the store through one React context and hook. No screen imports storage code.
     - _Requirements: 15.1, 15.2, 15.5, 15.6, 17.8, 21.1, 21.3_
 
-  - [ ]* 2.3 Write example tests for the Local_Store
+  - [x]* 2.3 Write example tests for the Local_Store
     - Use a fake localStorage and a fake IndexedDB. Cover write failure, unavailable storage, quota exceeded, newer schema version, corrupt record, missing text, and first-run default.
     - Assert that previously saved data is unchanged and that the failure is reported to the caller instead of returning a default value. For the newer version, assert the stored data is not overwritten or migrated and the failure is reported as unsupported.
     - _Requirements: 17.2, 17.3, 17.4, 17.5, 17.6, 18.3, 18.4, 18.8, 19.10, 23.5, 23.6, 23.7_
 
-  - [ ]* 2.4 Write example tests for Book_Id
+  - [x]* 2.4 Write example tests for Book_Id
     - Two files with equal name and size but different bytes get different Book_Ids. Identical bytes reuse one entry. Hash failure adds no book and leaves the model unchanged.
     - _Requirements: 15.1, 15.3, 15.4, 15.5_
 
-- [ ] 3. Catalogue script, bundled data, and README listing
-  - [ ] 3.1 Add `sharp` and create `scripts/fetch-catalogue.mjs`
+- [x] 3. Catalogue script, bundled data, and README listing
+  - [x] 3.1 Add `sharp` and create `scripts/fetch-catalogue.mjs`
     - Add `sharp` to `devDependencies` only. Licence: Apache-2.0. Confirm the licence from `node_modules/sharp/package.json` and its documentation before stating it.
     - Wait at least 1000 ms before every request and send a descriptive User-Agent. Use the `?source=download` download URL and check that the content type is `application/epub+zip` before writing.
     - Stop on HTTP 403 or 429, name the status and the book, and leave saved files unchanged. Report other failures and continue.
@@ -89,36 +89,36 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - Before using `sharp` or `jszip` APIs, fetch their current documentation. Do not rely on remembered APIs.
     - _Requirements: 1.5, 1.6, 1.7_
 
-  - [ ] 3.2 Create `src/library/catalogueData.ts`
+  - [x] 3.2 Create `src/library/catalogueData.ts`
     - Export `CatalogueEntry` and `CATALOGUE` with exactly the 16 entries and slugs listed in Requirement 1.11. Each holds title, author, readingMinutes, one or two mood tags, and cover and EPUB paths derived from the slug.
     - Write each description yourself: exactly two sentences, spoiler-free, not copied from Standard Ebooks or any other source.
     - Pride and Prejudice uses `jane-austen/pride-and-prejudice` from Standard Ebooks. The Vampyre uses `john-william-polidori/the-vampire`.
     - _Requirements: 1.1, 1.2, 1.3, 1.9, 1.11, 1.12_
 
-  - [ ] 3.3 Run the Catalogue_Script and replace the old bundled books
+  - [x] 3.3 Run the Catalogue_Script and replace the old bundled books
     - Run the script from the shell to download the 16 EPUBs and covers. If the network is blocked or Standard Ebooks answers 403 or 429, stop and ask the user. Do not retry in a loop.
     - Remove the superseded `public/books/Dracula.epub` and the Internet Archive `public/books/prideprejudice.epub` once the Standard Ebooks copies exist.
     - Update any reference to those old files and to the hard-coded list in `src/reader/library.ts` so the app builds. Leave `library.ts` itself until Task 5.4 swaps the screen over.
     - _Requirements: 1.3, 1.4, 1.5, 1.6, 1.7, 1.12_
 
-  - [ ] 3.4 List every bundled asset in the README and state dependency licences
+  - [x] 3.4 List every bundled asset in the README and state dependency licences
     - List each bundled EPUB and cover with its source address and licence (Standard Ebooks, CC0). Add `sharp` (Apache-2.0, dev-only, Node script) to the dependency table.
     - _Requirements: 1.8_
 
-  - [ ]* 3.5 Write example tests for catalogue data and README
+  - [x]* 3.5 Write example tests for catalogue data and README
     - Exactly 16 entries with unique slugs. Every description is exactly two sentences. Every entry has one or two mood tags. Every cover and EPUB path exists under `public/`. No Internet Archive copy, no `the-yellow-wallpaper` entry or file. Extend the existing `readmeAssets.unit.test.ts` pattern so every bundled EPUB and cover appears in the README with source and licence.
     - _Requirements: 1.1, 1.2, 1.3, 1.8, 1.12, 23.5_
 
-- [ ] 4. Cover grid and hover cards
-  - [ ] 4.1 Create `src/library/readingTime.ts`
+- [x] 4. Cover grid and hover cards
+  - [x] 4.1 Create `src/library/readingTime.ts`
     - `formatReadingTime(minutes)`: under 90 minutes rounds to the nearest 5 minutes, 90 or more rounds to whole hours.
     - _Requirements: 3.3_
 
-  - [ ]* 4.2 Write example tests for the reading-time formatter
+  - [x]* 4.2 Write example tests for the reading-time formatter
     - Boundary cases around 89, 90, and 134 minutes, and exact multiples.
     - _Requirements: 3.3, 23.5_
 
-  - [ ] 4.3 Create `Skeleton`, `PlaceholderCover`, `CoverCard`, and `CatalogueGrid` in `src/ui/`
+  - [x] 4.3 Create `Skeleton`, `PlaceholderCover`, `CoverCard`, and `CatalogueGrid` in `src/ui/`
     - The grid shows one `CoverCard` per catalogue entry with title and author (author blank without error when empty). A cover is a button with an accessible name containing title and author, a visible `--accent` focus ring, and it opens the book on click, Enter, or Space.
     - Reserve each cover's width and height while loading, with a Skeleton and no spinner. Fall back to `PlaceholderCover` on image error.
     - Two columns at 360 px, with each cover 120 to 220 px wide at wider sizes. No horizontal scroll. Every cover and button at least 44 by 44 px.
@@ -126,7 +126,7 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - Place styles in a CSS module or one stylesheet per component, with colours from `theme.css` only.
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 5.7, 13.2, 13.3, 14.2, 14.3, 14.6, 11.7_
 
-  - [ ] 4.4 Create `HoverCard` and its placement logic
+  - [x] 4.4 Create `HoverCard` and its placement logic
     - Show after the pointer rests 200 ms or on keyboard focus. Show only one at a time. Hide on pointer leave, blur, or Escape (focus stays on the cover).
     - Content: two-sentence description, reading time via `formatReadingTime`, and mood tags. Link it to the cover with `aria-describedby`. Never cover the cover's own title or author.
     - Place it beside the cover when 280 px or more of free width exists, otherwise below. Keep it fully inside the viewport. Fade in over 150 to 250 ms.
@@ -134,19 +134,19 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - Wire it into `CoverCard`.
     - _Requirements: 3.1, 3.2, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 12.9, 14.7_
 
-  - [ ]* 4.5 Write example tests for grid and hover card
+  - [x]* 4.5 Write example tests for grid and hover card
     - Cards show title and author. Selection by click, Enter, and Space. Accessible name has title and author. Hover card shows on hover (after 200 ms) and on focus, hides on Escape with focus kept, only one at a time, and "About this book" appears without hover. Placeholder cover appears on image error.
     - _Requirements: 2.2, 2.3, 2.6, 3.1, 3.5, 3.8, 3.10, 23.5_
 
-- [ ] 5. Continue reading card and per-book progress, end to end
-  - [ ] 5.1 Create `src/ui/useLibrary.ts`
+- [x] 5. Continue reading card and per-book progress, end to end
+  - [x] 5.1 Create `src/ui/useLibrary.ts`
     - Load the model once through the `DataStore` from context. On failure, keep an empty in-memory model and expose the plain-words message. Keep working in memory when saves fail.
     - Expose catalogue state (with retry on load failure), `currentBook`, and `openCatalogueBook(slug)` and `openUpload(file)`. An upload is hashed with `hashBytes`. Catalogue Book_Id is the slug. First open adds one `BookEntry` through `addBookEntry`. Reopening reuses it. A hash failure adds nothing and shows the "could not be added" message.
     - Store uploaded book text through `putText`. Never store catalogue text.
     - Debounced model writes complete within 1000 ms. Position saves complete within 500 ms of a chunk opening. Show the failure messages from the design's error handling section.
     - _Requirements: 5.1, 5.10, 6.1, 6.2, 15.1, 15.2, 15.4, 15.5, 17.7, 18.1, 18.6, 18.9, 21.4, 21.5, 13.6_
 
-  - [ ] 5.2 Adapt `src/ui/useReader.ts` to take a Book_Id and the `DataStore`
+  - [x] 5.2 Adapt `src/ui/useReader.ts` to take a Book_Id and the `DataStore`
     - Load a catalogue book from its own-origin EPUB path, or an upload from `getText`. Use the existing parser and splitter unchanged.
     - Restore the saved Position per Book_Id. With no Position, open at the first paragraph (Story_Start arrives in Task 13). Clamp a position past the end to the last paragraph with no error. A malformed Position opens at the start with a "saved place could not be restored" message and leaves other Positions unchanged.
     - On each next-paragraph, compute progress with the reader-core `calculateProgress` and save `{chapterIndex, paragraphIndex, savedAt, progress}` through `savePosition`.
@@ -155,29 +155,29 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - Show Skeleton content while a book loads.
     - _Requirements: 1.10, 5.1, 5.2, 5.5, 5.6, 5.8, 5.9, 5.10, 6.3, 6.12, 12.6, 18.10_
 
-  - [ ] 5.3 Create `WelcomeHeader` and `ContinueCard`
+  - [x] 5.3 Create `WelcomeHeader` and `ContinueCard`
     - `WelcomeHeader` shows a plain greeting (name and avatar arrive with Task 8).
     - `ContinueCard` shows cover, title, author, progress bar with whole percentage, and a "Continue" button at least 44 by 44 px that opens the book at its saved Position. Cover stacks above the text under 600 px and sits beside it at 600 px or wider.
     - With nothing on the `reading` shelf, show a warm empty state with "Choose a book", which moves focus to the catalogue grid.
     - If the book's text is missing, show it as needing its file opened again, with the actions from Requirement 6.12.
     - _Requirements: 4.2, 4.4, 4.5, 4.7, 4.8, 4.9, 14.4, 14.5, 6.12_
 
-  - [ ] 5.4 Compose the new `LibraryScreen` and wire `App.tsx`
+  - [x] 5.4 Compose the new `LibraryScreen` and wire `App.tsx`
     - Compose `WelcomeHeader`, `ContinueCard`, `CatalogueGrid`, and the "Open your own book" control with the existing file-input wiring. Show Skeletons while the model or catalogue loads, replaced without layout shift.
     - If the catalogue fails to load, show the message and a "Try again" button, and still show "Open your own book".
     - Provide the `DataStore` context in `App.tsx` from `createLocalStore()`. Remove `src/reader/library.ts` and its references.
     - _Requirements: 2.1, 6.9, 13.1, 13.5, 13.6, 17.8, 21.1_
 
-  - [ ]* 5.5 Write example tests for the Continue card and progress flow
+  - [x]* 5.5 Write example tests for the Continue card and progress flow
     - Use the in-memory store through context. Opening a catalogue book creates one entry on `reading`. Reopening reuses it and restores the position. Continue opens the saved Position. Position past the end is clamped. Empty state shows "Choose a book". A failed save keeps the reader on the chunk and shows the message. Progress bar and percentage appear on the card.
     - _Requirements: 4.4, 4.5, 4.6, 4.7, 5.1, 5.2, 5.5, 5.7, 5.10, 6.1, 6.2, 21.3, 23.5_
 
-- [ ] 6. Checkpoint - Phase 1 complete
+- [x] 6. Checkpoint - Phase 1 complete
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Shelves
   - [ ] 7.1 Extend `useLibrary` with shelf actions
-    - `moveBook(bookId, shelf)`, `removeBook(bookId)`, and shelf selectors. Removal deletes the book text first. Only after that succeeds does it write the model with the entry, position, and stats gone. On any failure, leave all four unchanged and show "This book could not be removed. You can try again."
+    - `moveBook(bookId, shelf)`, `removeBook(bookId)`, and shelf selectors. Removal deletes the book text first. Only after that succeeds does it write the model with the entry, position, and stats gone. Daily stats records stay. On any failure, leave all four unchanged and show "This book could not be removed. You can try again."
     - _Requirements: 6.4, 6.5, 6.6, 6.11_
 
   - [ ] 7.2 Create `ShelfView` and wire it into `LibraryScreen`
@@ -215,18 +215,41 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - _Requirements: 7.5, 7.7, 7.8, 7.9, 7.11, 7.14, 8.2, 8.6, 23.5_
 
 - [ ] 9. Reading stats
-  - [ ] 9.1 Create `src/library/statsOps.ts` (pure)
-    - `recordParagraphsRead`, `recordChapterFinished`, `addActiveSeconds`, `recordLookAway`, `recordSession`, `overallStats`. All additive, integer-only. `removeBook` already drops a book's stats, so `overallStats` re-sums the rest.
-    - _Requirements: 20.6, 20.7, 20.8, 20.10_
+  - [x] 9.1 Extend the model, validator, and serializer with daily stats
+    - In `src/library/model.ts`, add `awaySeconds` to `Stats` and `daily: Record<string, Stats>` (keyed by Local_Date `YYYY-MM-DD`) to `DataModel` and `EMPTY_DATA_MODEL`. Schema_Version stays 2 and no migration is added, because the model is not released yet.
+    - In `validator.ts`, accept `daily`. Reject a key that is not a real `YYYY-MM-DD` calendar date, and reject any negative, fractional, or non-finite count in `stats` or `daily`, naming the offending date or count. Daily keys need no matching Book_Entry.
+    - In `serializer.ts`, include `daily` in the stable key order. Extend the existing Property 8 generator so generated models include `daily` and `awaySeconds`, without weakening any assertion.
+    - In `shelfOps.ts`, make `removeBook` leave `daily` unchanged. Update existing fixtures, `localStore.ts`, and `memoryStore.ts` so everything compiles.
+    - Extend `src/library/__tests__/validator.unit.test.ts` with examples: an accepted model with a `daily` record, a malformed date key (for example `2025-13-40` and `25-1-1`), a negative count, and a fractional count. Add an example to `shelfOps.unit.test.ts` that removing a book leaves `daily` unchanged.
+    - _Requirements: 16.1, 16.11, 16.12, 20.10, 20.12_
 
-  - [ ] 9.2 Wire stats into the reader
-    - Count paragraphs the first time a chunk opens per session, chapters finished once, session once per page load, and active seconds while the attention signal is `present` (update at least every 5 seconds). Count a look-away on each `present` to `away` change, from the existing attention signal only, including the camera-off tab-switch and idle signal. Do not touch the camera and store no frames, face data, or text.
-    - On a stats save failure, keep session stats in memory, keep reading, and show "progress stats were not saved". Show zeros when nothing is recorded.
-    - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5, 20.8, 20.9, 20.11, 20.12_
+  - [x] 9.2 Create `src/library/statsOps.ts` (pure)
+    - Per-book operations: `recordParagraphsRead`, `recordChapterFinished`, `addActiveSeconds`, `addAwaySeconds`, `recordLookAway`, `recordSession`, and `overallStats` (sum of all six fields).
+    - Per-day recording: `recordEvent(model, bookId, event, today)` updates `stats[bookId]` and `daily[today]` in one returned model, with `today` an injected Local_Date string. The functions never read the clock. An unknown Book_Id returns the model unchanged.
+    - `pruneDaily(daily, today)` drops only records more than 90 days before `today` and keeps every record within 90 days. `recordEvent` calls it.
+    - All operations are additive and integer-only. Away seconds exclude reader-started breaks, which the caller handles by sending no away event during a break.
+    - Add example tests in `src/library/__tests__/statsOps.unit.test.ts`: a per-day record for an injected date, away seconds, a 90-day-old record kept and a 91-day-old record dropped, and counts that never decrease across a short fixed event sequence.
+    - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.7, 20.8, 20.13, 20.14, 20.15, 20.16, 20.17_
 
-  - [ ]* 9.3 Write example tests for stats
-    - A short fixed event sequence where no count decreases. Overall equals the per-book sum. Removing a book drops its contribution. Empty stats show zero.
-    - _Requirements: 20.6, 20.7, 20.10, 20.12, 23.4_
+  - [x]* 9.3 Write property test for daily totals
+    - **Property 11: Daily totals sum to per-book totals**
+    - Generate sequences of stat events over several books and dates, with no removal and no pruning, and check that for each of the six fields the sum of the daily totals equals the sum of the per-book totals.
+    - **Validates: Requirements 20.18**
+    - Report properties added, cases run, and any counterexample.
+
+  - [ ] 9.4 Add the local-date helper and stats selectors
+    - A small UI-layer helper returns today's Local_Date from the device's local time zone (not UTC). Selectors return per-book, per-day, and overall Stats, with zero for every value (including away seconds) when nothing is recorded.
+    - _Requirements: 20.6, 20.12, 20.15_
+
+  - [ ] 9.5 Wire stats into the reader
+    - Count paragraphs the first time a chunk opens per session, chapters finished once, session once per page load, and active seconds while the attention signal is `present` (update at least every 5 seconds). Record each event for the book and for the reader's local date through `recordEvent`.
+    - Record away seconds while the signal is `away` and a book is open, updating at least every 5 seconds, and record a look-away on each `present` to `away` change. Record neither during a break the reader started. Use the existing attention signal only, including the camera-off tab-switch and idle signal. Do not touch the camera and store no frames, face data, or text.
+    - On a stats save failure, keep session stats in memory, keep reading, and show "progress stats were not saved".
+    - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5, 20.8, 20.9, 20.11, 20.13, 20.14, 20.15, 20.16_
+
+  - [ ]* 9.6 Write example tests for stats
+    - A short fixed event sequence where no count decreases. Overall equals the per-book sum. Removing a book drops its contribution to overall but leaves the daily records unchanged. Empty stats show zero for every value. Events on two local dates land in two daily records. Away seconds are counted while `away` and not during a break.
+    - _Requirements: 20.6, 20.7, 20.10, 20.12, 20.13, 20.14, 23.4_
 
 - [ ] 10. Checkpoint - Phase 2 shelves, profile, onboarding, stats
   - Ensure all tests pass, ask the user if questions arise.
@@ -325,13 +348,34 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - Confirm the README lists every bundled EPUB, cover, font package, and dependency with source and licence (including `sharp`, Apache-2.0), and that the existing README asset test passes.
     - _Requirements: 1.8_
 
-- [ ] 17. Final checkpoint - Ensure all tests pass
+- [x] 18. Phase 1 follow-ups
+  - [x] 18.1 Swap Alice's Adventures in Wonderland for The Invisible Man
+    - In `scripts/catalogue-slugs.mjs`, replace `lewis-carroll/alices-adventures-in-wonderland/john-tenniel` with `h-g-wells/the-invisible-man` (file stem `the-invisible-man`) and update its comments.
+    - In `src/library/catalogueData.ts`, replace the Alice entry with The Invisible Man by H. G. Wells: write a new two-sentence, spoiler-free description, a reading time, and one or two mood tags. The catalogue stays at exactly 16 entries.
+    - Delete `public/books/alices-adventures-in-wonderland.epub` and `public/covers/alices-adventures-in-wonderland.webp`.
+    - Run the Catalogue_Script for the new book only (add a slug argument to the script if it has none), keeping the polite delay. On HTTP 403 or 429, stop and ask the user. The cover must be WebP at most 400 px wide and about 100 KB or less.
+    - In `README.md`, remove the Alice rows and add the EPUB and cover rows for The Invisible Man with source and licence (Standard Ebooks, CC0).
+    - Update `src/library/__tests__/catalogueData.unit.test.ts` (and the README asset test if it names Alice) so that it expects The Invisible Man and no Alice entry or file.
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.6, 1.8, 1.11_
+
+  - [x] 18.2 Retitle Poe and match the Dracula file name exactly
+    - In `src/library/catalogueData.ts`, set the Poe entry title to "Short Stories" with author "Edgar Allan Poe". The slug `edgar-allan-poe/short-fiction` and the file stem stay the same.
+    - Make the Dracula `epubPath` exactly `/books/dracula.epub`, matching the file `public/books/dracula.epub` in letter case. Confirm that no reference to `Dracula.epub` remains in `src/`, `scripts/`, `README.md`, or `public/`.
+    - Update the catalogue unit test so the Poe title and the case-sensitive file checks pass (every `coverPath` and `epubPath` exists at exactly that path).
+    - _Requirements: 1.11, 1.13, 23.5_
+
+  - [x] 18.3 Reader banner for a failed position save
+    - Add `src/ui/ReaderBanner.tsx` (under 200 lines) and show it in the reader view when a Position save fails, in addition to the Library_Screen message. It is small, dismissible, does not block reading, does not cover the active paragraph, and clears on the next successful save. Colours come from `theme.css`, and it has a visible focus ring and an accessible label.
+    - Add a small example test: a failed save shows the banner, dismiss hides it, the reading controls stay usable, and a later successful save clears it.
+    - _Requirements: 5.10, 5.11, 5.12_
+
+- [ ] 19. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
 
 - Tasks marked with `*` are optional test sub-tasks and can be skipped for a faster MVP.
-- Property tests exist only for the six named areas: serializer round trip (P8), position round trip (P1), shelf invariant (P4), migrator (P9, P10), front-matter detector (P5), and chunk merger (P6). Design Properties 2, 3, and 7 are covered by example tests in tasks 1.3 and 1.7, per the testing rule.
+- Property tests exist only for the six named areas: serializer round trip (P8), position round trip (P1), shelf invariant (P4), migrator (P9, P10), front-matter detector (P5), and chunk merger (P6). The one optional addition is Property 11, daily totals sum to per-book totals (task 9.3). Design Properties 2, 3, and 7 are covered by example tests in tasks 1.3 and 1.7, per the testing rule.
 - After each test task, report which properties were added, how many cases ran, and any counterexample. Record counterexamples (failing property, shrunk input, seed) in `docs/BUILD_LOG.md` before changing the test or the code under test.
 - Spend about 30 minutes at most per test file. If one needs more, stop and ask the user.
 - Never weaken, delete, or mock the function under test to make a test pass.
@@ -343,29 +387,182 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
 ```json
 {
   "waves": [
-    { "id": 0, "tasks": ["1.1", "3.1", "4.1"] },
-    { "id": 1, "tasks": ["1.2", "1.3", "1.4", "2.1", "3.2", "4.2"] },
-    { "id": 2, "tasks": ["1.5", "1.6", "1.7", "2.2", "2.3", "3.3", "4.3"] },
-    { "id": 3, "tasks": ["2.4", "3.4", "4.4", "5.1"] },
-    { "id": 4, "tasks": ["3.5", "4.5", "5.2", "5.3"] },
-    { "id": 5, "tasks": ["5.4"] },
-    { "id": 6, "tasks": ["5.5", "7.1"] },
-    { "id": 7, "tasks": ["7.2", "8.1"] },
-    { "id": 8, "tasks": ["7.3", "8.2", "9.1"] },
-    { "id": 9, "tasks": ["8.3", "9.2"] },
-    { "id": 10, "tasks": ["8.4", "9.3"] },
-    { "id": 11, "tasks": ["8.5", "11.1"] },
-    { "id": 12, "tasks": ["11.2", "11.3", "11.4"] },
-    { "id": 13, "tasks": ["11.5"] },
-    { "id": 14, "tasks": ["11.6"] },
-    { "id": 15, "tasks": ["13.1", "14.1"] },
-    { "id": 16, "tasks": ["13.2", "13.3", "14.2"] },
-    { "id": 17, "tasks": ["14.3"] },
-    { "id": 18, "tasks": ["14.4"] },
-    { "id": 19, "tasks": ["16.1"] },
-    { "id": 20, "tasks": ["16.2"] },
-    { "id": 21, "tasks": ["16.3"] },
-    { "id": 22, "tasks": ["16.4", "16.5"] }
+    {
+      "id": 0,
+      "tasks": [
+        "1.1",
+        "3.1",
+        "4.1",
+        "9.1",
+        "18.1",
+        "18.3"
+      ]
+    },
+    {
+      "id": 1,
+      "tasks": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "2.1",
+        "3.2",
+        "4.2",
+        "9.2",
+        "18.2"
+      ]
+    },
+    {
+      "id": 2,
+      "tasks": [
+        "1.5",
+        "1.6",
+        "1.7",
+        "2.2",
+        "2.3",
+        "3.3",
+        "4.3",
+        "9.3"
+      ]
+    },
+    {
+      "id": 3,
+      "tasks": [
+        "2.4",
+        "3.4",
+        "4.4",
+        "5.1"
+      ]
+    },
+    {
+      "id": 4,
+      "tasks": [
+        "3.5",
+        "4.5",
+        "5.2",
+        "5.3"
+      ]
+    },
+    {
+      "id": 5,
+      "tasks": [
+        "5.4"
+      ]
+    },
+    {
+      "id": 6,
+      "tasks": [
+        "5.5",
+        "7.1"
+      ]
+    },
+    {
+      "id": 7,
+      "tasks": [
+        "7.2",
+        "8.1"
+      ]
+    },
+    {
+      "id": 8,
+      "tasks": [
+        "7.3",
+        "8.2",
+        "9.4"
+      ]
+    },
+    {
+      "id": 9,
+      "tasks": [
+        "8.3",
+        "9.5"
+      ]
+    },
+    {
+      "id": 10,
+      "tasks": [
+        "8.4",
+        "9.6"
+      ]
+    },
+    {
+      "id": 11,
+      "tasks": [
+        "8.5",
+        "11.1"
+      ]
+    },
+    {
+      "id": 12,
+      "tasks": [
+        "11.2",
+        "11.3",
+        "11.4"
+      ]
+    },
+    {
+      "id": 13,
+      "tasks": [
+        "11.5"
+      ]
+    },
+    {
+      "id": 14,
+      "tasks": [
+        "11.6"
+      ]
+    },
+    {
+      "id": 15,
+      "tasks": [
+        "13.1",
+        "14.1"
+      ]
+    },
+    {
+      "id": 16,
+      "tasks": [
+        "13.2",
+        "13.3",
+        "14.2"
+      ]
+    },
+    {
+      "id": 17,
+      "tasks": [
+        "14.3"
+      ]
+    },
+    {
+      "id": 18,
+      "tasks": [
+        "14.4"
+      ]
+    },
+    {
+      "id": 19,
+      "tasks": [
+        "16.1"
+      ]
+    },
+    {
+      "id": 20,
+      "tasks": [
+        "16.2"
+      ]
+    },
+    {
+      "id": 21,
+      "tasks": [
+        "16.3"
+      ]
+    },
+    {
+      "id": 22,
+      "tasks": [
+        "16.4",
+        "16.5"
+      ]
+    }
   ]
 }
 ```

@@ -41,13 +41,15 @@ Suggested build order (informational only, not a requirement): cover grid with h
 - **Story_Start**: The Position (chapter index, paragraph index) of the first paragraph of the story.
 - **Reading_Chunk**: One or more consecutive paragraphs of the same chapter, joined in order, that the reader opens with one click.
 - **Chunk_Merger**: The pure function that groups paragraphs of one book into Reading_Chunks.
-- **Data_Model**: The single versioned record that holds the Profile, Shelves, Book_Entries, Positions, and Stats. It contains no book text.
+- **Data_Model**: The single versioned record that holds the Profile, Shelves, Book_Entries, Positions, per-book Stats, and Daily_Stats. It contains no book text.
 - **Schema_Version**: A positive whole number stored in the Data_Model that identifies its shape. The first Library-v2 version is 2. Version 1 is the legacy, unversioned data.
 - **Book_Entry**: The record for one book the reader has opened: a stable Book_Id, title, author (may be empty), file name, source (`catalogue` or `upload`), format (`txt` or `epub`), the catalogue slug for catalogue books, and the time it was added.
 - **Book_Id**: A stable string that identifies a book across sessions. For an upload it is the SHA-256 hash of the file bytes, computed with `crypto.subtle` and written as lowercase hexadecimal. For a catalogue book it is the catalogue slug.
 - **Shelf**: A named list of Book_Ids. The three built-in Shelves are `reading`, `want-to-read`, and `finished`.
 - **Position**: The chapter index, the index of the first paragraph of the current Reading_Chunk, a saved-at time, and a progress whole number from 0 to 100, stored per Book_Id.
-- **Stats**: Per-book and overall reading counts: paragraphs read, chapters finished, active reading time in seconds, look-away count, and session count.
+- **Stats**: Reading counts recorded per book and per calendar day, and summed for an overall view: paragraphs read, chapters finished, active reading seconds, away seconds, look-away count, and session count. Away seconds are the whole seconds the attention signal is `away` while a book is open, excluding any break the reader started.
+- **Local_Date**: A calendar date written `YYYY-MM-DD` from the device's local time zone, not UTC.
+- **Daily_Stats**: The Stats counts recorded for one Local_Date across all books, kept in the Data_Model under that date.
 - **Data_Store**: The small storage interface (`load`, `save`, `clear`, and per-book text `getText`, `putText`, `deleteText`) that all screens and logic use to read and write the Data_Model.
 - **Local_Store**: The only Data_Store implementation in this spec. It keeps the Data_Model in localStorage and book text in IndexedDB.
 - **Migrator**: The pure function that converts a Data_Model of an older Schema_Version, or legacy version-1 data, into the current Schema_Version.
@@ -83,16 +85,17 @@ Suggested build order (informational only, not a requirement): cover grid with h
     - The Vampyre by John Polidori (`john-william-polidori/the-vampire`, titled "The Vampire" on Standard Ebooks), which replaces Carmilla because Standard Ebooks does not publish Carmilla as a standalone book
     - The Turn of the Screw (`henry-james/the-turn-of-the-screw`)
     - The Hound of the Baskervilles (`arthur-conan-doyle/the-hound-of-the-baskervilles`)
-    - Short fiction by Edgar Allan Poe (`edgar-allan-poe/short-fiction`)
+    - Short Stories by Edgar Allan Poe (`edgar-allan-poe/short-fiction`, shown in the Library_App with the title "Short Stories" and the author "Edgar Allan Poe")
     - Pride and Prejudice (`jane-austen/pride-and-prejudice`)
     - Jane Eyre (`charlotte-bronte/jane-eyre`)
     - Wuthering Heights (`emily-bronte/wuthering-heights`)
     - A Christmas Carol (`charles-dickens/a-christmas-carol`)
     - Treasure Island (`robert-louis-stevenson/treasure-island`)
     - The Time Machine (`h-g-wells/the-time-machine`)
-    - Alice's Adventures in Wonderland (`lewis-carroll/alices-adventures-in-wonderland/john-tenniel`, the path of the Standard Ebooks edition)
+    - The Invisible Man by H. G. Wells (`h-g-wells/the-invisible-man`)
     - The Adventures of Sherlock Holmes (`arthur-conan-doyle/the-adventures-of-sherlock-holmes`)
 12. THE Library_App SHALL contain no bundled `the-yellow-wallpaper.txt` placeholder file and no library entry for it, and THE Catalogue SHALL NOT include it.
+13. THE Library_App SHALL bundle the Dracula EPUB as exactly `public/books/dracula.epub`, matching the epubPath of its Catalogue_Entry in exact letter case, and SHALL contain no file or reference named `Dracula.epub`.
 
 ### Requirement 2: Catalogue Grid
 
@@ -157,6 +160,8 @@ Suggested build order (informational only, not a requirement): cover grid with h
 8. IF no Position is saved for a Book_Id, THEN THE Library_App SHALL open the Book_Entry at the Story_Start, with progress 0.
 9. IF the saved Position for a Book_Id cannot be read or is malformed, THEN THE Library_App SHALL open the Book_Entry at the Story_Start, show a message saying the saved place could not be restored, and leave Positions for all other Book_Ids unchanged.
 10. IF saving a Position fails, THEN THE Library_App SHALL keep the reader on the current Reading_Chunk, show a message saying the place could not be saved, and retain the previously saved Position for that Book_Id.
+11. IF saving a Position fails, THEN THE Library_App SHALL show a small banner in the reader view, in addition to the message on the Library_Screen, that does not block reading, can be dismissed by the reader, and does not cover the active Reading_Chunk.
+12. WHEN a later Position save succeeds, THE Library_App SHALL remove the banner from the reader view.
 
 ### Requirement 6: Books and Shelves
 
@@ -341,7 +346,9 @@ Suggested build order (informational only, not a requirement): cover grid with h
 7. IF any Stats count is negative, fractional, or not a finite number, THEN THE Validator SHALL reject the Data_Model and report the name of the offending count.
 8. IF the Profile holds a Candle_Colour outside the fixed set, or a display name longer than 40 characters, THEN THE Validator SHALL reject the Data_Model and report the offending field.
 9. IF the Validator rejects a Data_Model, THEN THE Data_Store SHALL keep the previously saved Data_Model unchanged and SHALL NOT write the rejected Data_Model.
-10. WHEN every check in criteria 1 to 8 passes, THE Validator SHALL accept the Data_Model.
+10. WHEN every check in criteria 1 to 8, 11, and 12 passes, THE Validator SHALL accept the Data_Model.
+11. THE Data_Model SHALL hold Daily_Stats records keyed by Local_Date, each with the six Stats counts.
+12. IF a Daily_Stats key is not a valid `YYYY-MM-DD` calendar date, or any Daily_Stats count is negative, fractional, or not a finite number, THEN THE Validator SHALL reject the Data_Model and report the offending date or count name.
 
 ### Requirement 17: Storage Interface
 
@@ -399,22 +406,28 @@ Suggested build order (informational only, not a requirement): cover grid with h
 
 ### Requirement 20: Reading Stats
 
-**User Story:** As a reader, I want simple stats for each book and overall, so that I can see that I am making progress.
+**User Story:** As a reader, I want simple stats for each book, for each day, and overall, so that I can see that I am making progress and how my days went.
 
 #### Acceptance Criteria
 
-1. WHEN the reader opens a Reading_Chunk for the first time in the current book session, THE Library_App SHALL add the number of paragraphs in that Reading_Chunk to the paragraphs-read count of the current book.
-2. WHEN the reader finishes a chapter for the first time, THE Library_App SHALL add one to the chapters-finished count of the current book.
-3. WHILE the attention signal is `present` and a book is open, THE Library_App SHALL add the elapsed whole seconds to the active reading time of the current book, updating at least once every 5 seconds.
-4. WHEN the attention signal changes from `present` to `away`, THE Library_App SHALL add one to the look-away count of the current book.
-5. WHEN the reader opens a book and no book has been opened since the page loaded, THE Library_App SHALL add one to the session count once for that page load.
-6. THE Stats calculator SHALL compute overall Stats as the sum of the per-book Stats, for each of paragraphs-read, chapters-finished, active reading time, look-away count, and session count.
-7. FOR ALL sequences of stat events, no per-book Stats count and no overall Stats count SHALL decrease, except when a book is removed (see criterion 10).
+1. WHEN the reader opens a Reading_Chunk for the first time in the current book session, THE Library_App SHALL add the number of paragraphs in that Reading_Chunk to the paragraphs-read count of the current book and of the Daily_Stats record for the current Local_Date.
+2. WHEN the reader finishes a chapter for the first time, THE Library_App SHALL add one to the chapters-finished count of the current book and of the Daily_Stats record for the current Local_Date.
+3. WHILE the attention signal is `present` and a book is open, THE Library_App SHALL add the elapsed whole seconds to the active reading seconds of the current book and of the Daily_Stats record for the current Local_Date, updating at least once every 5 seconds.
+4. WHEN the attention signal changes from `present` to `away`, THE Library_App SHALL add one to the look-away count of the current book and of the Daily_Stats record for the current Local_Date.
+5. WHEN the reader opens a book and no book has been opened since the page loaded, THE Library_App SHALL add one to the session count of that book and of the Daily_Stats record for the current Local_Date, once for that page load.
+6. THE Stats calculator SHALL compute overall Stats as the sum of the per-book Stats, for each of paragraphs-read, chapters-finished, active reading seconds, away seconds, look-away count, and session count.
+7. FOR ALL sequences of stat events, no per-book Stats count, no overall Stats count, and no Daily_Stats count SHALL decrease, except when a book is removed (see criterion 10) and when a Daily_Stats record is pruned (see criterion 16).
 8. THE Library_App SHALL record Stats as non-negative integer counts and whole seconds only, and SHALL NOT record camera frames, face data, or book text.
-9. WHERE the camera is off, THE Library_App SHALL record look-away counts from the tab-switch and idle signal exposed by the attention module, using the same rule as criterion 4.
-10. WHEN the reader removes a book, THE Library_App SHALL recompute overall Stats as the sum of the Stats of the remaining books, so that the removed book's Stats no longer contribute.
+9. WHERE the camera is off, THE Library_App SHALL record look-away counts and away seconds from the tab-switch and idle signal exposed by the attention module, using the same rules as criteria 4 and 13.
+10. WHEN the reader removes a book, THE Library_App SHALL recompute overall Stats as the sum of the Stats of the remaining books, so that the removed book's Stats no longer contribute, and SHALL leave every Daily_Stats record unchanged, so that the history of days read is kept.
 11. IF Stats cannot be saved or read from device storage, THEN THE Library_App SHALL keep the current session's Stats in memory, continue reading without interruption, and show a message that says progress stats were not saved.
-12. WHEN the reader opens the stats view for a book or for all books with no recorded events, THE Library_App SHALL show zero for every Stats value.
+12. WHEN the reader opens the stats view for a book, for a day, or for all books with no recorded events, THE Library_App SHALL show zero for every Stats value, including away seconds.
+13. WHILE the attention signal is `away`, a book is open, and no break started by the reader is in progress, THE Library_App SHALL add the elapsed whole seconds to the away seconds of the current book and of the Daily_Stats record for the current Local_Date, updating at least once every 5 seconds.
+14. WHILE a break started by the reader is in progress, THE Library_App SHALL add no away seconds and no look-away count, so that a break is never counted as a breach.
+15. THE Library_App SHALL key each Daily_Stats record by the Local_Date taken from the device's local time zone at the moment the event is recorded.
+16. WHEN the Library_App records an event, THE Library_App SHALL delete Daily_Stats records older than 90 days before the current Local_Date and SHALL keep every record within those 90 days.
+17. THE Stats calculator functions SHALL receive the current Local_Date as an input parameter and SHALL NOT read the clock.
+18. FOR ALL sequences of stat events with no book removal and no pruning, the sum of the Daily_Stats values SHALL equal the sum of the per-book Stats values, for each of the six Stats fields (invariant property; the equality holds for events before any removal, because removal leaves Daily_Stats unchanged).
 
 ### Requirement 21: Screens Stay Independent of Storage
 
@@ -454,8 +467,8 @@ Suggested build order (informational only, not a requirement): cover grid with h
 1. THE Library_App SHALL include fast-check property tests for each of the following: the Serializer round trip, the Position save and restore round trip, the Migrator keeping the saved Position, Average_Pace, and Book_Entry of generated Legacy_Data (including idempotence on migrated data), the shelf invariant, the Front_Matter_Detector, and the Chunk_Merger.
 2. THE Front_Matter_Detector property test SHALL check that the Story_Start never lies after the first story paragraph when landmarks exist, that every skipped chapter precedes the Story_Start, and that inputs without landmarks or markers return the first paragraph of the first chapter.
 3. THE Chunk_Merger property test SHALL check that joining the Reading_Chunks returns the original paragraphs in the original order, that no Reading_Chunk spans two chapters, that no paragraph is split, and that every Reading_Chunk holds at least 40 words except where Requirement 10 criterion 6 allows fewer.
-4. WHERE time allows, THE Library_App MAY include one small property test or a few example tests for the Stats rule that no count decreases.
-5. THE Library_App SHALL use example tests, with a few representative cases each, for the remaining behaviour: Local_Store write failure, unavailable storage, and a newer Schema_Version, using a fake localStorage and a fake IndexedDB; Library_Screen cards showing title and author, the "Open your own book" control, and card selection by mouse click and by keyboard; Hover_Card display on hover and on focus and its dismissal with Escape; the reading-time formatter; the Catalogue_Data check that every entry has a two-sentence description, one or two Mood_Tags, and existing cover and EPUB files; the README listing of every bundled asset; the display name length rule; Onboarding having at most three steps and a working "Skip introduction"; "Delete my profile" keeping books; two uploads with equal name and size but different bytes receiving different Book_Ids; and reduced-motion styles removing lift and tilt.
+4. WHERE time allows, THE Library_App MAY include one property test named "Daily totals sum to per-book totals", checking criterion 20.18, and a few example tests for the Stats rule that no count decreases.
+5. THE Library_App SHALL use example tests, with a few representative cases each, for the remaining behaviour: Local_Store write failure, unavailable storage, and a newer Schema_Version, using a fake localStorage and a fake IndexedDB; Library_Screen cards showing title and author, the "Open your own book" control, and card selection by mouse click and by keyboard; Hover_Card display on hover and on focus and its dismissal with Escape; the reading-time formatter; the Catalogue_Data check that every entry has a two-sentence description, one or two Mood_Tags, and cover and EPUB files that exist at exactly the case-sensitive path in the entry (including `public/books/dracula.epub`); the README listing of every bundled asset; the display name length rule; Onboarding having at most three steps and a working "Skip introduction"; "Delete my profile" keeping books; two uploads with equal name and size but different bytes receiving different Book_Ids; and reduced-motion styles removing lift and tilt.
 6. IF a Local_Store example test covers write failure or unavailable storage, THEN THE test SHALL assert that previously saved data is unchanged and that the Local_Store reports the failure to its caller instead of returning a default value.
 7. IF a Local_Store example test covers a newer Schema_Version, THEN THE test SHALL assert that the stored data is not overwritten or migrated and that the Local_Store reports that the version is unsupported.
 8. THE Library_App property tests SHALL use the fast-check default number of runs unless a specific property needs more to find bugs.

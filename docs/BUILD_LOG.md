@@ -1184,3 +1184,9 @@ All fixes were approved by the user. No assertion was weakened.
 - `npx vitest --run`: 113 test files and 795 tests passed, 0 failed.
 - `npx tsc -b`: exit 0. `npm run lint`: exit 0.
 - No counterexamples.
+### library-v2 task 1.2 (Property 8, serializer round trip)
+- Counterexample (seed 308857658): a model with one book whose Book_Id is `""`, shelved under `reading`, with position `{__proto__:null, chapterIndex:0, paragraphIndex:0, savedAt:0, progress:0}`. `toStrictEqual` failed with "no visual difference".
+- Triage: test generator bug, not a serializer/validator bug. fast-check's `fc.record` can emit objects with a null prototype, and `toStrictEqual` compares prototypes, while `JSON.parse` returns plain objects. Fix: the generator now spreads records into plain objects. The assertion is unchanged (still `toStrictEqual`).
+- Second counterexample (seed 2085864703): one book with Book_Id `"constructor"` on the `reading` shelf, with matching stats and no position. Same "no visual difference" failure.
+- Triage: Vitest assertion quirk, not a serializer/validator bug. A standalone check showed `expect(JSON.parse('{"constructor":{"a":1}}')).toStrictEqual(JSON.parse('{"constructor":{"a":1}}'))` fails in Vitest 5.1.0, because its type check reads `obj.constructor`. The round-tripped model had the same prototypes and own keys as the original. Fix: compare with Node's `util.isDeepStrictEqual`, which is just as strict (it checks prototypes and own keys) and does not read `constructor`. The generator still produces `constructor`, `__proto__`, `toString` and `""` Book_Ids.
+- Result: `src/library/__tests__/serializer.p8.prop.test.ts` passes. It checks generator validity (200 runs), `validate(parse(serialize(m)))` deep-strict-equal to `m` (500 runs), and stable text on re-serialize (300 runs). `npx tsc -b` and `oxlint src/library` are clean. No serializer or validator code was changed.

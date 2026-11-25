@@ -15,7 +15,7 @@ This design keeps the existing `src/reader/` pipeline (`parser.ts`, `splitter.ts
 - `src/ui/useReader.ts` / `src/ui/loadSource.ts` — own loading, position-save-on-advance, and pace-guide toggling. Library-v2 introduces `useLibrary` (new) for the Library_Screen and keeps `useReader` for the reading view, now taking a `Book_Id` and a `Data_Store` instead of talking to `storage.ts`/`bookStore.ts` directly.
 - `src/ui/LibraryScreen.tsx` — currently a flat two-book list plus an upload control. This spec's `Library_Screen` replaces its contents (grid, shelves, continue card, welcome header) but keeps the "Open your own book" control and the file-input wiring from `loadSource.ts`.
 - `src/ui/theme.css` — already defines `--bg`, `--surface`, `--text`, `--text-dim`, `--accent`, `--danger`, `--shadow`, `--glow`. This spec adds `--candle-amber`, `--candle-rose`, `--candle-violet`, `--candle-teal`, `--candle-ash`, `--candle-moss` (the six `Candle_Colour` values) to this same file, each checked for ≥3:1 contrast against `--surface`.
-- `src/attention/index.ts` — exposes only `AttentionSignal` (`present`/`away` + timestamp) via `createAttention`. Stats' look-away count (Requirement 20.4, 20.9) subscribes to this signal exactly as `AttentionLayer` already does; no new camera access is added.
+- `src/attention/index.ts` — exposes only `AttentionSignal` (`present`/`away` + timestamp) via `createAttention`. Stats' look-away count and away seconds (Requirement 20.4, 20.9, 20.13) subscribes to this signal exactly as `AttentionLayer` already does; no new camera access is added.
 
 ## Architecture
 
@@ -105,6 +105,7 @@ export interface DataModel {
   books: Record<string, BookEntry>;   // keyed by Book_Id
   positions: Record<string, Position>; // keyed by Book_Id
   stats: Record<string, Stats>;        // per-book, keyed by Book_Id
+  daily: Record<string, Stats>;        // per calendar day, keyed by Local_Date 'YYYY-MM-DD' (device time zone); kept 90 days
 }
 
 export type CandleColour = 'amber' | 'rose' | 'violet' | 'teal' | 'ash' | 'moss';
@@ -140,6 +141,7 @@ export interface Stats {
   paragraphsRead: number;
   chaptersFinished: number;
   activeReadingSeconds: number;
+  awaySeconds: number;      // whole seconds `away` while a book is open, excluding reader-started breaks
   lookAwayCount: number;
   sessionCount: number;
 }
@@ -156,7 +158,8 @@ export const EMPTY_DATA_MODEL: DataModel = { /* First_Visit_State */ };
 3. Referential integrity: every Book_Id in `shelves`, `positions`, `stats` has a matching entry in `books` (16.4).
 4. Shelf exclusivity: no Book_Id appears twice across or within the three shelves (16.5).
 5. Position range: integer, non-negative `chapterIndex`/`paragraphIndex`; finite `savedAt`; `progress` a whole number 0–100 (16.6).
-6. Stats: every count a non-negative finite integer (16.7).
+6. Stats: every count a non-negative finite integer (16.7), in both `stats` and `daily`.
+6a. Daily: every `daily` key is a real calendar date written `YYYY-MM-DD`; a malformed date is rejected and reported by name (16.11, 16.12). `daily` keys need no matching Book_Entry, because daily records outlive removed books.
 7. Profile: `candleColour` in the fixed set; `displayName.length <= 40` (16.8).
 
 Rejected input never mutates the caller's stored data (16.9); the Local_Store only calls `save` with the validator's accepted value (see `localStore.ts`).
@@ -191,12 +194,25 @@ Each takes a `DataModel`, returns a new one, and does not mutate its input (stru
 export function recordParagraphsRead(stats: Stats, count: number): Stats
 export function recordChapterFinished(stats: Stats): Stats
 export function addActiveSeconds(stats: Stats, seconds: number): Stats
+export function addAwaySeconds(stats: Stats, seconds: number): Stats
 export function recordLookAway(stats: Stats): Stats
 export function recordSession(stats: Stats): Stats
-export function overallStats(perBook: Record<string, Stats>): Stats // 20.6, sum of fields
+export function overallStats(perBook: Record<string, Stats>): Stats // 20.6, sum of the six fields
+
+// Per-day recording. `today` is the injected Local_Date ('YYYY-MM-DD'); the functions never read the clock.
+export type StatEvent =
+  | { kind: 'paragraphs'; count: number } | { kind: 'chapter' }
+  | { kind: 'active'; seconds: number }   | { kind: 'away'; seconds: number }
+  | { kind: 'lookAway' }                  | { kind: 'session' };
+export function recordEvent(model: DataModel, bookId: string, event: StatEvent, today: string): DataModel // 20.1-20.5, 20.13, 20.15
+export function pruneDaily(daily: Record<string, Stats>, today: string): Record<string, Stats>            // 20.16
 ```
 
-All pure, all additive (no subtraction) except `removeBook`, which deletes a book's `Stats` entry entirely before `overallStats` resums the rest (20.10).
+All pure and additive. `recordEvent` updates `stats[bookId]` and `daily[today]` in the same returned model, then calls `pruneDaily`, which drops only records more than 90 days before `today` and keeps every record within 90 days (20.16). An unknown `bookId` returns the model unchanged. The reader decides whether an event is recorded: it sends no away event while a reader-started break is in progress (20.14).
+
+`removeBook` deletes a book's `Stats` entry before `overallStats` resums the rest (20.10), and leaves `daily` unchanged, so the history of days read is kept. The "Daily totals sum to per-book totals" property (20.18) therefore covers event sequences with no removal and no pruning.
+
+The reader gets the Local_Date from one small helper in the UI layer (built from `getFullYear`, `getMonth`, `getDate`, which use the device's local time zone), and passes it into `recordEvent`.
 
 ### `src/library/frontMatter.ts`
 
@@ -239,7 +255,7 @@ export interface CatalogueEntry {
 export const CATALOGUE: readonly CatalogueEntry[]; // exactly 16 entries (Req 1.1, 1.11)
 ```
 
-This file holds the 16 entries listed in Requirement 1.11, with `slug` exactly as specified there (e.g. `john-william-polidori/the-vampire`, `lewis-carroll/alices-adventures-in-wonderland/john-tenniel`). `description`, `readingMinutes`, and `moodTags` are hand-written editorial content (Requirement 1.9), not scraped from Standard Ebooks. `coverPath`/`epubPath` are derived from the slug by replacing `/` with `_`, matching the file names the fetch script writes.
+This file holds the 16 entries listed in Requirement 1.11, with `slug` exactly as specified there (e.g. `john-william-polidori/the-vampire`, `h-g-wells/the-invisible-man`). `description`, `readingMinutes`, and `moodTags` are hand-written editorial content (Requirement 1.9), not scraped from Standard Ebooks. The Poe entry keeps the slug `edgar-allan-poe/short-fiction` but is shown with the title "Short Stories". `coverPath`/`epubPath` use the file stem the fetch script writes (the book's own slug segment, for example `dracula`, `short-fiction`, `the-invisible-man`; see `scripts/catalogue-slugs.mjs`). Paths are case-sensitive: the Dracula file is exactly `public/books/dracula.epub` (Requirement 1.13).
 
 ### `src/library/localStore.ts` (the only Data_Store implementation — Requirement 17)
 
@@ -290,6 +306,7 @@ Pure (19.5 — the Book_Id is computed by `localStore.ts`, a side-effecting call
 | `ShelfView.tsx` | Three shelves, move buttons, empty-shelf message (6.7–6.10, 13.4). |
 | `Onboarding.tsx` | ≤3 steps, skip button, name/colour step (8.1–8.12). |
 | `ProfileSettings.tsx` | Name/colour edit, delete profile, clear data (7.6–7.9, 22.6–22.9). |
+| `ReaderBanner.tsx` | Small, dismissible, non-blocking banner in the reader view shown when a Position save fails. It sits outside the active Reading_Chunk, never blocks reading, and clears on the next successful save (5.11, 5.12). |
 | `Skeleton.tsx` | Shared placeholder shape (13.1–13.3, 13.5). |
 
 `useLibrary.ts` (new, in `src/ui/`) owns the `DataStore` calls, the `currentBook`/shelf selectors, onboarding/profile state, and debounced saves (within the 500 ms/1 s/1000 ms windows in Requirements 5.1, 7.3, 7.12, 18.1). `useReader.ts` changes to accept a `bookId` and the `DataStore` from context instead of calling `storage.ts`/`bookStore.ts` directly; it calls `savePosition`/`recordParagraphsRead` etc. through `useLibrary`'s exposed update functions rather than owning model state itself.
@@ -366,16 +383,22 @@ For any `DataModel` already at schema version 2, `migrate` returns a value deepl
 
 **Validates: Requirements 19.8**
 
+### Property 11: Daily totals sum to per-book totals (optional)
+
+For any sequence of stat events recorded with `recordEvent` over one or more books and one or more local dates, with no book removal and no pruning in the sequence, for each of the six Stats fields the sum of the `daily` values equals the sum of the per-book `stats` values.
+
+**Validates: Requirements 20.18**
+
 ### Redundancy Review
 
-Requirement 9.3 ("no usable landmarks" falls back to chapter 0) is folded into Property 5 rather than given its own property: the same generator produces chapter lists both with and without landmarks/markers, and the "no markers → chapter 0" case is one branch of the same assertion, not a distinct universal statement. Requirement 10.1–10.6 (minimum chunk size, no splitting, no cross-chapter merges, short-chapter exception) are folded into Property 6 alongside the round trip, since all of them are invariants checked against the same generated chapter list and the same function call — testing them as separate properties would re-run the identical generator for no added confidence. Requirement 5.6 (progress is 0–100) is not restated as a new property because it is `calculateProgress` from `src/reader/progress.ts`, already covered by `progress.prop.test.ts` in the reader-core spec; library-v2 only adds a call site. Requirement 20.7 (stats never decrease) is listed in Requirement 23 as optional ("where time allows... MAY") and is covered by a small number of example tests rather than a property, per that requirement's own allowance.
+Requirement 9.3 ("no usable landmarks" falls back to chapter 0) is folded into Property 5 rather than given its own property: the same generator produces chapter lists both with and without landmarks/markers, and the "no markers → chapter 0" case is one branch of the same assertion, not a distinct universal statement. Requirement 10.1–10.6 (minimum chunk size, no splitting, no cross-chapter merges, short-chapter exception) are folded into Property 6 alongside the round trip, since all of them are invariants checked against the same generated chapter list and the same function call — testing them as separate properties would re-run the identical generator for no added confidence. Requirement 5.6 (progress is 0–100) is not restated as a new property because it is `calculateProgress` from `src/reader/progress.ts`, already covered by `progress.prop.test.ts` in the reader-core spec; library-v2 only adds a call site. Requirement 20.7 (stats never decrease) is covered by a small number of example tests rather than a property. The only Stats property is Property 11, which Requirement 23.4 lists as optional ("where time allows... MAY").
 
 ## Error Handling
 
 All error paths follow `design.md`'s "state what happened and what to do next" tone and the Local persistence rules in the requirements:
 
 - **Load failure (startup)**: `Data_Store.load()` returns a failure → `useLibrary` keeps an empty in-memory model, shows the Library_Screen with an empty shelf state, and shows "Your saved books could not be loaded. You can still open a book below." (21.5, 13.6).
-- **Save failure (position)**: position write fails → stay on the current Reading_Chunk, show "Your place could not be saved. It will try again." and keep the previously saved Position (5.10).
+- **Save failure (position)**: position write fails → stay on the current Reading_Chunk, show "Your place could not be saved. It will try again." and keep the previously saved Position (5.10). The same failure also shows the `ReaderBanner` in the reader view, which `useReader` clears when a later save succeeds (5.11, 5.12).
 - **Save failure (profile)**: show "Your changes could not be saved. Try again." and keep previous saved values plus current in-session values (7.13).
 - **Newer schema version**: `load()` returns `kind: 'newer_version'` → show "Your saved data comes from a newer version of this app." and make no writes for the session (19.10).
 - **Missing book text**: `getText` returns `not_found` for an existing `BookEntry` → show "This book's file needs to be opened again," offering "Reopen the file" / "Choose the book again," leaving the model unchanged (6.12).
@@ -385,7 +408,7 @@ All error paths follow `design.md`'s "state what happened and what to do next" t
 
 ## Testing Strategy
 
-**Property tests** (fast-check, ≥100 runs each, tagged `Feature: library-v2, Property N: <text>`) cover the ten properties above, placed as:
+**Property tests** (fast-check, ≥100 runs each, tagged `Feature: library-v2, Property N: <text>`) cover the ten properties above (and the optional Property 11), placed as:
 
 - `src/library/__tests__/shelfOps.p1.prop.test.ts` — Property 1 (position round trip, via `savePosition`)
 - `src/library/__tests__/shelfOps.p2.prop.test.ts` — Property 2
@@ -397,6 +420,7 @@ All error paths follow `design.md`'s "state what happened and what to do next" t
 - `src/library/__tests__/serializer.p8.prop.test.ts` — Property 8
 - `src/library/__tests__/migrator.p9.prop.test.ts` — Property 9
 - `src/library/__tests__/migrator.p10.prop.test.ts` — Property 10
+- `src/library/__tests__/statsOps.p11.prop.test.ts` — Property 11 (optional)
 
 **Unit/example tests** (a few representative cases each, per Requirement 23.5), kept to roughly 30 minutes per file:
 
@@ -409,7 +433,8 @@ All error paths follow `design.md`'s "state what happened and what to do next" t
 - `Profile`/`Onboarding` component tests — display-name length rule rejection message; onboarding has at most three steps and "Skip introduction" works; "Delete my profile" keeps `books`/`shelves`/`positions`/`stats` untouched.
 - `bookId` unit test — two uploads with equal name/size but different bytes get different Book_Ids; an identical re-upload reuses the existing entry.
 - Reduced-motion CSS/style unit test — hover/focus lift and tilt are absent under `prefers-reduced-motion: reduce`.
-- `statsOps` unit tests — a few examples demonstrating counts never decrease across a short fixed event sequence (per Requirement 23.4's allowance to use examples here instead of a property).
+- `statsOps` unit tests — a few examples demonstrating counts never decrease across a short fixed event sequence, a per-day record for an injected local date, away seconds, 90-day pruning (a record 91 days old is dropped, one 90 days old is kept), and `removeBook` leaving `daily` unchanged.
+- `ReaderBanner` example test — a failed position save shows the banner, it can be dismissed, it does not cover the active chunk, and the next successful save clears it.
 
 Counterexamples, when found, are recorded in `docs/BUILD_LOG.md` with the failing property, the shrunk input, and the seed, before any test or code change (Requirement 23.10). After each test task, the properties added, iteration counts, and any counterexamples are reported (23.11). No test under this spec mocks the function it is testing, weakens an assertion to pass, or wraps logic in a catch that returns a default (per the workspace testing rule).
 

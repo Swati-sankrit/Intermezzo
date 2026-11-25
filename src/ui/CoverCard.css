@@ -1,0 +1,112 @@
+.cover-card {
+  position: relative;
+  width: 100%;
+  max-width: 220px;
+  min-width: 120px;
+}
+
+.cover-card__button {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cover-card__button:hover {
+  border-color: var(--text-dim);
+}
+
+.cover-card__button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Reserves the cover's width and height before the image arrives. */
+.cover-card__frame {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  border-radius: 0.25rem;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.cover-card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-card__image[hidden] {
+  display: none;
+}
+
+.cover-card__title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.cover-card__author {
+  min-height: 1.25em;
+  color: var(--text-dim);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.cover-card__progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  color: var(--text-dim);
+  font-size: 0.8125rem;
+}
+
+.cover-card__track {
+  flex: 1;
+  height: 0.375rem;
+  overflow: hidden;
+  border-radius: 0.1875rem;
+  background: var(--surface);
+}
+
+.cover-card__fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.cover-card__about {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid var(--text-dim);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.cover-card__about:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
