@@ -15,6 +15,10 @@
     "9.3 Write property test for daily totals": {
       "status": "passed",
       "lastRunTimestamp": 1795577587977
+    },
+    "11.2 Write property test for migration": {
+      "status": "passed",
+      "lastRunTimestamp": 1795607103885
     }
   },
   "executionHistory": {
@@ -792,6 +796,61 @@
         "executionId": "c8bfdb20-18bb-4c07-949c-f4f742b8401e",
         "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
         "timestamp": 1795606242528
+      }
+    ],
+    "11.1 Create `src/library/migrator.ts` (pure)": [
+      {
+        "executionId": "07869d73-f73a-4ede-b083-cd184dac5cda",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795606811562
+      },
+      {
+        "executionId": "07869d73-f73a-4ede-b083-cd184dac5cda",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795606951120
+      }
+    ],
+    "11.2 Write property test for migration": [
+      {
+        "executionId": "07869d73-f73a-4ede-b083-cd184dac5cda",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795606951726
+      },
+      {
+        "executionId": "07869d73-f73a-4ede-b083-cd184dac5cda",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795607423395
+      }
+    ],
+    "11.3 Write property test for migration idempotence": [
+      {
+        "executionId": "07869d73-f73a-4ede-b083-cd184dac5cda",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795607424001
+      },
+      {
+        "executionId": "07869d73-f73a-4ede-b083-cd184dac5cda",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795607599636
+      }
+    ],
+    "11.4 Add migration orchestration to `localStore.ts` and startup messages": [
+      {
+        "executionId": "07869d73-f73a-4ede-b083-cd184dac5cda",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795607599907
+      },
+      {
+        "executionId": "07869d73-f73a-4ede-b083-cd184dac5cda",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795608154477
+      }
+    ],
+    "11.5 Add \"Clear my data\" and remove superseded legacy modules": [
+      {
+        "executionId": "07869d73-f73a-4ede-b083-cd184dac5cda",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795608154924
       }
     ]
   }

@@ -3,45 +3,40 @@ import { countWords, suggestedSeconds, updateAveragePace } from '../reader/paceC
 import { absoluteIndex, calculateProgress, countTotalParagraphs } from '../reader/progress';
 import { splitIntoParagraphs } from '../reader/splitter';
 import { setPaceGuide } from '../library/profileOps';
-import { loadPaceGuide, savePaceGuide } from '../reader/storage';
 import type { Paragraph } from '../reader/types';
 import {
   READER_MESSAGES,
+  needsProgressRepair,
   savePositionUpdate,
   type ReaderSession,
 } from './bookSession';
 import { INITIAL_READER_STATE, type ReaderState } from './readerState';
-import { useLegacyBook } from './useLegacyBook';
 import { useSessionLoad } from './useSessionLoad';
 
 export type { ReaderState } from './readerState';
 
 /**
- * Without a `session` the reader keeps its old single-book behaviour (localStorage, bookStore),
- * unless `options.legacy` is false (the library app, before a book is chosen).
+ * Without a `session` no book is open (the library, before a book is chosen).
  * With one, it opens `session.bookId`, restores that book's Position and saves progress to the model.
  */
-export function useReader(session?: ReaderSession, options: { legacy?: boolean } = {}) {
-  const [s, setS] = useState<ReaderState>(() => ({ ...INITIAL_READER_STATE, paceGuideEnabled: loadPaceGuide() ?? false }));
+export function useReader(session?: ReaderSession) {
+  const [s, setS] = useState<ReaderState>(INITIAL_READER_STATE);
   // When the active paragraph appeared. Set in the load handlers; no book is shown before then.
   const shownAt = useRef(0);
-  const loadToken = useRef(0);
 
   const sessionRef = useRef(session);
   useEffect(() => {
     sessionRef.current = session;
   });
-  const { persist } = useLegacyBook(
-    options.legacy ?? session === undefined,
-    setS,
-    shownAt,
-    loadToken,
-  );
-
   useSessionLoad(session, {
     onLoading: () => setS((prev) => ({ ...prev, book: null, loading: true, failure: null, notice: null })),
     onOpened: (book, at) => {
       shownAt.current = Date.now();
+      // A migrated book has a place but progress 0. Work the progress out now; the reader does not move.
+      const sess = sessionRef.current;
+      if (sess && needsProgressRepair(sess.model.positions[sess.bookId], at)) {
+        savePositionUpdate(sess, book, at, false, false);
+      }
       setS((prev) => ({
         ...prev,
         book,
@@ -86,14 +81,13 @@ export function useReader(session?: ReaderSession, options: { legacy?: boolean }
       paragraphIndex: hasNext ? s.paragraphIndex + 1 : s.paragraphIndex,
       chapterComplete: !hasNext,
     };
-    persist(next);
     setS(next);
     const sess = sessionRef.current;
     if (sess) {
       const lastChapter = s.chapterIndex + 1 >= s.book.chapters.length;
       savePositionUpdate(sess, s.book, next, next.chapterComplete, next.chapterComplete && lastChapter);
     }
-  }, [s, paragraphs, persist]);
+  }, [s, paragraphs]);
 
   const nextChapter = useCallback(() => {
     if (!s.book || s.chapterIndex + 1 >= s.book.chapters.length) return;
@@ -104,14 +98,12 @@ export function useReader(session?: ReaderSession, options: { legacy?: boolean }
       paragraphIndex: 0,
       chapterComplete: false,
     };
-    persist(next);
     setS(next);
     if (sessionRef.current) savePositionUpdate(sessionRef.current, s.book, next, false, false);
-  }, [s, persist]);
+  }, [s]);
 
   // Clears the book from view only. The saved book and position stay on the device.
   const closeBook = useCallback(() => {
-    loadToken.current++;
     setS((prev) => ({
       ...prev,
       book: null,
@@ -125,12 +117,10 @@ export function useReader(session?: ReaderSession, options: { legacy?: boolean }
 
   const togglePaceGuide = useCallback(() => {
     const next = { ...s, paceGuideEnabled: !s.paceGuideEnabled };
-    savePaceGuide(next.paceGuideEnabled);
-    // In library mode the Profile is the source of truth; the old key is kept in step above.
+    // The Profile is the source of truth for the pace guide.
     sessionRef.current?.updateModel((m) => setPaceGuide(m, next.paceGuideEnabled));
-    persist(next);
     setS(next);
-  }, [s, persist]);
+  }, [s]);
 
   const derived = useMemo(() => {
     if (!s.book) return { progress: 0, suggestedSecs: 1 };

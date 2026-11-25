@@ -79,6 +79,13 @@ export function restorePosition(book: Book, saved: unknown): Restored {
   return { chapterIndex, paragraphIndex: Math.min(clamped, Math.max(0, count - 1)), malformed: false };
 }
 
+/** A saved place with progress 0 but a non-zero place: migrated data whose progress was never worked out. */
+export function needsProgressRepair(saved: unknown, at: Restored): boolean {
+  if (at.malformed || typeof saved !== 'object' || saved === null) return false;
+  const progress = (saved as { progress?: unknown }).progress;
+  return progress === 0 && (at.chapterIndex > 0 || at.paragraphIndex > 0);
+}
+
 export function progressFor(
   book: Book,
   at: { chapterIndex: number; paragraphIndex: number },

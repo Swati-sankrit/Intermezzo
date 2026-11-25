@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import { EMPTY_DATA_MODEL, type CandleColour, type DataModel } from '../library/model';
 import { completeOnboarding, resetProfile, setPaceGuide, updateProfile } from '../library/profileOps';
-import { savePaceGuide } from '../reader/storage';
 import type { UpdateOptions } from './useLibrary';
 
 export interface OnboardingChoices {
@@ -58,12 +57,8 @@ export function useProfileActions(updateModel: UpdateModel) {
     [updateModel],
   );
 
-  /** Also writes the old `rod_pace_guide` key so the reader's own toggle stays in step. */
   const changePaceGuide = useCallback(
-    (enabled: boolean) => {
-      savePaceGuide(enabled);
-      updateModel((m) => setPaceGuide(m, enabled));
-    },
+    (enabled: boolean) => updateModel((m) => setPaceGuide(m, enabled)),
     [updateModel],
   );
 

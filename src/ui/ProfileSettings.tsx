@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CANDLE_COLOURS, MAX_DISPLAY_NAME, type CandleColour, type Profile } from '../library/model';
 import { Avatar } from './Avatar';
+import { ClearDataConfirm } from './ClearDataConfirm';
 import { COLOUR_NAMES } from './colourNames';
 import { LIBRARY_MESSAGES as MSG } from './libraryMessages';
 import { useFocusTrap } from './useFocusTrap';
@@ -14,14 +15,16 @@ export interface ProfileSettingsProps {
   actions: Pick<ReturnType<typeof useProfileActions>, 'changeName' | 'changeColour' | 'changePaceGuide' | 'deleteProfile'>;
   /** The library message; the retry text shows here when a save failed. */
   message: string | null;
+  /** Deletes everything through the store. Resolves true only when all of it is gone. */
+  onClearData: () => Promise<boolean>;
   onClose: () => void;
 }
 
-/** A dialog for the name, candle colour and pace guide, with "Delete my profile". */
-export function ProfileSettings({ profile, actions, message, onClose }: ProfileSettingsProps) {
+/** A dialog for the name, candle colour and pace guide, with "Delete my profile" and "Clear my data". */
+export function ProfileSettings({ profile, actions, message, onClearData, onClose }: ProfileSettingsProps) {
   const [name, setName] = useState(profile.displayName);
   const [nameError, setNameError] = useState<string | null>(null);
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState<'profile' | 'data' | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   useFocusTrap(ref, true);
 
@@ -30,7 +33,7 @@ export function ProfileSettings({ profile, actions, message, onClose }: ProfileS
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       e.preventDefault();
-      if (confirming) setConfirming(false);
+      if (confirming) setConfirming(null);
       else onClose();
     };
     document.addEventListener('keydown', onKey);
@@ -53,7 +56,16 @@ export function ProfileSettings({ profile, actions, message, onClose }: ProfileS
   return (
     <div className="settings__backdrop">
       <div ref={ref} className="settings" role="dialog" aria-modal="true" aria-labelledby="settings-heading">
-        {confirming ? (
+        {confirming === 'data' ? (
+          <ClearDataConfirm
+            onCancel={() => setConfirming(null)}
+            onConfirm={async () => {
+              const ok = await onClearData();
+              if (ok) onClose();
+              return ok;
+            }}
+          />
+        ) : confirming === 'profile' ? (
           <>
             <h2 id="settings-heading" className="settings__heading">Delete my profile?</h2>
             <p className="settings__text">
@@ -61,7 +73,7 @@ export function ProfileSettings({ profile, actions, message, onClose }: ProfileS
               will be removed. Your books, shelves, reading positions and stats are kept.
             </p>
             <div className="settings__actions">
-              <button type="button" data-first className="settings__secondary" onClick={() => setConfirming(false)}>
+              <button type="button" data-first className="settings__secondary" onClick={() => setConfirming(null)}>
                 Cancel
               </button>
               <button
@@ -131,8 +143,11 @@ export function ProfileSettings({ profile, actions, message, onClose }: ProfileS
             </label>
 
             <div className="settings__actions">
-              <button type="button" className="settings__secondary" onClick={() => setConfirming(true)}>
+              <button type="button" className="settings__secondary" onClick={() => setConfirming('profile')}>
                 Delete my profile
+              </button>
+              <button type="button" className="settings__secondary" onClick={() => setConfirming('data')}>
+                Clear my data
               </button>
               <button type="button" className="library__button btn-quiet" onClick={onClose}>
                 Close settings

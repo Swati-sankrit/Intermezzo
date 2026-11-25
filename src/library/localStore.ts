@@ -1,4 +1,5 @@
 import { EMPTY_DATA_MODEL, SCHEMA_VERSION, type DataModel } from './model';
+import { clearLegacyData, migrateLegacy, type MigrationIo } from './legacyMigration';
 import { parse, serialize } from './serializer';
 import { validate } from './validator';
 
@@ -7,8 +8,8 @@ import { validate } from './validator';
  * localStorage key or the v2 IndexedDB database.
  *
  * Storage names are new on purpose. The legacy `rod_state`, `rod_pace_guide`
- * keys and the `rod_books` database stay untouched here so the migration
- * (task 11) can read them.
+ * keys and the `rod_books` database are read only by the startup migration
+ * and deleted by `clear` (legacyMigration.ts).
  */
 export const LIBRARY_STORAGE_KEY = 'rod_library_v2';
 /** IndexedDB database holding book text for uploaded books, keyed by Book_Id. */
@@ -16,7 +17,7 @@ export const LIBRARY_DB_NAME = 'rod_library_v2';
 export const LIBRARY_TEXT_STORE = 'book_text';
 const DB_VERSION = 1;
 
-export type FailureKind = 'unavailable' | 'quota' | 'invalid' | 'not_found' | 'newer_version';
+export type FailureKind = 'unavailable' | 'quota' | 'invalid' | 'not_found' | 'newer_version' | 'migration_failed';
 export type Result<T> = { ok: true; value: T } | { ok: false; kind: FailureKind };
 
 export interface DataStore {
@@ -112,11 +113,47 @@ export function createLocalStore(): DataStore {
   /** Set once a newer-version record is seen; all saves are refused afterwards. */
   let locked = false;
 
+  const migrationIo: MigrationIo = {
+    writeModel(model) {
+      const checked = validate(model);
+      if (!checked.ok) return false;
+      const text = serialize(checked.value);
+      localStorage.setItem(LIBRARY_STORAGE_KEY, text);
+      const back = localStorage.getItem(LIBRARY_STORAGE_KEY);
+      if (back === null) return false;
+      const again = validate(parse(back));
+      return again.ok && serialize(again.value) === text;
+    },
+    removeModel() {
+      localStorage.removeItem(LIBRARY_STORAGE_KEY);
+    },
+    async putText(bookId, text) {
+      const out = await runTransaction(
+        'readwrite',
+        (store) => store.put(text, bookId),
+        () => undefined,
+      );
+      return out.ok;
+    },
+    async getText(bookId) {
+      const out = await runTransaction(
+        'readonly',
+        (store) => store.get(bookId),
+        (request): unknown => request?.result,
+      );
+      return out.ok && typeof out.value === 'string' ? out.value : null;
+    },
+  };
+
   return {
     async load() {
       try {
         const raw = localStorage.getItem(LIBRARY_STORAGE_KEY);
-        if (raw === null) return { ok: true, value: EMPTY_DATA_MODEL };
+        if (raw === null) {
+          const migrated = await migrateLegacy(migrationIo);
+          if (migrated.status === 'migrated') return { ok: true, value: migrated.model };
+          return migrated.status === 'failed' ? fail('migration_failed') : { ok: true, value: EMPTY_DATA_MODEL };
+        }
         const data = parse(raw);
         if (hasNewerVersion(data)) {
           locked = true;
@@ -153,7 +190,8 @@ export function createLocalStore(): DataStore {
         (store) => store.clear(),
         () => undefined,
       );
-      return cleared.ok ? OK : cleared;
+      if (!cleared.ok) return cleared;
+      return (await clearLegacyData()) ? OK : fail('unavailable');
     },
 
     async getText(bookId) {

@@ -17,9 +17,9 @@ import './ReaderView.css';
 const IDLE_MS = 2500;
 
 export interface ReaderViewProps {
-  /** The book to open. Without a `library`, the reader keeps its old single-book behaviour. */
+  /** The book to open. Without one, no book is shown. */
   session?: ReaderSession;
-  /** Shown while no book is open. Its presence turns the old single-book restore off. */
+  /** Shown while no book is open. */
   library?: (status: OpenStatus, back: () => void) => ReactNode;
   /** Called after "Back to library" closes the book. */
   onLeave?: () => void;
@@ -31,7 +31,7 @@ export interface ReaderViewProps {
 const NOOP = () => {};
 
 export function ReaderView({ session, library, onLeave, saveFailure = null, onDismissSaveFailure = NOOP }: ReaderViewProps = {}) {
-  const r = useReader(session, { legacy: library === undefined });
+  const r = useReader(session);
   const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
   const reading = useReadingContext(r);
   const [awake, setAwake] = useState(true);

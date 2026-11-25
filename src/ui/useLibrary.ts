@@ -9,6 +9,7 @@ import { readAsArrayBuffer } from '../reader/fileIO';
 import { loadFromFile } from './loadSource';
 import { useDataStore } from './dataStoreContext';
 import { LIBRARY_MESSAGES as MSG } from './libraryMessages';
+import { useClearData } from './useClearData';
 import { useShelfActions } from './useShelfActions';
 
 export type CatalogueState =
@@ -78,7 +79,15 @@ export function useLibrary() {
         setModel(result.value);
       } else {
         if (result.kind === 'newer_version') saver.stop();
-        setMessage(result.kind === 'newer_version' ? MSG.newerVersion : MSG.loadFailed);
+        setMessage(
+          result.kind === 'newer_version'
+            ? MSG.newerVersion
+            : result.kind === 'invalid'
+              ? MSG.dataUnreadable
+              : result.kind === 'migration_failed'
+                ? MSG.migrationFailed
+                : MSG.loadFailed,
+        );
       }
       readyRef.current = true;
       setStatus('ready');
@@ -167,9 +176,11 @@ export function useLibrary() {
 
   const currentBook = useMemo(() => pickCurrentBook(model), [model]);
   const shelf = useShelfActions({ store, model, modelRef, readyRef, saverRef, setModel, setMessage, updateModel });
+  const clearAllData = useClearData({ store, modelRef, readyRef, saverRef, setModel, setMessage });
   const dismissMessage = useCallback(() => setMessage(null), []);
 
   return {
+    clearAllData,
     model,
     status,
     message,

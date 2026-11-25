@@ -88,7 +88,7 @@ export function LibraryScreen({
         }
       />
       {settingsOpen && (
-        <ProfileSettings profile={model.profile} actions={profileActions} message={lib.message} onClose={closeSettings} />
+        <ProfileSettings profile={model.profile} actions={profileActions} message={lib.message} onClearData={lib.clearAllData} onClose={closeSettings} />
       )}
       <ErrorBanner error={open.failure === 'epub' ? open.error : null} />
       {open.failure === 'epub' && (

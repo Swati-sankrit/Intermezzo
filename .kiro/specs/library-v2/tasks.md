@@ -255,21 +255,21 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Migration, clear my data, and legacy cleanup
-  - [ ] 11.1 Create `src/library/migrator.ts` (pure)
+  - [x] 11.1 Create `src/library/migrator.ts` (pure)
     - `migrate(legacy, current)` as in the design. Validate `rod_state` (parseable, file name 1 to 255 characters, integer position within paragraph count, finite pace above 0) and `rod_pace_guide` independently. Ignore an invalid record and keep going. Create one entry, a Position with progress 0, Average_Pace, and the book on `reading`. With no legacy text, use the `legacy-<fileName>` Book_Id. Profile stays in First_Visit_State apart from pace values. A version 2 model is returned deeply equal.
     - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.8, 19.9, 19.13_
 
-  - [ ]* 11.2 Write property test for migration
+  - [x]* 11.2 Write property test for migration
     - **Property 9: Migration preserves legacy position, pace, and book identity**
     - **Validates: Requirements 19.2, 19.3**
     - Report properties added, cases run, and any counterexample.
 
-  - [ ]* 11.3 Write property test for migration idempotence
+  - [x]* 11.3 Write property test for migration idempotence
     - **Property 10: Migration is idempotent on current-version data**
     - **Validates: Requirements 19.8**
     - Report properties added, cases run, and any counterexample.
 
-  - [ ] 11.4 Add migration orchestration to `localStore.ts` and startup messages
+  - [x] 11.4 Add migration orchestration to `localStore.ts` and startup messages
     - When no v2 model exists and legacy data does, read the legacy keys, hash the `current` text for the Book_Id, call `migrate`, write the v2 model, and read it back as valid. Then copy the text to the Book_Id key, confirm it reads back identical, and only then remove the legacy keys. Leave all legacy keys untouched on any failure and retry next start, with "data could not be carried over" shown.
     - Newer schema version: no writes in the session and the "newer version" message. Invalid stored data: start empty, show "saved data could not be read", and do not overwrite until the reader makes a first change.
     - _Requirements: 19.1, 19.5, 19.6, 19.7, 19.10, 19.11, 19.12_

@@ -1,16 +1,14 @@
-// Integration tests: the real ReaderView and the real useReader hook, with
-// fake-indexeddb for the saved book and jsdom localStorage for saved state.
-import 'fake-indexeddb/auto';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+// Integration tests: the real LibraryShell, ReaderView and useReader hook over the in-memory
+// store, which holds one uploaded book and its saved Position (the library path).
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import fc from 'fast-check';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { clearSavedBook, saveBook } from '../../reader/bookStore';
 import { restoreBook } from '../../reader/bookCodec';
 import { absoluteIndex, calculateProgress, countTotalParagraphs } from '../../reader/progress';
 import { splitIntoParagraphs } from '../../reader/splitter';
-import { loadState, saveState } from '../../reader/storage';
+import type { DataStore } from '../../library/localStore';
 import type { Book } from '../../reader/types';
-import { ReaderView } from '../ReaderView';
+import { BOOK_ID, showLibrary, storeWithBook } from './libraryBook';
 
 const FILE = 'known-book.txt';
 const TITLE = 'A Known Book';
@@ -42,26 +40,24 @@ const progress = () => Number(screen.getByRole('progressbar').getAttribute('aria
 const active = () => screen.getByTestId('active-paragraph');
 const nextButton = () => screen.queryByRole('button', { name: 'Next chapter' });
 
-async function openKnownBook() {
-  const view = render(<ReaderView />);
+type Place = { chapterIndex: number; paragraphIndex: number; progress: number };
+
+/** Opens the known book from the Continue card. Without a saved place it starts at the beginning. */
+async function openKnownBook(position: Place = { chapterIndex: 0, paragraphIndex: 0, progress: 1 }, store?: DataStore) {
+  const used = store ?? (await storeWithBook(TITLE, TEXT, position));
+  const view = showLibrary(used);
+  fireEvent.click(await screen.findByRole('button', { name: 'Continue reading' }));
   await screen.findByTestId('active-paragraph');
-  return view;
+  return { view, store: used };
 }
 
-function savedState(chapterIndex: number, paragraphIndex: number) {
-  saveState({
-    fileName: FILE,
-    position: { chapterIndex, paragraphIndex, savedAt: 1 },
-    averagePace: 200,
-    paceGuideEnabled: false,
-  });
-}
+const savedPosition = async (store: DataStore) => {
+  const r = await store.load();
+  return r.ok ? r.value.positions[BOOK_ID] : undefined;
+};
 
-beforeEach(async () => {
+beforeEach(() => {
   cleanup();
-  localStorage.clear();
-  await clearSavedBook();
-  await saveBook(FILE, TEXT, TITLE);
 });
 
 describe('ReaderView integration: advancing', () => {
@@ -141,8 +137,7 @@ describe('ReaderView integration: chapters', () => {
 
 describe('ReaderView integration: restore after reload', () => {
   it('shows the saved paragraph as active with no user action', async () => {
-    savedState(1, 1);
-    await openKnownBook();
+    await openKnownBook({ chapterIndex: 1, paragraphIndex: 1, progress: 50 });
     expect(screen.getByRole('heading', { name: 'Chapter 2' })).toBeInTheDocument();
     expect(active()).toHaveTextContent('Beta two.');
     expect(progress()).toBe(expectedProgress(1, 1, false));
@@ -152,23 +147,33 @@ describe('ReaderView integration: restore after reload', () => {
     const first = await openKnownBook();
     fireEvent.click(active());
     fireEvent.click(active());
-    expect(loadState()?.position).toMatchObject({ chapterIndex: 0, paragraphIndex: 2 });
-    first.unmount();
+    await waitFor(async () => expect(await savedPosition(first.store)).toMatchObject({ chapterIndex: 0, paragraphIndex: 2 }));
+    first.view.unmount();
 
-    await openKnownBook();
+    await openKnownBook(undefined, first.store);
     expect(active()).toHaveTextContent('Alpha three.');
     expect(progress()).toBe(expectedProgress(0, 2, false));
   });
 
   it.each([
-    ['chapter past the end', 9, 0],
-    ['paragraph past the end', 0, 99],
-  ])('falls back to chapter 0, paragraph 0 when the saved position is outside the book (%s)', async (_n, c, p) => {
-    savedState(c, p);
-    await openKnownBook();
-    expect(screen.getByRole('heading', { name: 'Chapter 1' })).toBeInTheDocument();
-    expect(active()).toHaveTextContent('Alpha one.');
-    expect(progress()).toBe(0);
+    ['chapter past the end', 9, 0, 'Chapter 2', 'Beta two.', 1, 1],
+    ['paragraph past the end', 0, 99, 'Chapter 1', 'Alpha three.', 0, 2],
+  ])('opens at the last paragraph that exists when the saved place is outside the book (%s)', async (_n, c, p, heading, text, rc, rp) => {
+    await openKnownBook({ chapterIndex: c, paragraphIndex: p, progress: 50 });
+    expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+    expect(active()).toHaveTextContent(text);
+    expect(progress()).toBe(expectedProgress(rc, rp, false));
+  });
+
+  it('works out the progress of a migrated place (progress 0, place not at the start) without moving the reader', async () => {
+    const store = await storeWithBook(TITLE, TEXT, { chapterIndex: 1, paragraphIndex: 1, progress: 0 });
+    showLibrary(store);
+    fireEvent.click(await screen.findByRole('button', { name: /Start reading/ }));
+    await screen.findByTestId('active-paragraph');
+    expect(active()).toHaveTextContent('Beta two.');
+    await waitFor(async () => expect((await savedPosition(store))?.progress).toBe(expectedProgress(1, 1, false)));
+    expect(await savedPosition(store)).toMatchObject({ chapterIndex: 1, paragraphIndex: 1 });
+    expect(active()).toHaveTextContent('Beta two.');
   });
 });
 
@@ -180,10 +185,7 @@ describe('ReaderView integration: properties', () => {
     await fc.assert(
       fc.asyncProperty(ops, async (sequence) => {
         cleanup();
-        localStorage.clear();
-        await clearSavedBook();
-        await saveBook(FILE, TEXT, TITLE);
-        await openKnownBook();
+        const { store } = await openKnownBook();
 
         let last = progress();
         for (const op of sequence) {
@@ -195,11 +197,9 @@ describe('ReaderView integration: properties', () => {
           expect(now).toBeGreaterThanOrEqual(last);
           last = now;
         }
-        const saved = loadState();
-        if (saved) {
-          const { chapterIndex: c, paragraphIndex: p } = saved.position;
-          const complete = screen.queryByRole('status') !== null;
-          expect(last).toBe(expectedProgress(c, p, complete));
+        // Any advance raises progress above 0; the saved Position then carries the same value.
+        if (last > 0) {
+          await waitFor(async () => expect((await savedPosition(store))?.progress).toBe(last));
         }
       }),
       { numRuns: 30 },

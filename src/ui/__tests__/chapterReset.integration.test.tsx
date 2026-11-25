@@ -3,12 +3,12 @@
 //
 // Real: useReader, useReadingContext, AttentionLayer, HauntLayer, useHauntEngine, HauntStage,
 // createHauntEngine, createGate (real adapters), the haunts from `loadRegistry`, the haunt
-// settings store, the book parser (`restoreBook`) and the saved-book store (fake-indexeddb).
+// settings store, the book parser (`restoreBook`) and the in-memory data store behind the real LibraryShell.
 // Fake: the attention signal source (through the `setAttentionForTests` seam), time (vitest fake
 // timers, which also move `performance.now`, the engine's clock) and the AudioContext.
 //
 // Why two views.
-//  - `ReaderView` is the real app. It has "Next chapter" but no "previous chapter", and "Back to
+//  - `LibraryShell` (with its ReaderView) is the real app. It has "Next chapter" but no "previous chapter", and "Back to
 //    library" unmounts the engine, so a return to an earlier chapter with the engine still alive is
 //    not reachable there. The ReaderView test covers what the UI can do: next chapter.
 //  - `Harness` is the highest real component that can change the chapter in both directions: it
@@ -17,17 +17,15 @@
 //
 // The step is observed through behaviour only: the height (viewBox) of the ghost SVG the real
 // `ghostFigure` haunt draws in its side layer. It is compared with `ghostArt(step).heightUnits`.
-import 'fake-indexeddb/auto';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { getHauntSettingsStore } from '../hauntSettingsStore';
 import { ghostArt } from '../../haunts/engine/ghost/ghostArt';
 import { createFakeAudioContextFactory, createFakeTime } from '../../haunts/engine/__tests__/fakes';
-import { clearSavedBook, saveBook } from '../../reader/bookStore';
 import { restoreBook } from '../../reader/bookCodec';
 import type { AttentionSignal, AttentionStatus } from '../../attention';
 import { AttentionLayer } from '../AttentionLayer';
-import { ReaderView } from '../ReaderView';
+import { showLibrary, storeWithBook } from './libraryBook';
 import { resetAttention, setAttentionForTests, type AttentionApi } from '../useAttention';
 import { useReadingContext } from '../readingContext';
 
@@ -200,20 +198,21 @@ describe('chapter change resets the Ghost_Distance (real hook, layer, engine)', 
 });
 
 describe('real ReaderView: Next chapter resets the Ghost_Distance', () => {
-  beforeEach(async () => {
-    await clearSavedBook();
-    await saveBook(FILE, TEXT, TITLE);
-  });
-
   it('look away twice in chapter 1, open chapter 2: the first look-away there is at step 0', async () => {
+    const store = await storeWithBook(TITLE, TEXT, { chapterIndex: 0, paragraphIndex: 0, progress: 1 });
     useFakeTime(); // before the render, so the engine and the signals share one clock
-    render(<ReaderView />);
-    // The saved book is restored from IndexedDB (setImmediate stays real); wait for it to show.
-    for (let i = 0; i < 100 && screen.queryByTestId('active-paragraph') === null; i++) {
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(10);
-      });
-    }
+    showLibrary(store);
+    // The store answers through promises; let them settle on the fake clock until the book shows.
+    const settle = async (done: () => boolean) => {
+      for (let i = 0; i < 100 && !done(); i++) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(10);
+        });
+      }
+    };
+    await settle(() => screen.queryByRole('button', { name: 'Continue reading' }) !== null);
+    fireEvent.click(screen.getByRole('button', { name: 'Continue reading' }));
+    await settle(() => screen.queryByTestId('active-paragraph') !== null);
     expect(screen.getByTestId('active-paragraph')).toHaveTextContent('Alpha one.');
 
     expect(lookAway(source)).toBe(0);
