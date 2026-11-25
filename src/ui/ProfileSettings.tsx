@@ -134,7 +134,7 @@ export function ProfileSettings({ profile, actions, message, onClose }: ProfileS
               <button type="button" className="settings__secondary" onClick={() => setConfirming(true)}>
                 Delete my profile
               </button>
-              <button type="button" className="library__button" onClick={onClose}>
+              <button type="button" className="library__button btn-quiet" onClick={onClose}>
                 Close settings
               </button>
             </div>

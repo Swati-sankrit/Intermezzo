@@ -28,8 +28,8 @@ Suggested build order (informational only, not a requirement): cover grid with h
 - **Placeholder_Cover**: A cover drawn from the book's title and author, used when no cover image exists or an image fails to load.
 - **Hover_Card**: The short card shown beside or below a Cover, with a two-sentence description, the reading time, and Mood_Tags.
 - **Mood_Tag**: A short lowercase word describing the mood of a book, for example gothic, romance, or adventure.
-- **Continue_Card**: The hero card on the Library_Screen for the reader's current book. It shows the Cover, the title, the progress, and a "Continue" button.
-- **Current_Book**: The Book_Entry on the `reading` Shelf whose Position has the latest saved-at time.
+- **Continue_Card**: The hero card on the Library_Screen for the reader's current book. It shows the Cover, the title, the progress, and a "Continue reading" button.
+- **Current_Book**: The Book_Entry on the `reading` Shelf, among those whose Position has a progress above 0, whose Position has the latest saved-at time. There is none when no such Book_Entry exists.
 - **Profile**: The reader's local settings: display name (optional), Candle_Colour, onboarding-completed flag, Pace_Guide setting, and Average_Pace. There is no account.
 - **Candle_Colour**: One of a fixed set of named candle flame colours the reader picks as an Avatar. Each is a CSS custom property.
 - **Avatar**: A small candle drawing in the reader's Candle_Colour.
@@ -110,6 +110,7 @@ Suggested build order (informational only, not a requirement): cover grid with h
 5. IF a Catalogue_Entry has an empty author, THEN THE Library_Screen SHALL show the title and leave the author blank without an error.
 6. WHEN a Cover image fails to load, THE Library_Screen SHALL show the Placeholder_Cover for that entry and keep the title and author visible.
 7. WHILE a Cover image is loading, THE Library_Screen SHALL reserve the Cover's final width and height so that the grid does not shift when the image appears.
+8. IF the reader activates a Cover, or a "Continue reading" or "Start reading" action on a Shelf, while the Data_Model is still loading, THEN THE Library_App SHALL hold that request and open the book as soon as loading finishes, and SHALL NOT drop the request silently.
 
 ### Requirement 3: Hover Cards
 
@@ -137,10 +138,10 @@ Suggested build order (informational only, not a requirement): cover grid with h
 1. WHERE the Profile holds a display name, THE Welcome_Header SHALL greet the reader by that name.
 2. WHERE the Profile holds no display name, THE Welcome_Header SHALL show a greeting without a name and without a placeholder name.
 3. WHERE a Profile exists, THE Welcome_Header SHALL show the Avatar in the Candle_Colour of the Profile.
-4. WHILE a Current_Book exists, THE Library_Screen SHALL show the Continue_Card above the Catalogue grid with the Cover, the title, the author, the progress as a whole percentage with a progress bar, and a button labelled "Continue".
-5. WHEN the reader activates the "Continue" button, THE Library_App SHALL open the Current_Book at its saved Position.
-6. THE Library_App SHALL choose as Current_Book the Book_Entry on the `reading` Shelf whose Position has the latest saved-at time, and SHALL choose the Book_Entry with the latest added time when no Position exists for any `reading` Book_Entry.
-7. WHILE no Book_Entry is on the `reading` Shelf, THE Library_Screen SHALL show a warm empty state in place of the Continue_Card, with text inviting the reader to choose a book and a button labelled "Choose a book" that moves focus to the Catalogue grid.
+4. WHILE a Current_Book exists, THE Library_Screen SHALL show the Continue_Card above the Catalogue grid with the Cover, the title, the author, the progress as a whole percentage with a progress bar, and a button labelled "Continue reading".
+5. WHEN the reader activates the "Continue reading" button, THE Library_App SHALL open the Current_Book at its saved Position.
+6. THE Library_App SHALL choose as Current_Book the Book_Entry on the `reading` Shelf whose Position has the latest saved-at time, and SHALL choose no Current_Book when no `reading` Book_Entry has a Position with a progress above 0.
+7. WHILE no Current_Book exists (nothing has been started), THE Library_Screen SHALL hide the Continue_Card and SHALL show in its place a short warm prompt inviting the reader to choose a book, with a button labelled "Choose a book" that moves focus to the Catalogue grid.
 8. IF the Current_Book is a Book_Entry whose text is missing, THEN THE Continue_Card SHALL show the book as needing its file to be opened again and SHALL offer the actions described in Requirement 6.
 9. THE Continue_Card button SHALL have a minimum size of 44 by 44 CSS pixels.
 
@@ -176,12 +177,15 @@ Suggested build order (informational only, not a requirement): cover grid with h
 5. WHEN the reader confirms removal of a book from the library, THE Library_App SHALL delete its Book_Entry, Position, and Stats from the Data_Model and its text from IndexedDB as one operation, and SHALL remove the Book_Id from every Shelf.
 6. IF any part of the removal in criterion 5 fails, THEN THE Library_App SHALL leave the Book_Entry, Position, Stats, and book text unchanged, and SHALL show an error message stating that the book was not removed and that the reader can try again.
 7. THE Shelf_View SHALL list the Book_Entries of each Shelf, showing the Cover, the title, and the author of each, and SHALL show the Catalogue books in the Catalogue grid regardless of which Shelf holds their Book_Id.
-8. THE Shelf_View SHALL offer a button on each shelved book labelled "Move to Reading", "Move to Want to read", or "Move to Finished", omitting the label of the Shelf that already holds the book.
+8. THE Shelf_View SHALL offer, in the "⋯" actions menu of each shelved book (criterion 14), items labelled "Move to Reading", "Move to Want to read", or "Move to Finished", omitting the label of the Shelf that already holds the book, and an item labelled "Remove".
 9. THE Library_Screen SHALL show the control labelled "Open your own book".
 10. WHILE the viewport is 360px wide or more, THE Shelf_View SHALL show no horizontal scroll.
 11. FOR ALL sequences of shelf operations (open, finish, move, remove), every Book_Id SHALL appear on at most one Shelf, and a removed Book_Id SHALL appear on none (invariant property).
 12. IF the book text for a Book_Entry is missing from IndexedDB when the reader opens it, THEN THE Library_App SHALL show a message stating that the text is missing, SHALL offer two actions, "Reopen the file" and "Choose the book again", and SHALL keep the Book_Entry, its Shelf, and its Position unchanged.
 13. IF a Book_Entry has no author, THEN THE Shelf_View SHALL show the title and leave the author blank without an error.
+14. THE Shelf_View SHALL show each shelved book as a cover-led card: the Cover with a fixed 2:3 aspect ratio that is never cropped, then the title, the author, and a progress bar, with one visible action labelled "Continue" when the book has a Position with progress above 0 and "Start reading" otherwise, and a "⋯" menu button with the accessible label "More actions for <title>".
+15. THE "⋯" menu SHALL open with Enter or Space, let the reader move between items with the arrow keys or Tab, and close with Escape, returning focus to the menu button.
+16. THE Shelf_View SHALL lay out each Shelf as one horizontal row of cover cards. WHILE the viewport is narrow, THE row MAY scroll sideways inside itself, and THE page SHALL NOT scroll sideways (see Requirement 14 criterion 1). An empty Shelf SHALL keep the message and button described in Requirement 13 criterion 4.
 
 ### Requirement 7: Reader Profile
 
@@ -194,7 +198,7 @@ Suggested build order (informational only, not a requirement): cover grid with h
 3. WHEN the reader saves a display name and a Candle_Colour, THE Library_App SHALL save them to the Profile through the Data_Store within 1 second and show them on the next app open.
 4. WHERE no display name is set, THE Library_App SHALL show no name, show no placeholder name, and require none to save the Profile or use any feature.
 5. IF a display name is longer than 40 characters after leading and trailing spaces are removed, THEN THE Validator SHALL reject the Profile, THE Library_App SHALL keep the previous name, and THE Library_App SHALL show a message stating that the name must be 40 characters or fewer.
-6. WHEN the reader opens settings, THE Library_App SHALL let the reader change the display name, change the Candle_Colour, and choose "Delete my profile".
+6. THE Library_Screen SHALL show the Settings control as a small gear icon button (inline SVG using `currentColor`, accessible label "Settings") in the Welcome_Header row next to the Avatar, and not as a large or primary button. WHEN the reader opens settings, THE Library_App SHALL let the reader change the display name, change the Candle_Colour, and choose "Delete my profile".
 7. WHEN the reader chooses "Delete my profile", THE Library_App SHALL show a confirmation prompt that states the name and colour will be removed and that books, shelves, positions, and stats will be kept, with a "Cancel" choice and a confirm choice.
 8. WHEN the reader confirms "Delete my profile", THE Library_App SHALL reset the Profile to the First_Visit_State and keep every Book_Entry, Shelf, Position, and Stats record unchanged.
 9. WHEN the reader cancels the "Delete my profile" confirmation, or dismisses it with the Escape key, THE Library_App SHALL keep the Profile unchanged.
@@ -270,9 +274,10 @@ Suggested build order (informational only, not a requirement): cover grid with h
 5. THE Library_App SHALL draw each Cover with a subtle shadow and a spine edge on its left side.
 6. THE Library_App SHALL build the Library_Screen from small hand-written components with plain CSS and SHALL NOT use a UI component library.
 7. THE Library_Screen SHALL give every interactive element a visible focus ring in `--accent`, a label readable by screen readers, and keyboard operation.
-8. THE Library_Screen SHALL label every button with what it does, such as "Continue", "Open your own book", "Choose a book", and "Skip introduction".
+8. THE Library_Screen SHALL label every button with what it does, such as "Continue reading", "Open your own book", "Choose a book", and "Skip introduction".
 9. THE Library_Screen SHALL keep each component source file under 200 lines.
 10. THE Library_Screen SHALL use warm, short, slightly gothic wording and SHALL state in plain words what happened and what to do next in every error message.
+11. THE Library_Screen SHALL show at most one primary button (filled with `--accent`) per area, and the Continue_Card button SHALL be the only primary button on the Library_Screen. Shelf card actions and the "⋯" menu button SHALL be quiet text or outline buttons.
 
 ### Requirement 12: Motion and Transitions
 
@@ -312,8 +317,8 @@ Suggested build order (informational only, not a requirement): cover grid with h
 1. WHILE the viewport is between 360 px and 3840 px wide, THE Library_Screen SHALL show no horizontal scroll.
 2. WHILE the viewport is 360 px wide, THE Catalogue grid SHALL show two Covers per row.
 3. WHEN the viewport width grows, THE Catalogue grid SHALL add Covers per row so that each Cover is between about 130 px and 200 px wide, SHALL show about 5 to 6 Covers per row at 1440 px, and SHALL keep the grid centred.
-4. WHILE the viewport is narrower than 600 px, THE Continue_Card SHALL stack the Cover above the title, progress, and "Continue" button.
-5. WHILE the viewport is 600 px wide or more, THE Continue_Card SHALL show the Cover beside the title, progress, and "Continue" button.
+4. WHILE the viewport is narrower than 600 px, THE Continue_Card SHALL stack the Cover above the title, progress, and "Continue reading" button.
+5. WHILE the viewport is 600 px wide or more, THE Continue_Card SHALL show the Cover beside the title, progress, and "Continue reading" button.
 6. THE Library_Screen SHALL make every button and Cover at least 44 by 44 CSS pixels.
 7. THE Library_Screen SHALL keep the Hover_Card fully inside the viewport.
 8. WHILE the text size is set to 200 percent in the browser, THE Library_Screen SHALL keep all text and controls reachable without overlap.

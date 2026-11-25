@@ -8,6 +8,7 @@ import { LIBRARY_MESSAGES as MSG } from './libraryMessages';
 import { LibraryScreen } from './LibraryScreen';
 import { Onboarding } from './Onboarding';
 import { ReaderView } from './ReaderView';
+import { useHeldOpen } from './useHeldOpen';
 import { useLibrary } from './useLibrary';
 import { useProfileActions } from './useProfileActions';
 
@@ -29,16 +30,22 @@ export function LibraryShell() {
     setBookId(id);
   };
 
-  const openCatalogue = (slug: string) => {
-    if (lib.status !== 'ready') return;
-    const id = lib.openCatalogueBook(slug);
-    if (id) open(id);
-  };
-
   const openFile = async (file: File) => {
     const id = await lib.openUpload(file);
     if (id) open(id);
   };
+
+  // A click made while the library loads is held (one request, the latest) and run once ready.
+  type OpenRequest = { kind: 'catalogue'; slug: string } | { kind: 'book'; id: string } | { kind: 'file'; file: File };
+  const requestOpen = useHeldOpen<OpenRequest>(lib.status === 'ready', (r) => {
+    if (r.kind === 'book') open(r.id);
+    else if (r.kind === 'file') void openFile(r.file);
+    else {
+      const id = lib.openCatalogueBook(r.slug);
+      if (id) open(id);
+    }
+  });
+  const openCatalogue = (slug: string) => requestOpen({ kind: 'catalogue', slug });
 
   // "Reopen the file": reuse the file only when it is the same one (its hash is the Book_Id).
   const reopenPicked = async (id: string, file: File) => {
@@ -87,10 +94,8 @@ export function LibraryShell() {
           failedBookId={status.failure ? bookId : null}
           notice={notice ?? unsavedNotice}
           onOpenCatalogue={openCatalogue}
-          onOpenFile={(file) => void openFile(file)}
-          onContinue={(id) => {
-            if (lib.status === 'ready') open(id);
-          }}
+          onOpenFile={(file) => requestOpen({ kind: 'file', file })}
+          onContinue={(id) => requestOpen({ kind: 'book', id })}
           onReopenPicked={(id, file) => void reopenPicked(id, file)}
           onBack={() => {
             setNotice(null);

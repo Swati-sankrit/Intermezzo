@@ -1,0 +1,55 @@
+.shelf-menu {
+  position: relative;
+}
+
+.shelf-menu__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+/* Opens upward over the card so the scrolling row never clips it. */
+.shelf-menu__list {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.25rem);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 11rem;
+  padding: 0.25rem;
+  border: 1px solid var(--text-dim);
+  border-radius: 0.5rem;
+  background: var(--bg);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.shelf-menu__item {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.shelf-menu__item:hover {
+  background: var(--surface);
+}
+
+.shelf-menu__item:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}

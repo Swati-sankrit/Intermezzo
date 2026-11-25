@@ -92,9 +92,32 @@ describe('shelfOps examples', () => {
     expect(currentBook(m)?.bookId).toBe('a');
   });
 
-  it('currentBook falls back to the latest addedAt when no position exists', () => {
-    const m = build([entry('a', 5), entry('b', 9), entry('c', 7)]);
-    expect(currentBook(m)?.bookId).toBe('b');
+  it('currentBook returns null when no reading book has progress above 0', () => {
+    let m = build([entry('a', 5), entry('b', 9)]);
+    expect(currentBook(m)).toBeNull();
+    m = savePosition(m, 'a', { ...pos(100), progress: 0 });
+    expect(currentBook(m)).toBeNull();
+  });
+
+  it('currentBook ignores progress 0 even when its savedAt is the latest', () => {
+    let m = build([entry('a', 1), entry('b', 2)]);
+    m = savePosition(m, 'a', pos(100));
+    m = savePosition(m, 'b', { ...pos(200), progress: 0 });
+    expect(currentBook(m)?.bookId).toBe('a');
+  });
+
+  it('currentBook ignores want-to-read books with progress', () => {
+    let m = build([entry('a', 1), entry('b', 2)]);
+    m = savePosition(m, 'a', pos(100));
+    m = savePosition(m, 'b', pos(200));
+    m = moveToShelf(m, 'b', 'want-to-read');
+    expect(currentBook(m)?.bookId).toBe('a');
+  });
+
+  it('currentBook returns null when the only started book is finished', () => {
+    let m = savePosition(build([entry('a', 1)]), 'a', pos(100));
+    m = moveToShelf(m, 'a', 'finished');
+    expect(currentBook(m)).toBeNull();
   });
 
   it('currentBook returns null with no reading books', () => {

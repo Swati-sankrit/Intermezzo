@@ -136,12 +136,12 @@ describe('Onboarding', () => {
     const store = await storeWith();
     const first = show(store);
     fireEvent.click(await screen.findByRole('button', { name: 'Skip introduction' }));
-    expect(await screen.findByRole('region', { name: 'Continue reading' })).toBeTruthy();
+    expect(await screen.findByText(/shelf is quiet/i)).toBeTruthy();
     await waitFor(async () => expect((await saved(store)).profile.onboardingCompleted).toBe(true));
     first.unmount();
 
     show(store);
-    expect(await screen.findByRole('region', { name: 'Continue reading' })).toBeTruthy();
+    expect(await screen.findByText(/shelf is quiet/i)).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Skip introduction' })).toBeNull();
   });
 
@@ -155,7 +155,7 @@ describe('Onboarding', () => {
     };
     show(failing);
     fireEvent.click(await screen.findByRole('button', { name: 'Skip introduction' }));
-    expect(await screen.findByRole('region', { name: 'Continue reading' })).toBeTruthy();
+    expect(await screen.findByText(/shelf is quiet/i)).toBeTruthy();
     expect(await screen.findByText(LIBRARY_MESSAGES.onboardingNotSaved)).toBeTruthy();
     expect(LIBRARY_MESSAGES.onboardingNotSaved).toMatch(/will not be saved after the tab closes/);
     expect(screen.queryByRole('button', { name: 'Skip introduction' })).toBeNull();

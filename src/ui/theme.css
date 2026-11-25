@@ -14,3 +14,16 @@
   --candle-moss: #8fae5f;
   --glow: color-mix(in srgb, var(--accent) 20%, transparent);
 }
+
+/* Shared quiet button: outline, no fill. Use for every action except the one primary. */
+button.btn-quiet {
+  border: 1px solid var(--text-dim);
+  background: transparent;
+  color: var(--text);
+  font-weight: 400;
+}
+
+button.btn-quiet:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}

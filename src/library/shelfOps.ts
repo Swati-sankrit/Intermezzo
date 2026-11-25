@@ -65,21 +65,17 @@ export function savePosition(model: DataModel, bookId: string, position: Positio
   return { ...model, positions: { ...model.positions, [bookId]: { ...position } } };
 }
 
-/** The `reading` book with the latest saved position, else the latest added. */
+/** The `reading` book with progress above 0 and the latest saved position, else null. */
 export function currentBook(model: DataModel): BookEntry | null {
   let best: BookEntry | null = null;
   let bestSaved = -Infinity;
-  let bestAdded = -Infinity;
   for (const id of model.shelves.reading) {
     const entry = model.books[id];
-    if (!entry) continue;
-    const saved = model.positions[id]?.savedAt ?? -Infinity;
-    const better =
-      saved > bestSaved || (saved === bestSaved && saved === -Infinity && entry.addedAt > bestAdded);
-    if (best === null || better) {
+    const position = model.positions[id];
+    if (!entry || !position || !(position.progress > 0)) continue;
+    if (best === null || position.savedAt > bestSaved) {
       best = entry;
-      bestSaved = saved;
-      bestAdded = entry.addedAt;
+      bestSaved = position.savedAt;
     }
   }
   return best;

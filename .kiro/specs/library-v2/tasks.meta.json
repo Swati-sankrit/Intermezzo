@@ -728,6 +728,71 @@
         "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
         "timestamp": 1795595455490
       }
+    ],
+    "18.13 Hold cover clicks while the library loads": [
+      {
+        "executionId": "0145033c-6a48-44d2-93c3-6b7a2aaa62cf",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795595673467
+      },
+      {
+        "executionId": "0145033c-6a48-44d2-93c3-6b7a2aaa62cf",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795595795753
+      }
+    ],
+    "18.14 Continue card shows the most recent started book": [
+      {
+        "executionId": "0145033c-6a48-44d2-93c3-6b7a2aaa62cf",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795595796280
+      },
+      {
+        "executionId": "0145033c-6a48-44d2-93c3-6b7a2aaa62cf",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795596020498
+      }
+    ],
+    "18.15 Cover-led shelf cards with the \"⋯\" actions menu": [
+      {
+        "executionId": "0145033c-6a48-44d2-93c3-6b7a2aaa62cf",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795596019858
+      },
+      {
+        "executionId": "0145033c-6a48-44d2-93c3-6b7a2aaa62cf",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795596184305
+      }
+    ],
+    "18.16 Settings as a small gear icon button": [
+      {
+        "executionId": "0145033c-6a48-44d2-93c3-6b7a2aaa62cf",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795596183707
+      },
+      {
+        "executionId": "0145033c-6a48-44d2-93c3-6b7a2aaa62cf",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795596281098
+      }
+    ],
+    "18.17 Visual check and full suite": [
+      {
+        "executionId": "0145033c-6a48-44d2-93c3-6b7a2aaa62cf",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795596281701
+      },
+      {
+        "executionId": "c8bfdb20-18bb-4c07-949c-f4f742b8401e",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795597719610
+      },
+      {
+        "executionId": "c8bfdb20-18bb-4c07-949c-f4f742b8401e",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795606242528
+      }
     ]
   }
 }

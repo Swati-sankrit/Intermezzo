@@ -68,11 +68,14 @@ const show = (store: DataStore) =>
     </DataStoreProvider>,
   );
 // Shelf buttons also carry the title (visually hidden), so scope cover queries to the catalogue.
-// The cover grid renders before the store has loaded, and a cover click is ignored until then
-// (LibraryShell.openCatalogue). Wait for the Continue card, which replaces its skeleton only
-// once the library is ready, so the click is never made during loading.
+// The cover grid renders before the store has loaded. A cover click made then is remembered and
+// opens the book once loading finishes (task 18.13), but waiting for the library keeps tests steady
+// (LibraryShell.openCatalogue). Wait for the Continue card, or the quiet-shelf prompt when no book
+// has been started; either replaces the skeleton only once the library is ready.
 const coverButton = async () => {
-  await screen.findByRole('region', { name: 'Continue reading' });
+  await waitFor(() =>
+    expect(screen.queryByRole('region', { name: 'Continue reading' }) ?? screen.queryByText(/shelf is quiet/i)).not.toBeNull(),
+  );
   return within(await screen.findByRole('region', { name: 'Choose a book' })).getByRole('button', { name: /Dracula/ });
 };
 const active = () => screen.getByTestId('active-paragraph');
@@ -94,9 +97,10 @@ afterEach(() => {
 describe('Continue card and progress flow', () => {
   it('shows "Choose a book" on an empty shelf', async () => {
     show(createOnboardedStore());
-    const card = await screen.findByRole('region', { name: 'Continue reading' });
-    expect(within(card).getByText(/shelf is quiet/i)).toBeTruthy();
-    expect(within(card).getByRole('button', { name: 'Choose a book' })).toBeTruthy();
+    const prompt = (await screen.findByText(/shelf is quiet/i)).parentElement as HTMLElement;
+    expect(screen.queryByRole('region', { name: 'Continue reading' })).toBeNull();
+    fireEvent.click(within(prompt).getByRole('button', { name: 'Choose a book' }));
+    expect(screen.getByRole('region', { name: 'Choose a book' })).toHaveFocus();
   });
 
   it('opening a catalogue book creates one entry on reading; progress is saved; reopening reuses the entry and restores the place', async () => {
@@ -135,7 +139,7 @@ describe('Continue card and progress flow', () => {
     const cover = await coverButton();
     expect(within(cover).getByText('40%')).toBeTruthy();
 
-    fireEvent.click(within(card).getByRole('button', { name: 'Continue' }));
+    fireEvent.click(within(card).getByRole('button', { name: 'Continue reading' }));
     await screen.findByTestId('active-paragraph');
     expect(active()).toHaveTextContent('Charlie three.');
   });
@@ -144,7 +148,7 @@ describe('Continue card and progress flow', () => {
     const store = createOnboardedStore();
     await seed(store, { chapterIndex: 9, paragraphIndex: 99, progress: 80 });
     show(store);
-    fireEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue reading' }));
     await screen.findByTestId('active-paragraph');
     expect(active()).toHaveTextContent('Echo five.');
     expect(screen.queryByRole('alert')).toBeNull();
@@ -155,7 +159,7 @@ describe('Continue card and progress flow', () => {
     const { store, flags } = failableStore(createOnboardedStore());
     await seed(store, { chapterIndex: 0, paragraphIndex: 1, progress: 20 });
     show(store);
-    fireEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue reading' }));
     await screen.findByTestId('active-paragraph');
     flags.failSave = true;
     fireEvent.click(active());
@@ -169,9 +173,9 @@ describe('Continue card and progress flow', () => {
 
   it('shows a dismissible banner in the reader when a position save fails, and clears it after a later successful save', async () => {
     const { store, flags } = failableStore(createOnboardedStore());
-    await seed(store, { chapterIndex: 0, paragraphIndex: 0, progress: 0 });
+    await seed(store, { chapterIndex: 0, paragraphIndex: 0, progress: 10 });
     show(store);
-    fireEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue reading' }));
     await screen.findByTestId('active-paragraph');
     expect(screen.queryByText(LIBRARY_MESSAGES.positionSaveFailed)).toBeNull();
 

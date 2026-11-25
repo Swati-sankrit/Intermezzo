@@ -417,6 +417,32 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - Run the file alone 40 times and confirm 0 failures. Log the cause, fix, and run count in `docs/BUILD_LOG.md`.
     - _Requirements: 23.2, 23.5_
 
+  - [x] 18.13 Hold cover clicks while the library loads
+    - In `LibraryShell`/`LibraryScreen`, keep one pending open request when a cover (or a shelf "Continue"/"Start reading") is activated before the model is ready. Open the book once loading finishes. Never drop the request silently.
+    - Add one example test: wrap the in-memory store so `load` resolves slowly, click a cover before it resolves, and assert the book opens after the load completes.
+    - _Requirements: 2.8, 6.2_
+
+  - [x] 18.14 Continue card shows the most recent started book
+    - In `src/library/shelfOps.ts`, change `currentBook` to consider only `reading`-shelf books with a Position progress above 0, choose the latest `savedAt`, and return `null` otherwise (no `addedAt` fallback).
+    - Hide the Continue card when `currentBook` is null and show the "Choose a book" prompt instead. Rename the button to "Continue reading". Make it the only primary (amber, `--accent` filled) button on the library screen.
+    - Update the `shelfOps` example tests and any test that uses the old "Continue" name or the `addedAt` fallback, deliberately and with a note of each change.
+    - _Requirements: 4.4, 4.5, 4.6, 4.7, 11.8, 11.11_
+
+  - [x] 18.15 Cover-led shelf cards with the "⋯" actions menu
+    - Rework `ShelfBook`/`ShelfView` into horizontal rows of cover cards: 2:3 uncropped cover, title, author, progress bar, one quiet action ("Continue" if started, "Start reading" if not). The row may scroll sideways inside itself, never the page.
+    - Create `src/ui/ShelfMenu.tsx` for the "⋯" button (`aria-label="More actions for <title>"`) with the move items (omitting the current shelf) and "Remove". Enter/Space opens it, arrow keys or Tab move, Escape closes and returns focus to the menu button. Use quiet text or outline buttons and colours from `theme.css`.
+    - Update the existing shelf tests and add a menu example test (open, move item, Escape returns focus).
+    - _Requirements: 6.7, 6.8, 6.14, 6.15, 6.16, 11.11, 14.1_
+
+  - [x] 18.16 Settings as a small gear icon button
+    - In `WelcomeHeader`/`LibraryScreen`, replace the large Settings button with a small gear icon button (inline SVG, `currentColor`, `aria-label="Settings"`, at least 44 by 44 px hit area) in the header row next to the avatar. Keep the dialog behaviour. Update the tests.
+    - _Requirements: 7.6, 11.7, 11.11, 14.6_
+
+  - [x] 18.17 Visual check and full suite
+    - Using an already-installed headless browser tool (for example playwright or puppeteer, if present; add no dependency), load the library at 1440 px and 390 px wide. Measure element rects and page overflow, capture screenshots to a temp folder, and fix any issue found (overflow, cropped covers, more than one amber button).
+    - Run the full test suite and confirm it passes.
+    - _Requirements: 6.14, 6.16, 11.11, 14.1, 14.3_
+
 - [ ] 19. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
@@ -639,7 +665,12 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
       "tasks": [
         "18.12"
       ]
-    }
+    },
+    { "id": 27, "tasks": ["18.13"] },
+    { "id": 28, "tasks": ["18.14"] },
+    { "id": 29, "tasks": ["18.15"] },
+    { "id": 30, "tasks": ["18.16"] },
+    { "id": 31, "tasks": ["18.17"] }
   ]
 }
 ```

@@ -20,13 +20,16 @@
   font-weight: 600;
 }
 
+/* One horizontal row per shelf; it scrolls sideways inside itself, never the page. */
 .shelf-view__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  display: flex;
   gap: 1rem;
   margin: 0;
-  padding: 0;
+  padding: 0.5rem 0.25rem 0.75rem;
+  overflow-x: auto;
   list-style: none;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 0.25rem;
 }
 
 .shelf-view__empty {
@@ -46,24 +49,28 @@
 }
 
 .shelf-book {
+  position: relative;
   display: flex;
-  gap: 1rem;
+  flex: none;
+  flex-direction: column;
+  gap: 0.75rem;
   box-sizing: border-box;
-  min-width: 0;
-  padding: 1rem;
+  width: 10rem;
+  padding: 0.75rem;
   border-radius: 0.75rem;
   background: var(--surface);
   color: var(--text);
+  scroll-snap-align: start;
 }
 
 .shelf-book__cover {
   position: relative;
   display: block;
-  flex: none;
-  width: 72px;
+  width: 100%;
   aspect-ratio: 2 / 3;
   overflow: hidden;
   border-radius: 0.25rem;
+  background: var(--bg);
   box-shadow: 0 4px 12px var(--shadow);
 }
 
@@ -71,7 +78,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .shelf-book__image[hidden] {
@@ -89,7 +96,7 @@
 .shelf-book__title {
   margin: 0;
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.2;
   overflow-wrap: anywhere;
@@ -126,6 +133,7 @@
 .shelf-book__actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -141,17 +149,6 @@
   color: var(--text);
   font: inherit;
   cursor: pointer;
-}
-
-.shelf-book__button--primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--bg);
-  font-weight: 600;
-}
-
-.shelf-book__button--quiet {
-  color: var(--text-dim);
 }
 
 .shelf-book__button--danger {

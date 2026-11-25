@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CATALOGUE } from '../library/catalogueData';
 import type { BookEntry, ShelfName } from '../library/model';
 import { PlaceholderCover } from './PlaceholderCover';
-import { SHELF_LABELS } from './shelfLabels';
+import { ShelfMenu } from './ShelfMenu';
 import { Skeleton } from './Skeleton';
 import './ShelfView.css';
 
@@ -46,10 +46,9 @@ export function ShelfBook({ book, shelf, progress, onOpen, onMove, onRemove }: S
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
-  const removeRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLButtonElement>(null);
   const author = book.author.trim();
   const percent = Number.isFinite(progress) ? Math.min(100, Math.max(0, Math.floor(progress))) : 0;
-  const targets = (Object.keys(SHELF_LABELS) as ShelfName[]).filter((s) => s !== shelf);
 
   useEffect(() => {
     if (confirming) cancelRef.current?.focus();
@@ -57,7 +56,7 @@ export function ShelfBook({ book, shelf, progress, onOpen, onMove, onRemove }: S
 
   const cancel = () => {
     setConfirming(false);
-    removeRef.current?.focus();
+    menuRef.current?.focus();
   };
 
   const confirm = async () => {
@@ -91,26 +90,17 @@ export function ShelfBook({ book, shelf, progress, onOpen, onMove, onRemove }: S
           </div>
         )}
         <div className="shelf-book__actions">
-          <button type="button" className="shelf-book__button shelf-book__button--primary" onClick={() => onOpen(book.bookId)}>
-            {percent > 0 ? 'Continue ' : 'Open '}
+          <button type="button" className="btn-quiet shelf-book__button" onClick={() => onOpen(book.bookId)}>
+            {percent > 0 ? 'Continue ' : 'Start reading '}
             <span className="shelf-book__sr">{book.title}</span>
           </button>
-          {targets.map((s) => (
-            <button key={s} type="button" className="shelf-book__button" onClick={() => onMove(book.bookId, s)}>
-              Move to {SHELF_LABELS[s]}
-              <span className="shelf-book__sr">: {book.title}</span>
-            </button>
-          ))}
-          <button
-            ref={removeRef}
-            type="button"
-            className="shelf-book__button shelf-book__button--quiet"
-            onClick={() => setConfirming(true)}
-            aria-expanded={confirming}
-          >
-            Remove{' '}
-            <span className="shelf-book__sr">{book.title}</span>
-          </button>
+          <ShelfMenu
+            title={book.title}
+            shelf={shelf}
+            buttonRef={menuRef}
+            onMove={(s) => onMove(book.bookId, s)}
+            onRemove={() => setConfirming(true)}
+          />
         </div>
         {confirming && (
           <div
@@ -129,7 +119,7 @@ export function ShelfBook({ book, shelf, progress, onOpen, onMove, onRemove }: S
               device.
             </p>
             <div className="shelf-book__actions">
-              <button ref={cancelRef} type="button" className="shelf-book__button" onClick={cancel} disabled={busy}>
+              <button ref={cancelRef} type="button" className="btn-quiet shelf-book__button" onClick={cancel} disabled={busy}>
                 Cancel
               </button>
               <button type="button" className="shelf-book__button shelf-book__button--danger" onClick={confirm} disabled={busy}>

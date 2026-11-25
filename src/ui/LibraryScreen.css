@@ -95,12 +95,11 @@
 .library__upload-input::file-selector-button {
   margin-right: 0.75rem;
   padding: 0.5rem 1rem;
-  border: 0;
+  border: 1px solid var(--text-dim);
   border-radius: 0.375rem;
-  background: var(--accent);
-  color: var(--bg);
+  background: transparent;
+  color: var(--text);
   font: inherit;
-  font-weight: 600;
   cursor: pointer;
 }
 
@@ -109,7 +108,16 @@
   outline-offset: 2px;
 }
 
-.library__settings-button {
-  display: block;
-  margin: 0 0 1rem auto;
+.library__prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.library__prompt p {
+  margin: 0;
 }

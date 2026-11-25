@@ -186,7 +186,7 @@ export function savePosition(model: DataModel, bookId: string, position: Positio
 
 Each takes a `DataModel`, returns a new one, and does not mutate its input (structural sharing is fine; only the touched branches are copied). `moveToShelf`/`removeBook`/`savePosition` on an unknown `bookId` return the input model unchanged (21.6). `moveToShelf` always removes the Book_Id from whichever shelf currently holds it (if any) before adding it to the target, in one returned value, so no caller can observe an intermediate state (6.4) — there is no separate "remove" step the caller must sequence.
 
-`currentBook(model): BookEntry | null` picks the `reading`-shelf entry with the latest `positions[id].savedAt`, falling back to the latest `addedAt` when none has a position (4.6).
+`currentBook(model): BookEntry | null` considers only `reading`-shelf entries whose position has `progress > 0` and picks the one with the latest `positions[id].savedAt`. It returns `null` when none qualifies; there is no `addedAt` fallback (4.6). A `null` result hides the Continue card.
 
 ### `src/library/statsOps.ts`
 
@@ -298,16 +298,21 @@ Pure (19.5 — the Book_Id is computed by `localStore.ts`, a side-effecting call
 | File | Responsibility |
 |---|---|
 | `LibraryScreen.tsx` | Composes `WelcomeHeader`, `ContinueCard`, `CatalogueGrid`, `ShelfView`, "Open your own book". Replaces current flat list. |
-| `WelcomeHeader.tsx` | Greeting + `Avatar` (4.1–4.3). |
-| `ContinueCard.tsx` | Hero card or empty state (4.4, 4.7–4.9). |
+| `WelcomeHeader.tsx` | Greeting + `Avatar` (4.1–4.3), with the Settings control as a small gear icon button (inline SVG, `currentColor`, `aria-label="Settings"`) in the same row, next to the Avatar (7.6). |
+| `ContinueCard.tsx` | Hero card with the only primary (`--accent` filled) button, labelled "Continue reading". Hidden when `currentBook` is null; `LibraryScreen` then shows the "Choose a book" prompt instead (4.4, 4.7–4.9, 11.11). |
 | `CatalogueGrid.tsx` | Centred grid of `CoverCard`s: two columns at 360 px, about 5 to 6 per row at 1440 px, covers about 130–200 px wide (2.1–2.7, 14.2–14.3). |
 | `CoverCard.tsx` | One cover, title, author, hover/focus lift (3.1, 12.1–12.2). |
 | `HoverCard.tsx` | Spoiler-free preview (3.1–3.10). |
-| `ShelfView.tsx` | Three shelves, move buttons, empty-shelf message (6.7–6.10, 13.4). |
+| `ShelfView.tsx` | Three shelves, each a horizontal row of `ShelfBook` cards that may scroll sideways inside the row, never the page; empty-shelf message (6.7–6.10, 6.16, 13.4). |
+| `ShelfBook.tsx` | Cover-led card: 2:3 uncropped cover, title, author, progress bar, one quiet action ("Continue" if progress > 0, else "Start reading"), and the "⋯" button (6.14). |
+| `ShelfMenu.tsx` | The "⋯" actions menu (`aria-label="More actions for <title>"`): move items (omitting the current shelf) and "Remove". Enter/Space opens, arrow keys or Tab move, Escape closes and returns focus to the menu button (6.8, 6.15). |
+| `LibraryShell.tsx` | Holds a cover click or a shelf "Continue"/"Start reading" made while the model is loading, and opens the book once `useLibrary` reports ready (2.8). |
 | `Onboarding.tsx` | ≤3 steps, skip button, name/colour step (8.1–8.12). |
 | `ProfileSettings.tsx` | Name/colour edit, delete profile, clear data (7.6–7.9, 22.6–22.9). |
 | `ReaderBanner.tsx` | Small, dismissible, non-blocking banner in the reader view shown when a Position save fails. It sits outside the active Reading_Chunk, never blocks reading, and clears on the next successful save (5.11, 5.12). |
 | `Skeleton.tsx` | Shared placeholder shape (13.1–13.3, 13.5). |
+
+Held clicks (2.8): `useLibrary` exposes a `ready` flag. `LibraryShell` stores the one pending open request (a catalogue slug or Book_Id) when the reader acts while `ready` is false, and runs it in an effect when `ready` becomes true. A later request replaces the pending one. It is never dropped silently.
 
 `useLibrary.ts` (new, in `src/ui/`) owns the `DataStore` calls, the `currentBook`/shelf selectors, onboarding/profile state, and debounced saves (within the 500 ms/1 s/1000 ms windows in Requirements 5.1, 7.3, 7.12, 18.1). `useReader.ts` changes to accept a `bookId` and the `DataStore` from context instead of calling `storage.ts`/`bookStore.ts` directly; it calls `savePosition`/`recordParagraphsRead` etc. through `useLibrary`'s exposed update functions rather than owning model state itself.
 

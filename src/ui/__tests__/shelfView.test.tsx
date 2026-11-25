@@ -2,6 +2,7 @@
 // Real LibraryShell, LibraryScreen, ShelfView, ShelfBook, useLibrary and useShelfActions, with the
 // in-memory store provided through context. A wrapper store makes deleteText or save fail on demand.
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { CATALOGUE } from '../../library/catalogueData';
 import type { DataStore, Result } from '../../library/localStore';
@@ -62,26 +63,32 @@ const savedShelves = async (store: DataStore) => {
   if (!r.ok) throw new Error('load failed');
   return r.value;
 };
-const startRemoving = (title: string) => fireEvent.click(shelf('Reading').getByRole('button', { name: new RegExp(`^Remove ${title}`) }));
+/** Opens a book's "⋯" menu on the named shelf and returns the menu's queries. */
+const openMenu = (title: string, shelfName = 'Reading') => {
+  fireEvent.click(shelf(shelfName).getByRole('button', { name: `More actions for ${title}` }));
+  return within(screen.getByRole('menu'));
+};
+const startRemoving = (title: string) => fireEvent.click(openMenu(title).getByRole('menuitem', { name: 'Remove' }));
 
 afterEach(cleanup);
 
 describe('Shelf view', () => {
-  it('omits the current shelf from each book\'s move buttons', async () => {
+  it('omits the current shelf from each book\'s move items', async () => {
     await show(createOnboardedStore());
-    const moves = (name: string) =>
-      shelf(name)
-        .getAllByRole('button', { name: /^Move to / })
-        .map((b) => b.textContent?.split(':')[0]);
-    expect(moves('Reading')).toEqual(['Move to Want to read', 'Move to Finished']);
-    expect(moves('Want to read')).toEqual(['Move to Reading', 'Move to Finished']);
+    const moves = (name: string, title: string) => {
+      const items = openMenu(title, name).getAllByRole('menuitem').map((b) => b.textContent);
+      fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
+      return items;
+    };
+    expect(moves('Reading', A.title)).toEqual(['Move to Want to read', 'Move to Finished', 'Remove']);
+    expect(moves('Want to read', B.title)).toEqual(['Move to Reading', 'Move to Finished', 'Remove']);
   });
 
   it('a move updates both shelves in one render and is saved', async () => {
     const store = createOnboardedStore();
     await show(store);
     expect(shelf('Reading').getByRole('heading', { name: A.title })).toBeTruthy();
-    fireEvent.click(shelf('Reading').getByRole('button', { name: `Move to Finished: ${A.title}` }));
+    fireEvent.click(openMenu(A.title).getByRole('menuitem', { name: 'Move to Finished' }));
     // No waiting: the click's render must already show the book on the new shelf only.
     expect(shelf('Reading').queryByRole('heading', { name: A.title })).toBeNull();
     expect(shelf('Finished').getByRole('heading', { name: A.title })).toBeTruthy();
@@ -137,6 +144,28 @@ describe('Shelf view', () => {
       expect(text).toEqual({ ok: true, value: 'uploaded text' });
     },
   );
+
+  it('opens the menu with Enter, moves with arrow keys, and Escape returns focus to the button', async () => {
+    const user = userEvent.setup();
+    await show(createOnboardedStore());
+    const button = shelf('Reading').getByRole('button', { name: 'More actions for Dracula' });
+    expect(button).toHaveAttribute('aria-haspopup', 'menu');
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    button.focus();
+    await user.keyboard('{Enter}');
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
+    expect(items[0]).toHaveFocus();
+    await user.keyboard('{ArrowDown}');
+    expect(items[1]).toHaveFocus();
+    await user.keyboard('{ArrowDown}');
+    expect(items[2]).toHaveFocus();
+    await user.keyboard('{ArrowUp}');
+    expect(items[1]).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(button).toHaveFocus();
+  });
 
   it('shows the empty-shelf message and its button moves focus to the catalogue grid', async () => {
     await show(createOnboardedStore());
