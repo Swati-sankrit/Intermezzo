@@ -1,7 +1,7 @@
 .cover-card {
   position: relative;
   width: 100%;
-  max-width: 220px;
+  max-width: 200px;
   min-width: 120px;
 }
 
@@ -33,6 +33,7 @@
 
 /* Reserves the cover's width and height before the image arrives. */
 .cover-card__frame {
+  position: relative;
   display: block;
   width: 100%;
   aspect-ratio: 2 / 3;
@@ -49,8 +50,14 @@
   object-fit: cover;
 }
 
-.cover-card__image[hidden] {
-  display: none;
+/* Never display:none while loading: a lazy image with no layout box is never fetched. */
+.cover-card__image--loading {
+  opacity: 0;
+}
+
+.cover-card__skeleton {
+  position: absolute;
+  inset: 0;
 }
 
 .cover-card__title {

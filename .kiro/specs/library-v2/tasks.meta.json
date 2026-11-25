@@ -455,6 +455,90 @@
         "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
         "timestamp": 1795577661133
       }
+    ],
+    "18.4 Fix catalogue grid covers never rendering": [
+      {
+        "executionId": "8617e90a-eccc-4388-ade9-9f5ceb490d7b",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795578685334
+      },
+      {
+        "executionId": "8617e90a-eccc-4388-ade9-9f5ceb490d7b",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795578784275
+      }
+    ],
+    "18.5 Centre the library content column": [
+      {
+        "executionId": "8617e90a-eccc-4388-ade9-9f5ceb490d7b",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795578784620
+      },
+      {
+        "executionId": "8617e90a-eccc-4388-ade9-9f5ceb490d7b",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795578933069
+      }
+    ],
+    "18.6 Make the catalogue grid denser": [
+      {
+        "executionId": "8617e90a-eccc-4388-ade9-9f5ceb490d7b",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795578932955
+      },
+      {
+        "executionId": "8617e90a-eccc-4388-ade9-9f5ceb490d7b",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795579205337
+      }
+    ],
+    "18.7 Fix flaky continueFlow test": [
+      {
+        "executionId": "b9542624-4da8-42b1-af70-0b460d43fcb2",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795579431792
+      },
+      {
+        "executionId": "b9542624-4da8-42b1-af70-0b460d43fcb2",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795579666810
+      }
+    ],
+    "18.8 Fix flaky coverage floor in the ghost planner property test": [
+      {
+        "executionId": "b9542624-4da8-42b1-af70-0b460d43fcb2",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795579671542
+      },
+      {
+        "executionId": "b9542624-4da8-42b1-af70-0b460d43fcb2",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795580576841
+      }
+    ],
+    "18.9 Centre the library column on wide windows": [
+      {
+        "executionId": "2fca3c34-e247-40aa-83ed-1aa268e6aa73",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795580734459
+      },
+      {
+        "executionId": "2fca3c34-e247-40aa-83ed-1aa268e6aa73",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795585116304
+      }
+    ],
+    "18.10 Show Poe as Short Fiction and Polidori as The Vampire": [
+      {
+        "executionId": "2fca3c34-e247-40aa-83ed-1aa268e6aa73",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795585116530
+      },
+      {
+        "executionId": "2fca3c34-e247-40aa-83ed-1aa268e6aa73",
+        "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
+        "timestamp": 1795587120978
+      }
     ]
   }
 }

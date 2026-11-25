@@ -369,6 +369,42 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
     - Add a small example test: a failed save shows the banner, dismiss hides it, the reading controls stay usable, and a later successful save clears it.
     - _Requirements: 5.10, 5.11, 5.12_
 
+  - [x] 18.4 Fix catalogue grid covers never rendering
+    - In the manual check every grid card stays on the placeholder, no `<img>` is rendered, and the grid never requests any cover (only `ContinueCard` requests `frankenstein.webp`). Find the root cause in `src/ui/CoverCard.tsx` and `src/ui/CatalogueGrid.tsx` (a lazy-loading gate, an IntersectionObserver, or a loading state that never ends). Check whether the `<img>` is gated on an `onLoad` that never fires because the `<img>` is not rendered.
+    - Fix it so the `<img>` is rendered with the cover path, a Skeleton shows until it loads, and the placeholder shows only on image error.
+    - Add an example test (jsdom): fire no load event and assert the grid card renders an `<img>` with the cover `src`; then fire `error` and assert the placeholder appears. The test must fail on the code before the fix.
+    - _Requirements: 2.1, 2.6, 2.7, 13.2_
+
+  - [x] 18.5 Centre the library content column
+    - Give the library content a centred column with a sensible max width (about `min(100% - gutters, 1200px)`) and side padding, from 360 px up to large desktop, with no horizontal scroll. Colours and spacing come from `theme.css` custom properties where they exist.
+    - _Requirements: 11.1, 14.1_
+
+  - [x] 18.6 Make the catalogue grid denser
+    - Show 2 covers per row at 360 px and about 5 to 6 per row at 1440 px, keeping the 2:3 cover shape. Keep covers at about 120 to 220 px wide if that fits. Otherwise relax to about 140 to 200 px and keep the grid centred.
+    - Update Requirements 14.2 and 14.3 in `requirements.md` and the matching wording in `design.md` (two columns on a 360 px window, about 5 to 6 per row at 1440 px). Update any test that asserts column sizing.
+    - _Requirements: 14.2, 14.3_
+
+  - [x] 18.7 Fix flaky continueFlow test
+    - `src/ui/__tests__/continueFlow.test.tsx` times out (1 s `findByTestId('active-paragraph')`) about 1 in 10 runs under suite load.
+    - If it opens a real EPUB in jsdom, use a small fake book for that test. Otherwise raise the wait to 5 s with a comment (test-environment timing limit under full-suite load). Do not weaken any assertion.
+    - Run the file 20 times alone and confirm 0 failures. Log the cause, fix, and run results in `docs/BUILD_LOG.md`.
+    - _Requirements: 5.1, 5.2, 23.5_
+
+  - [x] 18.8 Fix flaky coverage floor in the ghost planner property test
+    - In `src/haunts/engine/ghost/__tests__/planner.gd11.prop.test.ts`, the "qualifying:blocked-by-history" floor was once seen at 36 < 37. Reshape the generator inputs so the floor has a comfortable margin, without lowering the floor.
+    - Test-only change: do not change the planner. Run the file many times to confirm no failures, and log the cause, fix, and run count in `docs/BUILD_LOG.md`.
+    - _Requirements: 23.2, 23.5_
+
+  - [x] 18.9 Centre the library column on wide windows
+    - User report: at 1840 px wide there is about 70 px of space on the left and 280 px on the right. Find what makes the column sit left (for example grid justification, a fixed-width child, or margins that do not auto-centre) and centre it, with equal space on both sides, from 360 px up to large desktop and no horizontal scroll.
+    - Add a layout-agnostic example test only if it is meaningful in jsdom (for example, the content container has no fixed-width child wider than its parent and uses auto side margins). Otherwise skip the test and say why.
+    - _Requirements: 11.1, 14.1, 14.3_
+
+  - [x] 18.10 Show Poe as Short Fiction and Polidori as The Vampire
+    - In `src/library/catalogueData.ts`, set the Poe entry title to "Short Fiction" (author "Edgar Allan Poe") and the Polidori entry title to "The Vampire". Slugs and file stems stay the same.
+    - Update the tests that assert these titles, for example `src/library/__tests__/catalogueData.unit.test.ts`, and the README titles if present.
+    - _Requirements: 1.11_
+
 - [ ] 19. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
@@ -395,7 +431,8 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
         "4.1",
         "9.1",
         "18.1",
-        "18.3"
+        "18.3",
+        "18.4"
       ]
     },
     {
@@ -408,7 +445,8 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
         "3.2",
         "4.2",
         "9.2",
-        "18.2"
+        "18.2",
+        "18.5"
       ]
     },
     {
@@ -421,7 +459,8 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
         "2.3",
         "3.3",
         "4.3",
-        "9.3"
+        "9.3",
+        "18.6"
       ]
     },
     {
@@ -430,7 +469,8 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
         "2.4",
         "3.4",
         "4.4",
-        "5.1"
+        "5.1",
+        "18.7"
       ]
     },
     {
@@ -439,7 +479,8 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
         "3.5",
         "4.5",
         "5.2",
-        "5.3"
+        "5.3",
+        "18.8"
       ]
     },
     {
@@ -561,6 +602,18 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
       "tasks": [
         "16.4",
         "16.5"
+      ]
+    },
+    {
+      "id": 23,
+      "tasks": [
+        "18.9"
+      ]
+    },
+    {
+      "id": 24,
+      "tasks": [
+        "18.10"
       ]
     }
   ]

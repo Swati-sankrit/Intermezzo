@@ -95,7 +95,9 @@ describe('Continue card and progress flow', () => {
     const store = createMemoryStore();
     show(store);
     fireEvent.click(await screen.findByRole('button', { name: /Dracula/ }));
-    await screen.findByTestId('active-paragraph');
+    // Test-environment timing limit: the real EPUB parse (epub.js + jszip, first dynamic import
+    // in this file) can exceed the default 1 s when the full suite loads the CPU.
+    await screen.findByTestId('active-paragraph', undefined, { timeout: 5000 });
     expect(active()).toHaveTextContent('Alpha one.');
     fireEvent.click(active());
     expect(active()).toHaveTextContent('Bravo two.');
@@ -109,7 +111,7 @@ describe('Continue card and progress flow', () => {
     // Leave, then open the same book again from the cover card.
     fireEvent.click(screen.getByRole('button', { name: 'Back to library' }));
     fireEvent.click(await screen.findByRole('button', { name: /Dracula/ }));
-    await screen.findByTestId('active-paragraph');
+    await screen.findByTestId('active-paragraph', undefined, { timeout: 5000 }); // same timing limit as above
     expect(active()).toHaveTextContent('Bravo two.');
     model = await savedModel(store);
     expect(model.shelves.reading).toEqual([SLUG]);

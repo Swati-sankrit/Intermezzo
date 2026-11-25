@@ -71,7 +71,7 @@ const SOURCES: readonly EntrySource[] = [
   },
   {
     slug: 'john-william-polidori/the-vampire',
-    title: 'The Vampyre',
+    title: 'The Vampire',
     author: 'John William Polidori',
     description:
       'A young gentleman travels across Europe with a magnetic and mysterious lord who seems to draw misfortune wherever he goes. Written during the same famous summer as Frankenstein, it is the story that first brought the elegant vampire into English fiction.',
@@ -98,7 +98,7 @@ const SOURCES: readonly EntrySource[] = [
   },
   {
     slug: 'edgar-allan-poe/short-fiction',
-    title: 'Short Stories',
+    title: 'Short Fiction',
     author: 'Edgar Allan Poe',
     description:
       'This collection gathers many of the master storyteller\'s best tales of dread, guilt and strange obsession. Each one is short enough to read in a single sitting by candlelight.',

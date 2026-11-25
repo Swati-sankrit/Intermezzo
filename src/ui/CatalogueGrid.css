@@ -1,6 +1,9 @@
+/* Cards keep one size and wrap in the centred library column, so a short last row
+   is centred too instead of sitting against the left edge (Requirement 14.2, 14.3).
+   About 160 px wide, 2 per row at 360 px, 6 per row at 1440 px. */
 .catalogue-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 220px));
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
   margin: 0;
@@ -10,6 +13,7 @@
 
 .catalogue-grid__item {
   display: flex;
+  flex: 0 0 min(160px, calc(50% - 0.5rem));
   justify-content: center;
   min-width: 0;
 }

@@ -1,9 +1,10 @@
 .library {
   box-sizing: border-box;
   width: 100%;
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+  /* Centred column: about 1200px wide, with gutters that shrink to 1rem at 360px. */
+  max-width: 75rem;
+  margin-inline: auto;
+  padding: 2rem clamp(1rem, 4vw, 2.5rem);
   color: var(--text);
   font-family: system-ui, sans-serif;
 }

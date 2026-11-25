@@ -82,10 +82,10 @@ Suggested build order (informational only, not a requirement): cover grid with h
     - Frankenstein (`mary-shelley/frankenstein`)
     - The Strange Case of Dr Jekyll and Mr Hyde (`robert-louis-stevenson/the-strange-case-of-dr-jekyll-and-mr-hyde`)
     - The Picture of Dorian Gray (`oscar-wilde/the-picture-of-dorian-gray`)
-    - The Vampyre by John Polidori (`john-william-polidori/the-vampire`, titled "The Vampire" on Standard Ebooks), which replaces Carmilla because Standard Ebooks does not publish Carmilla as a standalone book
+    - The Vampire by John Polidori (`john-william-polidori/the-vampire`, shown in the Library_App with the title "The Vampire" to match the title printed on its cover), which replaces Carmilla because Standard Ebooks does not publish Carmilla as a standalone book
     - The Turn of the Screw (`henry-james/the-turn-of-the-screw`)
     - The Hound of the Baskervilles (`arthur-conan-doyle/the-hound-of-the-baskervilles`)
-    - Short Stories by Edgar Allan Poe (`edgar-allan-poe/short-fiction`, shown in the Library_App with the title "Short Stories" and the author "Edgar Allan Poe")
+    - Short Fiction by Edgar Allan Poe (`edgar-allan-poe/short-fiction`, shown in the Library_App with the title "Short Fiction" to match the title printed on its cover, and the author "Edgar Allan Poe")
     - Pride and Prejudice (`jane-austen/pride-and-prejudice`)
     - Jane Eyre (`charlotte-bronte/jane-eyre`)
     - Wuthering Heights (`emily-bronte/wuthering-heights`)
@@ -311,7 +311,7 @@ Suggested build order (informational only, not a requirement): cover grid with h
 
 1. WHILE the viewport is between 360 px and 3840 px wide, THE Library_Screen SHALL show no horizontal scroll.
 2. WHILE the viewport is 360 px wide, THE Catalogue grid SHALL show two Covers per row.
-3. WHEN the viewport width grows, THE Catalogue grid SHALL add Covers per row so that each Cover is between 120 px and 220 px wide.
+3. WHEN the viewport width grows, THE Catalogue grid SHALL add Covers per row so that each Cover is between about 130 px and 200 px wide, SHALL show about 5 to 6 Covers per row at 1440 px, and SHALL keep the grid centred.
 4. WHILE the viewport is narrower than 600 px, THE Continue_Card SHALL stack the Cover above the title, progress, and "Continue" button.
 5. WHILE the viewport is 600 px wide or more, THE Continue_Card SHALL show the Cover beside the title, progress, and "Continue" button.
 6. THE Library_Screen SHALL make every button and Cover at least 44 by 44 CSS pixels.

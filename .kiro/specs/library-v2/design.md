@@ -255,7 +255,7 @@ export interface CatalogueEntry {
 export const CATALOGUE: readonly CatalogueEntry[]; // exactly 16 entries (Req 1.1, 1.11)
 ```
 
-This file holds the 16 entries listed in Requirement 1.11, with `slug` exactly as specified there (e.g. `john-william-polidori/the-vampire`, `h-g-wells/the-invisible-man`). `description`, `readingMinutes`, and `moodTags` are hand-written editorial content (Requirement 1.9), not scraped from Standard Ebooks. The Poe entry keeps the slug `edgar-allan-poe/short-fiction` but is shown with the title "Short Stories". `coverPath`/`epubPath` use the file stem the fetch script writes (the book's own slug segment, for example `dracula`, `short-fiction`, `the-invisible-man`; see `scripts/catalogue-slugs.mjs`). Paths are case-sensitive: the Dracula file is exactly `public/books/dracula.epub` (Requirement 1.13).
+This file holds the 16 entries listed in Requirement 1.11, with `slug` exactly as specified there (e.g. `john-william-polidori/the-vampire`, `h-g-wells/the-invisible-man`). `description`, `readingMinutes`, and `moodTags` are hand-written editorial content (Requirement 1.9), not scraped from Standard Ebooks. The Poe entry keeps the slug `edgar-allan-poe/short-fiction` but is shown with the title "Short Fiction", and the Polidori entry (slug `john-william-polidori/the-vampire`) is shown as "The Vampire", both matching the title printed on the cover. `coverPath`/`epubPath` use the file stem the fetch script writes (the book's own slug segment, for example `dracula`, `short-fiction`, `the-invisible-man`; see `scripts/catalogue-slugs.mjs`). Paths are case-sensitive: the Dracula file is exactly `public/books/dracula.epub` (Requirement 1.13).
 
 ### `src/library/localStore.ts` (the only Data_Store implementation — Requirement 17)
 
@@ -300,7 +300,7 @@ Pure (19.5 — the Book_Id is computed by `localStore.ts`, a side-effecting call
 | `LibraryScreen.tsx` | Composes `WelcomeHeader`, `ContinueCard`, `CatalogueGrid`, `ShelfView`, "Open your own book". Replaces current flat list. |
 | `WelcomeHeader.tsx` | Greeting + `Avatar` (4.1–4.3). |
 | `ContinueCard.tsx` | Hero card or empty state (4.4, 4.7–4.9). |
-| `CatalogueGrid.tsx` | Grid of `CoverCard`s (2.1–2.7, 14.2–14.3). |
+| `CatalogueGrid.tsx` | Centred grid of `CoverCard`s: two columns at 360 px, about 5 to 6 per row at 1440 px, covers about 130–200 px wide (2.1–2.7, 14.2–14.3). |
 | `CoverCard.tsx` | One cover, title, author, hover/focus lift (3.1, 12.1–12.2). |
 | `HoverCard.tsx` | Spoiler-free preview (3.1–3.10). |
 | `ShelfView.tsx` | Three shelves, move buttons, empty-shelf message (6.7–6.10, 13.4). |

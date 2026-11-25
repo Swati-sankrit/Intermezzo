@@ -68,6 +68,36 @@ describe('CatalogueGrid cards', () => {
   });
 });
 
+describe('CatalogueGrid covers', () => {
+  it('renders a fetchable <img> per card before load, clears the skeleton on load, and falls back per card on error', () => {
+    stubMatchMedia(false);
+    const { container } = render(<CatalogueGrid onOpen={vi.fn()} />);
+    const items = Array.from(container.querySelectorAll('li'));
+    expect(items).toHaveLength(CATALOGUE.length);
+
+    items.forEach((li, i) => {
+      const img = li.querySelector('img') as HTMLImageElement;
+      expect(img.getAttribute('src')).toBe(CATALOGUE[i].coverPath);
+      // A hidden (display:none) lazy image is never fetched by the browser.
+      expect(img.hidden).toBe(false);
+      expect(li.querySelector('.skeleton')).not.toBeNull();
+      expect(li.querySelector('.placeholder-cover')).toBeNull();
+    });
+
+    const [a, b] = items;
+    fireEvent.load(a.querySelector('img') as HTMLImageElement);
+    expect(a.querySelector('.skeleton')).toBeNull();
+    expect(a.querySelector('img')).not.toBeNull();
+
+    fireEvent.error(b.querySelector('img') as HTMLImageElement);
+    expect(b.querySelector('.placeholder-cover')).not.toBeNull();
+    expect(b.querySelector('img')).toBeNull();
+    items.forEach((li, i) => {
+      if (i !== 1) expect(li.querySelector('.placeholder-cover')).toBeNull();
+    });
+  });
+});
+
 describe('HoverCard behaviour', () => {
   it('shows after the pointer rests 200 ms and hides on pointer leave', () => {
     stubMatchMedia(false);

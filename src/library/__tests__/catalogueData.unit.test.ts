@@ -40,9 +40,9 @@ describe('catalogue data', () => {
     expect(existsExactCase('/covers/alices-adventures-in-wonderland.webp')).toBe(false)
   })
 
-  it('titles the Poe entry "Short Stories" and spells the Dracula path in lower case', () => {
+  it('titles the Poe entry "Short Fiction" and spells the Dracula path in lower case', () => {
     const poe = CATALOGUE.find((e) => e.slug === 'edgar-allan-poe/short-fiction')
-    expect(poe?.title).toBe('Short Stories')
+    expect(poe?.title).toBe('Short Fiction')
     expect(poe?.author).toBe('Edgar Allan Poe')
     expect(poe?.epubPath).toBe('/books/short-fiction.epub')
     const dracula = CATALOGUE.find((e) => e.slug === 'bram-stoker/dracula')

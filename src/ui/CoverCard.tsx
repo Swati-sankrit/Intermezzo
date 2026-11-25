@@ -46,17 +46,18 @@ export function CoverCard({ entry, progress = 0, onOpen, buttonProps, slot }: Co
         }}
       >
         <span className="cover-card__frame">
-          {state === 'loading' && <Skeleton />}
+          {state === 'loading' && <Skeleton className="cover-card__skeleton" />}
           {state === 'error' ? (
             <PlaceholderCover title={entry.title} />
           ) : (
             <img
               ref={imgRef}
-              className="cover-card__image"
+              className={
+                state === 'loading' ? 'cover-card__image cover-card__image--loading' : 'cover-card__image'
+              }
               src={entry.coverPath}
               alt=""
               loading="lazy"
-              hidden={state === 'loading'}
               onLoad={() => setState('loaded')}
               onError={() => setState('error')}
             />

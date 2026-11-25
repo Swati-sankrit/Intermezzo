@@ -67,7 +67,7 @@ function jumpRollArb(mode: ScaryMode, below: boolean): fc.Arbitrary<number> {
 
 /** Away times whose sanitised value is below 10000: just below, NaN, negative, 0, and ordinary. */
 const lowAwayArb: fc.Arbitrary<number> = fc.oneof(
-  { weight: 4, arbitrary: fc.constantFrom(9999, 9999.5, 9999.999) },
+  { weight: 16, arbitrary: fc.constantFrom(9999, 9999.5, 9999.999) },
   { weight: 3, arbitrary: fc.constantFrom(0, -0, 1, 5000) },
   { weight: 3, arbitrary: fc.constantFrom(NaN, -1, -10_000, -1e9, -Infinity, -0.5) },
   { weight: 3, arbitrary: fc.integer({ min: 0, max: 9999 }) },
@@ -75,7 +75,7 @@ const lowAwayArb: fc.Arbitrary<number> = fc.oneof(
 
 /** Away times at or above 10000, including the exact boundary and very large values. */
 const highAwayArb: fc.Arbitrary<number> = fc.oneof(
-  { weight: 4, arbitrary: fc.constant(10_000) },
+  { weight: 8, arbitrary: fc.constant(10_000) },
   { weight: 2, arbitrary: fc.constantFrom(10_001, 10_000.5, 60_000) },
   { weight: 3, arbitrary: fc.integer({ min: 10_000, max: 200_000 }) },
   { weight: 1, arbitrary: fc.constantFrom(1e12, Number.MAX_VALUE, Infinity) },
@@ -88,10 +88,10 @@ const withRollAndHistory = (
 
 /** Inputs whose sanitised `awayMs` is below 10000, in any mode, any rolls and any history. */
 export const nonQualifyingArb: fc.Arbitrary<ReturnInput> = fc.oneof(
-  { weight: 2, arbitrary: fc.tuple(baseArb, lowAwayArb).map(([b, away]): ReturnInput => ({ ...b, awayMs: away })) },
+  { weight: 1, arbitrary: fc.tuple(baseArb, lowAwayArb).map(([b, away]): ReturnInput => ({ ...b, awayMs: away })) },
   {
     // The case that would scare if it qualified: a scary mode, roll 0, empty history.
-    weight: 2,
+    weight: 4,
     arbitrary: fc.tuple(baseArb, scaryModeArb, lowAwayArb).map(([b, mode, away]) =>
       withRollAndHistory(b, mode, away, [], 0)),
   },
@@ -104,22 +104,22 @@ export const nonQualifyingArb: fc.Arbitrary<ReturnInput> = fc.oneof(
 
 /** Qualifying inputs in Classic or Nightmare, split by what the history and the roll say. */
 export const qualifyingArb: fc.Arbitrary<ReturnInput> = fc.oneof(
-  { weight: 2, arbitrary: fc.tuple(baseArb, scaryModeArb).map(([b, mode]): ReturnInput => ({ ...b, mode, awayMs: 10_000 })) },
+  { weight: 1, arbitrary: fc.tuple(baseArb, scaryModeArb).map(([b, mode]): ReturnInput => ({ ...b, mode, awayMs: 10_000 })) },
   {
     // The history blocks it although the roll is below the probability.
-    weight: 2,
+    weight: 6,
     arbitrary: fc.tuple(baseArb, scaryModeArb, highAwayArb).chain(([b, mode, away]) =>
       fc.tuple(historyArb(mode, false), jumpRollArb(mode, true)).map(([h, r]) => withRollAndHistory(b, mode, away, h, r))),
   },
   {
     // The roll is too high although the history allows it.
-    weight: 2,
+    weight: 6,
     arbitrary: fc.tuple(baseArb, scaryModeArb, highAwayArb).chain(([b, mode, away]) =>
       fc.tuple(historyArb(mode, true), jumpRollArb(mode, false)).map(([h, r]) => withRollAndHistory(b, mode, away, h, r))),
   },
   {
     // The history allows it and the roll is below the probability: a Jumpscare is planned.
-    weight: 2,
+    weight: 6,
     arbitrary: fc.tuple(baseArb, scaryModeArb, highAwayArb).chain(([b, mode, away]) =>
       fc.tuple(historyArb(mode, true), jumpRollArb(mode, true)).map(([h, r]) => withRollAndHistory(b, mode, away, h, r))),
   },
@@ -127,15 +127,16 @@ export const qualifyingArb: fc.Arbitrary<ReturnInput> = fc.oneof(
 
 /** Both kinds together, for the coverage count. */
 export const caseArb: fc.Arbitrary<ReturnInput> = fc.oneof(
-  { weight: 5, arbitrary: nonQualifyingArb },
+  { weight: 2, arbitrary: nonQualifyingArb },
   { weight: 8, arbitrary: qualifyingArb },
 );
 
 /**
- * Floors per 300 inputs: floor(mean - 4 SD) over 10 batches. Measured min / mean / SD:
- * just below 10000: 25 / 33.9 / 4.58; exactly 10000: 92 / 105.9 / 7.87;
- * non-qualifying would-scare: 32 / 46.3 / 7.59; blocked by history: 47 / 53.0 / 3.92;
- * blocked by roll: 45 / 57.0 / 5.33; scares: 66 / 76.5 / 4.90.
+ * Floors per 300 inputs (unchanged). Measured over 300 batches, mean / SD / min:
+ * just below 10000: 38.2 / 5.7 / 22; exactly 10000: 143 / 8.7 / 115;
+ * non-qualifying would-scare: 40.9 / 5.5 / 28; blocked by history: 76.7 / 7.3 / 57;
+ * blocked by roll: 78.0 / 7.9 / 52; scares: 85.5 / 7.9 / 63.
+ * The caseArb weights favour qualifying inputs so every mean sits at least 3.7 SD above its floor.
  */
 export const FLOORS: Record<string, number> = {
   'away:just-below-10000': 15,

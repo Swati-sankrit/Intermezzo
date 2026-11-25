@@ -1190,3 +1190,28 @@ All fixes were approved by the user. No assertion was weakened.
 - Second counterexample (seed 2085864703): one book with Book_Id `"constructor"` on the `reading` shelf, with matching stats and no position. Same "no visual difference" failure.
 - Triage: Vitest assertion quirk, not a serializer/validator bug. A standalone check showed `expect(JSON.parse('{"constructor":{"a":1}}')).toStrictEqual(JSON.parse('{"constructor":{"a":1}}'))` fails in Vitest 5.1.0, because its type check reads `obj.constructor`. The round-tripped model had the same prototypes and own keys as the original. Fix: compare with Node's `util.isDeepStrictEqual`, which is just as strict (it checks prototypes and own keys) and does not read `constructor`. The generator still produces `constructor`, `__proto__`, `toString` and `""` Book_Ids.
 - Result: `src/library/__tests__/serializer.p8.prop.test.ts` passes. It checks generator validity (200 runs), `validate(parse(serialize(m)))` deep-strict-equal to `m` (500 runs), and stable text on re-serialize (300 runs). `npx tsc -b` and `oxlint src/library` are clean. No serializer or validator code was changed.
+### Task 18.6 final verification: flaky tests
+- Full `npx vitest --run` x3: runs 1 and 2 passed (123 files, 860 tests). Run 3 had one failure: `src/ui/__tests__/continueFlow.test.tsx` > "opening a catalogue book creates one entry on reading; progress is saved; reopening reuses the entry and restores the place". `findByTestId('active-paragraph')` (line 98) timed out after about 1 s (default findBy timeout) under full-suite load.
+- This is an example test, not a property test, so there is no fast-check seed or counterexample. Run alone 10 times it failed 1 of 10 (run 3), so it is timing-flaky. Likely cause: async load of the book before the 1 s `findBy` limit. Not changed.
+- `planner.gd11.prop.test.ts` run alone 10 times: 0 failures. The earlier `blocked-by-history: expected 36 >= 37` failure did not reproduce, and no seed was captured. Test and code untouched.
+- `npx tsc -b`, `npm run lint` (1 existing warning, dataStoreContext.tsx) and `npm run build`: all exit 0.
+
+## library-v2 task 18.7: flaky continueFlow test
+
+- Flake: `continueFlow.test.tsx` "opening a catalogue book creates one entry on reading..." timed out on `findByTestId('active-paragraph')` (default 1 s) about 1 in 10 runs under full-suite load.
+- Root cause: the test already uses a tiny EPUB (1 chapter, 5 short paragraphs) parsed by the real parser, so a smaller book would not help. The time is the first-use cost of the real EPUB path (dynamic import of epub.js/jszip, paid by the first test that opens a book: ~245 ms alone vs ~30 ms for later tests), which can exceed 1 s when the CPU is loaded by parallel test files.
+- Change: both `findByTestId('active-paragraph')` waits in that test now use `{ timeout: 5000 }`, with a comment that this is a test-environment timing limit. No assertion changed.
+- Result: file run alone 20/20 passed (0 failures); full suite once: 123 files, 860 tests passed.
+## library-v2 task 18.8: planner.gd11 coverage floor flake
+- Flake: `planner.gd11.prop.test.ts` "Property 11 coverage" once failed with `qualifying:blocked-by-history: expected 36 >= 37`.
+- Cause: the floors were set at mean - 4 SD from 10 batches, and the measured SD (3.9) was too small. Counts are close to binomial: 300 inputs at a 17.7% share give mean 53 and SD about 6.6, so floor 37 was only 2.4 SD below the mean (about 0.8% failure chance per run).
+- Change (test-only, floors, run counts and assertions untouched): reweighted `caseArb`, `qualifyingArb`, `nonQualifyingArb`, `lowAwayArb` and `highAwayArb`. The blocked-by-history branch went from weight 2 to 6, blocked-by-roll 2 to 6, scares 2 to 6, the "exactly 10000" branch 2 to 1, non-qualifying share 5 to 2 (of 13 total), and the weights of the just-below-10000 and exactly-10000 away values were raised so those floors keep their margin.
+- Margins over 300 batches of 300 inputs (mean / SD / min vs floor, z = (mean - floor) / SD), before to after:
+  - blocked-by-history: 53 / 6.6 / floor 37 (z 2.4) to 76.7 / 7.3 / min 57 (z 5.5, 2.1x the floor)
+  - blocked-by-roll: 57 / floor 35 (z 3.2) to 78.0 / 7.9 / min 52 (z 5.4)
+  - scares: 76.5 / floor 56 (z 2.7) to 85.5 / 7.9 / min 63 (z 3.7)
+  - exactly-10000: 106 / floor 74 to 143 / 8.7 / min 115 (z 7.9)
+  - just-below-10000: 33.9 / floor 15 to 38.2 / 5.7 / min 22 (z 4.1)
+  - would-scare: 46 / floor 15 to 40.9 / 5.5 / min 28 (z 4.7)
+- Before this change the thinnest margins were blocked-by-history (z 2.4) and scares (z 2.7); the other floors were 3 SD or more away. The "Floors" comment in the test now records the new measurements.
+- Result: file run alone 40 times, 0 failures. Full `npx vitest --run` twice: 123 files, 860 tests passed both times. `npx tsc -b` clean, `npm run lint` has only the existing dataStoreContext.tsx warning. The temporary statistics test was deleted.
