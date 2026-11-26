@@ -55,6 +55,7 @@ describe('shelfOps examples', () => {
     expect(added.stats.a).toEqual({
       paragraphsRead: 0, chaptersFinished: 0, activeReadingSeconds: 0,
       lookAwayCount: 0, sessionCount: 0, awaySeconds: 0,
+      wordsRead: 0,
     });
     const day = { ...added.stats.a, paragraphsRead: 4, awaySeconds: 9 };
     const withDaily: DataModel = { ...added, daily: { '2025-03-04': day } };

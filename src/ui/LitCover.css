@@ -1,0 +1,22 @@
+/* Dimming applies to the cover images only, and only inside the Shell. Strengths arrive as
+   --image-brightness, --image-saturation and --light-radius, set by ShellFrame from shellEffects.ts.
+   Outside the Shell (and on the reading page) covers stay as they are. */
+
+.lit-cover__lit {
+  display: none;
+}
+
+.shell-frame .lit-cover__base {
+  filter: brightness(var(--image-brightness, 1)) saturate(var(--image-saturation, 1));
+}
+
+.shell-frame .lit-cover__lit {
+  --lit-x: -9999px;
+  --lit-y: -9999px;
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle var(--light-radius, 280px) at var(--lit-x) var(--lit-y), #000 0, #000 35%, transparent 100%);
+  mask-image: radial-gradient(circle var(--light-radius, 280px) at var(--lit-x) var(--lit-y), #000 0, #000 35%, transparent 100%);
+}

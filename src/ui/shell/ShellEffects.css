@@ -1,0 +1,77 @@
+/* Shell visual layers. All sit behind content (z-index 0; content is z-index 1),
+   take no pointer events and no focus. Colours come from theme.css only. */
+
+.shell-darkness,
+.shell-candle-pool,
+.shell-fog {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* The room, dimmed to --bg-brightness (set from shellEffects.ts). Only this layer is filtered. */
+.shell-darkness {
+  inset: 0;
+  background: var(--darkness);
+  filter: brightness(var(--bg-brightness, 1));
+}
+
+/* Vignette: clear in the centre, black at the edges, --vignette strong. */
+.shell-darkness__vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse farthest-corner at 50% 50%,
+    transparent 40%,
+    rgba(0, 0, 0, var(--vignette, 0)) 100%
+  );
+}
+
+/* Peak strength 14% over the darkness, the strongest value measured in the design. */
+.shell-candle-pool {
+  top: 0;
+  left: 0;
+  background: radial-gradient(
+    circle closest-side,
+    color-mix(in srgb, var(--pool-colour, var(--candle-amber)) 14%, transparent),
+    transparent
+  );
+  transform: translate3d(-9999px, -9999px, 0);
+  transition: transform 90ms ease-out;
+  will-change: transform;
+}
+
+.shell-fog {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 28vh;
+  overflow: hidden;
+}
+
+/* Twice the screen wide; sliding by half of itself (one screen width) takes 90 s. */
+.shell-fog__drift {
+  width: 200%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse 25% 60% at 12% 100%, color-mix(in srgb, var(--text-dim) 7%, transparent), transparent),
+    radial-gradient(ellipse 25% 50% at 37% 100%, color-mix(in srgb, var(--text-dim) 6%, transparent), transparent),
+    radial-gradient(ellipse 25% 60% at 62% 100%, color-mix(in srgb, var(--text-dim) 7%, transparent), transparent),
+    radial-gradient(ellipse 25% 50% at 87% 100%, color-mix(in srgb, var(--text-dim) 6%, transparent), transparent);
+  animation: shell-fog-drift 90s linear infinite;
+}
+
+.shell-fog__drift--paused {
+  animation-play-state: paused;
+}
+
+@keyframes shell-fog-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-candle-pool { transition: none; }
+  .shell-fog__drift { animation: none; }
+}

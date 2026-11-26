@@ -26,12 +26,19 @@ export interface ReaderViewProps {
   /** Set while a position save has failed. Shows the reader banner; the owner clears it on a later save. */
   saveFailure?: string | null;
   onDismissSaveFailure?: () => void;
+  /** Reports whether the book is shown and whether opening it failed. */
+  onOpenState?: (state: { ready: boolean; failed: boolean }) => void;
 }
 
 const NOOP = () => {};
 
-export function ReaderView({ session, library, onLeave, saveFailure = null, onDismissSaveFailure = NOOP }: ReaderViewProps = {}) {
+export function ReaderView({ session, library, onLeave, saveFailure = null, onDismissSaveFailure = NOOP, onOpenState }: ReaderViewProps = {}) {
   const r = useReader(session);
+  const ready = !!r.book;
+  const failed = !!r.failure;
+  useEffect(() => {
+    onOpenState?.({ ready, failed });
+  }, [ready, failed, onOpenState]);
   const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
   const reading = useReadingContext(r);
   const [awake, setAwake] = useState(true);
@@ -66,7 +73,13 @@ export function ReaderView({ session, library, onLeave, saveFailure = null, onDi
   const bookTitle = r.book.title;
 
   const stats = session && library
-    ? { session, chapterIndex: r.chapterIndex, paragraphIndex: r.paragraphIndex, chapterComplete: r.chapterComplete }
+    ? {
+        session,
+        chapterIndex: r.chapterIndex,
+        paragraphIndex: r.paragraphIndex,
+        chapterComplete: r.chapterComplete,
+        paragraphText: r.paragraphs[r.paragraphIndex]?.text ?? '',
+      }
     : undefined;
 
   return (

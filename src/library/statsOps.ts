@@ -10,10 +10,11 @@ export const ZERO_STATS: Stats = {
   lookAwayCount: 0,
   sessionCount: 0,
   awaySeconds: 0,
+  wordsRead: 0,
 };
 
 export type StatEvent =
-  | { kind: 'paragraphs'; count: number }
+  | { kind: 'paragraphs'; count: number; words: number }
   | { kind: 'chapter' }
   | { kind: 'active'; seconds: number }
   | { kind: 'away'; seconds: number }
@@ -27,6 +28,10 @@ function isAmount(n: unknown): n is number {
 
 export function recordParagraphsRead(stats: Stats, count: number): Stats {
   return isAmount(count) ? { ...stats, paragraphsRead: stats.paragraphsRead + count } : stats;
+}
+
+export function recordWordsRead(stats: Stats, words: number): Stats {
+  return isAmount(words) ? { ...stats, wordsRead: stats.wordsRead + words } : stats;
 }
 
 export function recordChapterFinished(stats: Stats): Stats {
@@ -51,7 +56,7 @@ export function recordSession(stats: Stats): Stats {
   return { ...stats, sessionCount: stats.sessionCount + 1 };
 }
 
-/** Sum of all six fields over every per-book Stats in the model. Zeros when none. */
+/** Sum of every Stats field over every per-book Stats in the model. Zeros when none. */
 export function overallStats(model: Pick<DataModel, 'stats'>): Stats {
   let total: Stats = { ...ZERO_STATS };
   for (const s of Object.values(model.stats)) {
@@ -62,6 +67,7 @@ export function overallStats(model: Pick<DataModel, 'stats'>): Stats {
       lookAwayCount: total.lookAwayCount + s.lookAwayCount,
       sessionCount: total.sessionCount + s.sessionCount,
       awaySeconds: total.awaySeconds + s.awaySeconds,
+      wordsRead: total.wordsRead + s.wordsRead,
     };
   }
   return total;
@@ -70,7 +76,7 @@ export function overallStats(model: Pick<DataModel, 'stats'>): Stats {
 function applyEvent(stats: Stats, event: StatEvent): Stats {
   switch (event.kind) {
     case 'paragraphs':
-      return recordParagraphsRead(stats, event.count);
+      return recordWordsRead(recordParagraphsRead(stats, event.count), event.words);
     case 'chapter':
       return recordChapterFinished(stats);
     case 'active':
@@ -132,6 +138,7 @@ export function recordEvent(
   if (!Object.prototype.hasOwnProperty.call(model.books, bookId)) return model;
   if (dayNumber(today) === null) return model;
   if (event.kind === 'paragraphs' && !isAmount(event.count)) return model;
+  if (event.kind === 'paragraphs' && !isAmount(event.words)) return model;
   if ((event.kind === 'active' || event.kind === 'away') && !isAmount(event.seconds)) return model;
 
   const book = Object.prototype.hasOwnProperty.call(model.stats, bookId)

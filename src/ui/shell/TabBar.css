@@ -1,0 +1,36 @@
+.tab-bar {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.75rem clamp(0.5rem, 4vw, 2.5rem) 0;
+  font-family: system-ui, sans-serif;
+}
+
+.tab-bar__tab {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tab-bar__tab:hover {
+  color: var(--text);
+}
+
+.tab-bar__tab--active {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}
+
+.tab-bar__tab:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}

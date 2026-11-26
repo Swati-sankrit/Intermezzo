@@ -1,4 +1,4 @@
-/** Pure migration from legacy version-1 data (rod_state, rod_pace_guide) to the version-2 Data_Model. No DOM. */
+/** Pure migration from legacy version-1 data (rod_state, rod_pace_guide) to the current Data_Model. No DOM. */
 import {
   DEFAULT_AVERAGE_PACE,
   EMPTY_DATA_MODEL,
@@ -174,6 +174,7 @@ export function migrateWithReport(legacy: LegacyInput, current: DataModel): Migr
       lookAwayCount: 0,
       sessionCount: 0,
       awaySeconds: 0,
+      wordsRead: 0,
     };
     model.shelves.reading.push(bookId);
   }

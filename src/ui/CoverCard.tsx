@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import type { CatalogueEntry } from '../library/catalogueData';
+import { LitCover } from './LitCover';
 import { PlaceholderCover } from './PlaceholderCover';
 import { Skeleton } from './Skeleton';
+import { useCoverTilt } from './useCoverTilt';
 import './CoverCard.css';
 
 export interface CoverCardProps {
@@ -21,6 +23,7 @@ type ImageState = 'loading' | 'loaded' | 'error';
 export function CoverCard({ entry, progress = 0, onOpen, buttonProps, slot }: CoverCardProps) {
   const [state, setState] = useState<ImageState>('loading');
   const imgRef = useRef<HTMLImageElement>(null);
+  const tilt = useCoverTilt();
   const author = entry.author.trim();
   const percent = Number.isFinite(progress) ? Math.min(100, Math.max(0, Math.floor(progress))) : 0;
   const name = [entry.title, author ? `by ${author}` : '', percent > 0 ? `${percent}% read` : '']
@@ -40,6 +43,14 @@ export function CoverCard({ entry, progress = 0, onOpen, buttonProps, slot }: Co
         {...buttonProps}
         className="cover-card__button"
         aria-label={name}
+        onPointerMove={(event) => {
+          buttonProps?.onPointerMove?.(event);
+          tilt.onPointerMove(event);
+        }}
+        onPointerLeave={(event) => {
+          buttonProps?.onPointerLeave?.(event);
+          tilt.onPointerLeave(event);
+        }}
         onClick={(event) => {
           buttonProps?.onClick?.(event);
           onOpen(entry.slug);
@@ -50,14 +61,10 @@ export function CoverCard({ entry, progress = 0, onOpen, buttonProps, slot }: Co
           {state === 'error' ? (
             <PlaceholderCover title={entry.title} />
           ) : (
-            <img
-              ref={imgRef}
-              className={
-                state === 'loading' ? 'cover-card__image cover-card__image--loading' : 'cover-card__image'
-              }
+            <LitCover
               src={entry.coverPath}
-              alt=""
-              loading="lazy"
+              imgRef={imgRef}
+              loading={state === 'loading'}
               onLoad={() => setState('loaded')}
               onError={() => setState('error')}
             />

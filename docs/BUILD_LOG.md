@@ -1241,3 +1241,19 @@ All fixes were approved by the user. No assertion was weakened.
   - jump:classic z 5.5 to 9.9; jump:reduced z 6.3 to 10.8; falsecalm:present z 7.1 to 7.8; dirty z 6.0 to 6.5
 - The "Floors" comment in the test records the new measurements. The temporary measuring test was deleted.
 - Result: file run alone 40 times, 0 failures (7 of 7 tests each). `npx tsc -b` clean, `npm run lint` only the existing dataStoreContext.tsx warning, full `npx vitest --run` once: 127 files, 894 tests passed.
+
+## haunted-shell, task 1.1: theme colour changes
+Ratios use the `scripts/check-candle-contrast.mjs` formula (WCAG relative luminance), measured against `--bg` #14110f / `--surface` #1d1916 / `--darkness` #0d0b0a. They match the design's numbers. `--darkness` is new in `src/ui/theme.css`.
+
+- `--text-dim`: old `#8a7f6e`, new `#9a8f7e`. New ratio 5.91 / 5.49 / 6.18. The old value gave 4.78 / 4.44 / 5.00, so it already failed 4.5:1 against `--surface` (4.44).
+- `--danger`: old `#c0564b`, new `#d9766b`. New ratio 6.05 / 5.61 / 6.32. The old value gave 4.19 / 3.89 / 4.37, so it already failed 4.5:1 against `--bg`, `--surface` and `--darkness`.
+- `--darkness`: added as `#0d0b0a` (a background, no ratio of its own).
+## haunted-shell, task 12.1: Property 20 failure in the full suite
+- `src/ui/__tests__/ReaderView.integration.test.tsx`, "Property 20: any sequence of advances and chapter changes keeps progress valid and non-decreasing" failed once in the full `npx vitest --run` run (133 of 134 files passed, 1081 of 1082 tests).
+- Failure was `Test timed out in 5000ms` (reported at 5011 ms, test file 6831 ms), not an assertion. fast-check printed no seed and no counterexample, so there are none to record. The test was not changed.
+- Task 12.1 changes do not touch ReaderView. `npx tsc -b` was clean.
+
+### Task 12.1 follow-up: cause of the Property 20 timeout (ReaderView.integration)
+- Reading the test, `ReaderView`, and the helpers (`libraryBook.tsx`): no race and no wait that can fail to come true. Each run builds a fresh store, mounts the shell, clicks Continue (after `findByRole`, so the library is ready), and unmounts via `cleanup()`. `next` with no button and `advance` past the last paragraph are no-ops by design. The save `waitFor` runs only when progress is above 0, and the value it waits for is the one just displayed. State does not leak between runs (new in-memory store each time). An earlier cover click dropped during library load does not apply because the test waits for the Continue button.
+- Measured, property alone, 10 runs idle: 3.66 to 4.62 s file duration (test about 3.3 to 4.2 s). 5 runs with 6 busy CPU loops: 3.65 to 4.32 s per test. 0 failures in 15 runs, so no seed or counterexample exists. About 130 ms per iteration, against a 5000 ms default limit. The full suite runs files in parallel, which is what pushed it over once.
+- Change: timeout for this test raised to 30 000 ms. `numRuns` (30) and all assertions are unchanged. The earlier, different symptom was not reproduced and is unexplained.

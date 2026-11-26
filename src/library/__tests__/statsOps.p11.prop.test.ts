@@ -22,7 +22,7 @@ function dateAt(offset: number): string {
 const date = fc.integer({ min: 0, max: 89 }).map(dateAt);
 
 const validEvent: fc.Arbitrary<StatEvent> = fc.oneof(
-  fc.record({ kind: fc.constant('paragraphs' as const), count: fc.integer({ min: 0, max: 50 }) }),
+  fc.record({ kind: fc.constant('paragraphs' as const), count: fc.integer({ min: 0, max: 50 }), words: fc.integer({ min: 0, max: 5000 }) }),
   fc.constant<StatEvent>({ kind: 'chapter' }),
   fc.record({ kind: fc.constant('active' as const), seconds: fc.integer({ min: 0, max: 3600 }) }),
   fc.record({ kind: fc.constant('away' as const), seconds: fc.integer({ min: 0, max: 3600 }) }),
@@ -36,7 +36,7 @@ const badAmount = fc.oneof(
 );
 
 const invalidEvent: fc.Arbitrary<StatEvent> = fc.oneof(
-  fc.record({ kind: fc.constant('paragraphs' as const), count: badAmount }),
+  fc.record({ kind: fc.constant('paragraphs' as const), count: badAmount, words: fc.integer({ min: 0, max: 5000 }) }),
   fc.record({ kind: fc.constant('active' as const), seconds: badAmount }),
   fc.record({ kind: fc.constant('away' as const), seconds: badAmount }),
 );
@@ -71,6 +71,7 @@ function dailyTotal(model: DataModel): Stats {
       lookAwayCount: t.lookAwayCount + s.lookAwayCount,
       sessionCount: t.sessionCount + s.sessionCount,
       awaySeconds: t.awaySeconds + s.awaySeconds,
+      wordsRead: t.wordsRead + s.wordsRead,
     };
   }
   return t;
@@ -101,7 +102,7 @@ describe('Property 11: daily totals sum to per-book totals', () => {
   it('valid events actually change both sides (the check is not vacuous)', () => {
     fc.assert(
       fc.property(date, fc.integer({ min: 1, max: 50 }), (today, count) => {
-        const model = recordEvent(seeded(['__proto__']), '__proto__', { kind: 'paragraphs', count }, today);
+        const model = recordEvent(seeded(['__proto__']), '__proto__', { kind: 'paragraphs', count, words: 0 }, today);
         expect(overallStats(model).paragraphsRead).toBe(count);
         expect(dailyTotal(model).paragraphsRead).toBe(count);
       }),

@@ -1,0 +1,58 @@
+/* Opening_Transition. Covers the screen but takes no pointer events and no focus.
+   Colours come from theme.css only. No sound, no flashing: every phase is one smooth change. */
+.opening {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  background: var(--darkness);
+  opacity: 0;
+}
+.opening__glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 45%,
+    color-mix(in srgb, var(--accent) 16%, transparent),
+    transparent 55%
+  );
+}
+/* The candle gutters: one slow swell and sink of light while the room darkens a little. */
+.opening--gutter {
+  animation: opening-gutter 400ms ease-in-out forwards;
+}
+.opening--gutter .opening__glow {
+  animation: opening-glow 400ms ease-in-out forwards;
+}
+/* Dim to dark. */
+.opening--dim {
+  animation: opening-dim 600ms ease-in forwards;
+}
+.opening--hold {
+  opacity: 1;
+}
+.opening--fade {
+  opacity: 1;
+  animation: opening-fade 500ms ease-out forwards;
+}
+.opening--reduced.opening--fade {
+  animation-duration: 250ms;
+}
+@keyframes opening-gutter {
+  from { opacity: 0; }
+  to { opacity: 0.25; }
+}
+@keyframes opening-glow {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+@keyframes opening-dim {
+  from { opacity: 0.25; }
+  to { opacity: 1; }
+}
+@keyframes opening-fade {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

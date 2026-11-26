@@ -204,5 +204,7 @@ describe('ReaderView integration: properties', () => {
       }),
       { numRuns: 30 },
     );
-  });
+    // 30 runs each mount the whole shell (about 130 ms per run, 3.6 to 4.3 s in total), so the
+    // default 5 s limit leaves too little room when the full suite runs files in parallel.
+  }, 30_000);
 });

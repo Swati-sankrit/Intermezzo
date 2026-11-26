@@ -1,0 +1,35 @@
+/* Lurking ghost: slides in from a screen edge, holds, slides out. One smooth
+   motion over 1.5 s, no flashing, no sound, no pointer events. Its box
+   (left, top, width, height) is set from ghostPlacement.ts; part of it sits
+   behind the screen edge. */
+
+.lurking-ghost {
+  position: fixed;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.7;
+  filter: drop-shadow(0 0 12px var(--shadow));
+  animation: lurking-ghost-peek 1.5s ease-in-out both;
+}
+
+.lurking-ghost--left {
+  --peek-hidden: -100%;
+}
+
+.lurking-ghost--right {
+  --peek-hidden: 100%;
+}
+
+.lurking-ghost__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@keyframes lurking-ghost-peek {
+  0% { transform: translateX(var(--peek-hidden)); }
+  20% { transform: translateX(0); }
+  80% { transform: translateX(0); }
+  100% { transform: translateX(var(--peek-hidden)); }
+}

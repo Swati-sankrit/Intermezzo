@@ -4,7 +4,9 @@
 
 Haunted-shell turns the app shell of "Read or Dread" into a haunted reading room. The drama lives in the library and its tabs. The reading page stays calm, and it is haunted only when the reader looks away, as the `ghost-dread` spec already defines.
 
-The shell gets three header tabs: Library, The Ledger (reading insights) and The Séance (settings). The Séance replaces the gear-icon settings dialog. The library and the tabs sit in near-darkness, lit by a candlelight pool that follows the pointer, with a slow fog along the bottom, covers that tilt and glow, a short book-opening transition, and a lurking ghost that peeks from a screen edge now and then.
+The shell gets three header tabs: Library, The Ledger (reading insights) and The Séance (settings). The Séance replaces the gear-icon settings dialog. The library and the tabs sit in near-darkness. Outside the light, cover images and the background are dimmed and desaturated and a vignette darkens the edges. A small flickering flame follows the pointer and its red-amber glow lights what is under it. Smoke wisps rise slowly from the bottom of the screen. Covers tilt and glow. A chosen book's cover burns away before the book opens, and a large lurking ghost peeks from a screen edge now and then.
+
+Every visual choice lives in one file, `src/ui/shellEffects.ts`, with named options: `cursorLight` ('flame' or 'pool'), `ambient` ('smoke' or 'fog') and `bookOpen` ('burn' or 'fade'), plus named strengths. The defaults are the new looks ('flame', 'smoke', 'burn'). The earlier looks ('pool', 'fog', 'fade') stay working, and one changed value switches back to them with no other edit.
 
 The Ledger is built from the per-day and per-book Stats and the shelves in the library-v2 Data_Model. The Ledger shows the reader's measured reading pace, which needs one deliberate addition to the data model: a `wordsRead` count in every Stats record, raised by the word count of each paragraph when it is recorded as read. Old saved data without `wordsRead` is kept and read as 0. This addition raises the Schema_Version from 2 to 3 and supersedes the six-count wording of library-v2 Requirement 16 and the version-2 wording of its Migrator requirement. `wordsRead` is the only new tracking; it is a number and holds no book text. The one new stored setting is the daily reading goal, kept under its own key like the haunt settings are. The Séance reuses the existing settings logic: `useProfileActions` and `ProfileSettings` content for name, candle colour, pace guide, delete profile and clear data; the haunt settings store for Haunt_Mode; the saved camera choice in `src/attention/storage.ts`; and the `rod_volume_cap` key that the Safety_Gate already reads. The lurking ghost reuses the bundled images in `public/ghosts/` listed in `GHOST_ASSETS`.
 
@@ -22,15 +24,25 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 - **Ledger_Tab**: The tab "The Ledger", which shows reading insights.
 - **Seance_Tab**: The tab "The Séance", which holds the settings.
 - **Saved_Tab**: The name of the last active tab, kept in localStorage under the key `rod_shell_tab`.
-- **Darkness**: The dark layer over the Shell background that makes the Shell look nearly unlit. It sits behind all text and controls.
+- **Darkness**: The dark treatment of the Shell that makes it look nearly unlit. It has three parts: a dark layer over the Shell background, the dimming and desaturation of cover images outside the Cursor_Light, and the Vignette. It never changes text and sits behind all text and controls.
+- **Vignette**: A dark gradient that deepens toward the screen edges, part of the Darkness.
+- **Effect_Options**: The single file `src/ui/shellEffects.ts` that holds the named options `cursorLight`, `ambient` and `bookOpen` and the named strengths (image brightness, image saturation, background brightness, vignette, light radius, flame glow radius and peak alpha, smoke peak alpha, smoke rise time, burn duration, burn spark count, ghost height, ghost visible fraction, peek delay ranges).
+- **Cursor_Light**: The light drawn at the Light_Anchor: the Flame_Cursor with its Flame_Glow when `cursorLight` is 'flame', or the Candle_Pool when it is 'pool'.
+- **Flame_Cursor**: A small flickering reddish-orange flame drawn at the pointer position with CSS or canvas.
+- **Flame_Glow**: The local, low-alpha, warm red-amber glow around the Flame_Cursor that flickers with the flame and lights what is under it.
+- **Ambient_Layer**: The layer along the bottom of the screen that is the Smoke_Layer when `ambient` is 'smoke', or the Fog_Layer when it is 'fog'.
+- **Smoke_Layer**: Visible smoke wisps that rise slowly from the bottom of the screen, drawn with CSS or canvas.
+- **Burn**: The first part of the Opening_Transition when `bookOpen` is 'burn': the chosen cover catches fire from its edges and burns away with a glowing ember edge and a few rising sparks.
+- **Demo_Mode**: The state in which the page URL query contains `demo=1`. It only changes the Peek delays, for filming.
+- **Peek_Delay_Range**: The delay before each Peek. Normally it is a random 45 to 90 seconds for every Peek. In Demo_Mode it is exactly 3 seconds before the first Peek after the page loads, and a random 4 to 6 seconds before every later Peek.
 - **Candle_Pool**: The warm radial pool of light, about 280 px across, that lights what is under it. Its colour comes from the Profile's Candle_Colour.
 - **Candle_Colour**: One of the six named colours in the Profile, each a CSS custom property (`--candle-amber`, `--candle-rose`, `--candle-violet`, `--candle-teal`, `--candle-ash`, `--candle-moss`).
 - **Light_Anchor**: The point on which the Candle_Pool is centred. It is the pointer position while the pointer was the last input, and the centre of the focused element while the keyboard or touch was the last input.
-- **Fog_Layer**: The slow drifting fog along the bottom of the screen, drawn with CSS or canvas.
+- **Fog_Layer**: The slow drifting fog along the bottom of the screen, drawn with CSS or canvas. It is shown only when `ambient` is 'fog'.
 - **Cover_Card**: A cover in the catalogue grid, the shelves or the Continue_Card.
 - **Cover_Effect**: The set of tilt toward the pointer, warm edge glow and flickering shadow on a Cover_Card.
-- **Opening_Transition**: The sequence shown when a book opens: the candle gutters, the screen dims to dark for about 600 ms, then the reader fades up.
-- **Lurking_Ghost**: The existing ghost image from `public/ghosts/` that peeks from a screen edge on the Library_Tab.
+- **Opening_Transition**: The sequence shown when a book opens: the Burn first when `bookOpen` is 'burn', then the candle gutters, the screen dims to dark for about 600 ms, and the reader fades up. The part after the Burn is the existing sequence.
+- **Lurking_Ghost**: The existing ghost image from `public/ghosts/` that peeks from a screen edge on the Library_Tab, drawn at 30 to 35 percent of the viewport height.
 - **Peek**: One appearance of the Lurking_Ghost, about 1.5 seconds long.
 - **Control**: Any button, link, input, select, slider, tab or other interactive element, including the Continue_Card button.
 - **Haunt_Mode**: One of Gentle, Classic or Nightmare, kept in the haunt settings store. Classic is the default.
@@ -118,7 +130,7 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 #### Acceptance Criteria
 
 1. WHILE the Shell is shown, THE Shell SHALL draw the Darkness behind all text and Controls.
-2. WHILE the Shell is shown, THE Shell SHALL draw a Candle_Pool about 280 px across in the colour of the Profile's Candle_Colour, centred on the Light_Anchor.
+2. WHERE `cursorLight` is 'pool', THE Shell SHALL draw a Candle_Pool about 280 px across in the colour of the Profile's Candle_Colour, centred on the Light_Anchor, while the Shell is shown.
 3. WHEN the pointer moves, THE Shell SHALL move the Light_Anchor to the pointer position within one animation frame.
 4. WHEN an element receives keyboard focus, THE Shell SHALL move the Light_Anchor to the centre of the focused element.
 5. WHEN the reader touches the screen, THE Shell SHALL move the Light_Anchor to the touch position and keep it there until the next pointer, touch or focus event.
@@ -140,7 +152,7 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 
 #### Acceptance Criteria
 
-1. WHILE the Shell is shown, THE Shell SHALL draw a Fog_Layer along the bottom of the screen with CSS or a canvas, and without a new dependency.
+1. WHERE `ambient` is 'fog', THE Shell SHALL draw a Fog_Layer along the bottom of the screen with CSS or a canvas, and without a new dependency, while the Shell is shown.
 2. THE Fog_Layer SHALL sit behind all content, SHALL NOT capture pointer events, and SHALL NOT take keyboard focus.
 3. THE Fog_Layer SHALL stay under all text, so that no text is drawn beneath a fog pixel.
 4. WHILE Reduced_Motion is not active, THE Fog_Layer SHALL drift at a rate that takes at least 30 seconds to cross the screen once.
@@ -171,11 +183,11 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 
 #### Acceptance Criteria
 
-1. WHEN a book is opened from the Library_Tab, THE Opening_Transition SHALL show the candle guttering, then dim the screen to dark for about 600 ms, then fade the reader up.
-2. THE Opening_Transition SHALL last at most 1500 ms from the moment the reader opens the book to the moment the reader is fully visible.
+1. WHEN a book is opened from the Library_Tab, THE Opening_Transition SHALL show the candle guttering, then dim the screen to dark for about 600 ms, then fade the reader up. WHERE `bookOpen` is 'burn', the Burn of Requirement 17 plays before this sequence, and this sequence is otherwise unchanged.
+2. THE Opening_Transition SHALL last at most 2700 ms from the moment the reader opens the book to the moment the reader is fully visible, made of the Burn at about 1200 ms plus the existing sequence at most 1500 ms. WHERE `bookOpen` is 'fade' or Reduced_Motion is active, THE Opening_Transition SHALL last at most 1500 ms. The limits apply when the book text is ready by the end of the dim, and Criterion 5 applies when it is not.
 3. WHEN the reader presses any key, clicks, or touches the screen during the Opening_Transition, THE Opening_Transition SHALL end at once and show the reader fully visible.
 4. THE Opening_Transition SHALL NOT block pointer or keyboard input, so that a click or key press during the transition reaches the page beneath.
-5. WHILE the book text is still loading when the dim ends, THE Opening_Transition SHALL stay on the dark screen until the reader is ready, and SHALL show the existing loading state beneath the fade.
+5. WHILE the book text is still loading when the dim ends, THE Opening_Transition SHALL stay on the dark screen until the reader is ready, and SHALL show the existing loading state beneath the fade. The Burn never waits for loading: it ends after its own duration, the book text loads in parallel, and the extra wait is the load time only.
 6. IF the book fails to open, THEN THE Opening_Transition SHALL end at once and the existing error and "Back to library" button SHALL show.
 7. WHILE Reduced_Motion is active, THE Opening_Transition SHALL replace the guttering and dimming with a single fade of at most 300 ms.
 8. THE Opening_Transition SHALL NOT flash or change brightness more than 3 times per second, and SHALL NOT show saturated red over the full screen.
@@ -188,18 +200,18 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 
 #### Acceptance Criteria
 
-1. WHILE the Library_Tab is active, the document is visible, the Haunt_Mode is Classic or Nightmare, and Reduced_Motion is not active, THE Lurking_Ghost SHALL start a Peek after a random delay between 45 and 90 seconds, and SHALL then schedule the next Peek with a new random delay in the same range.
+1. WHILE the Library_Tab is active, the document is visible, the Haunt_Mode is Classic or Nightmare, and Reduced_Motion is not active, THE Lurking_Ghost SHALL start a Peek after the delay that the Peek_Delay_Range gives for that Peek, and SHALL then schedule the next Peek the same way.
 2. WHEN a Peek starts, THE Lurking_Ghost SHALL appear from a screen edge using one of the images listed in `GHOST_ASSETS`, loaded from the app's own origin through a relative URL.
 3. WHEN a Peek has been visible for about 1.5 seconds, THE Lurking_Ghost SHALL withdraw to the screen edge.
 4. WHEN the pointer reaches the Lurking_Ghost during a Peek, THE Lurking_Ghost SHALL vanish at once.
-5. THE Lurking_Ghost SHALL choose an edge position that does not overlap the bounding box of the Continue_Card button or of any other Control.
+5. THE Lurking_Ghost SHALL choose an edge position where the part of its bounding box inside the viewport does not overlap the bounding box of the Continue_Card button or of any other Control. The part of the ghost behind the screen edge is not counted.
 6. IF no edge position is free of every Control, THEN THE Lurking_Ghost SHALL skip that Peek and schedule the next one.
 7. THE Lurking_Ghost SHALL NOT capture pointer events other than the pointer reaching it, and SHALL NOT take keyboard focus.
 8. WHEN the Haunt_Mode changes to Gentle during a Peek, THE Lurking_Ghost SHALL vanish at once and SHALL cancel the scheduled Peek.
 9. WHILE the Haunt_Mode is Gentle, THE Lurking_Ghost SHALL NOT appear.
 10. WHILE Reduced_Motion is active, THE Lurking_Ghost SHALL NOT appear.
 11. WHEN the reader changes to the Ledger_Tab or the Seance_Tab, or a book opens, THE Lurking_Ghost SHALL cancel any Peek and scheduled Peek.
-12. WHEN the reader returns to the Library_Tab, THE Lurking_Ghost SHALL schedule a new Peek with a random delay between 45 and 90 seconds.
+12. WHEN the reader returns to the Library_Tab, THE Lurking_Ghost SHALL schedule a new Peek with the delay that the Peek_Delay_Range gives for a Peek after the first.
 13. THE Lurking_Ghost SHALL use no sound.
 14. THE Lurking_Ghost SHALL NOT flash or change brightness more than 3 times per second.
 15. THE Lurking_Ghost SHALL be hidden from screen readers with `aria-hidden="true"`.
@@ -266,8 +278,8 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 
 #### Acceptance Criteria
 
-1. THE Library_App SHALL keep the reading page unchanged: no Darkness, Candle_Pool, Fog_Layer, Cover_Effect or Lurking_Ghost on it, and haunts there only for looking away.
-2. WHILE Reduced_Motion is active, THE Shell SHALL show no Fog_Layer movement, no tilt, no flicker and no Lurking_Ghost, and SHALL use still images and simple fades.
+1. THE Library_App SHALL keep the reading page unchanged: no Darkness, Cursor_Light, Ambient_Layer, Cover_Effect, Burn or Lurking_Ghost on it, and haunts there only for looking away.
+2. WHILE Reduced_Motion is active, THE Shell SHALL show no Ambient_Layer movement, no tilt, no flicker, no Burn and no Lurking_Ghost, a still flame with a steady glow, and SHALL use still images and simple fades.
 3. THE Shell SHALL NOT flash faster than 3 times per second and SHALL NOT flash the full screen in saturated red.
 4. THE Shell SHALL give every effect in this spec `pointer-events: none`, except the Lurking_Ghost's pointer-reach detection and the Cover_Effect on its own Cover_Card.
 5. THE Library_App SHALL use no new dependency for this spec.
@@ -307,11 +319,107 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 #### Acceptance Criteria
 
 1. THE Library_App SHALL include fast-check property tests for the Ledger_Calculator covering: the Focus_Score is between 0 and 100 for every non-negative input with a sum above 0; the Measured_Pace is computed only from Pace_Days, is either absent or a whole number greater than 0, is absent whenever the summed active reading seconds of the Pace_Days are below the Pace_Threshold, and is unchanged when days with Words_Read 0 are added; the Goal_Progress is between 0 and 100; and the Moon_Phase mapping returns one of five phases and does not move to an earlier phase as active seconds rise.
-2. THE Library_App SHALL include property tests that the 7-day Focus_Score uses summed seconds, and that `rod_daily_goal` and `rod_shell_tab` values written and then read return the same value for every valid value.
+2. THE Library_App SHALL include a property test that the 7-day Focus_Score uses summed seconds, and SHALL cover the `rod_daily_goal` and `rod_shell_tab` save-and-reload round trips with example tests, not property tests: a valid value written and then read returns the same value, and a missing or invalid value falls back to the default.
 3. THE Library_App SHALL include example tests for the Tab_Bar covering the ARIA roles and attributes, Right Arrow, Left Arrow, Home and End movement with wrap-around, the single tab stop, remembering the tab across a reload, and the fall back to the Library_Tab for an invalid Saved_Tab.
 4. THE Library_App SHALL include example tests for the Ledger_Tab empty state text and the progressbar attributes, and for the Seance_Tab controls, the Haunt_Mode write, the camera choice write and the Volume_Cap write.
-5. THE Library_App SHALL include an example test that checks the text colours of the Shell against the Darkness for a contrast ratio of at least 4.5:1, reusing the luminance and ratio calculation of `scripts/check-candle-contrast.mjs`, which on its own checks only each Candle_Colour against `--surface` at 3:1 and is extended or complemented for the 4.5:1 text checks of Requirement 3, and that the test covers every text colour against `--bg`, `--surface` and the Darkness.
-6. THE Library_App SHALL NOT include tests for pure visuals: the Candle_Pool shape, the Fog_Layer drawing, the Cover_Effect, the Opening_Transition look and the Lurking_Ghost animation.
+5. THE Library_App SHALL include an example test that checks the text colours of the Shell against the Darkness for a contrast ratio of at least 4.5:1, reusing the luminance and ratio calculation of `scripts/check-candle-contrast.mjs`, which on its own checks only each Candle_Colour against `--surface` at 3:1 and is extended or complemented for the 4.5:1 text checks of Requirement 3, and that the test covers every text colour against `--bg`, `--surface` and the Darkness, and against the peak-alpha composites of the Flame_Glow and the Smoke_Layer over the Darkness, `--bg` and `--surface`.
+6. THE Library_App SHALL NOT include tests for pure visuals: the Candle_Pool shape, the Flame_Cursor drawing, the Flame_Glow, the Fog_Layer and Smoke_Layer drawing, the Cover_Effect, the dimming and Vignette look, the Burn look, the Opening_Transition look and the Lurking_Ghost animation. The behaviours listed in Criteria 10 to 12 are not pure visuals and are tested.
 7. THE Library_App SHALL include property tests that: recording a paragraph adds exactly its `countWords` result to `wordsRead` and one to paragraphs read, for the book and the day; migrating a Schema_Version 2 Data_Model gives Schema_Version 3 with `wordsRead` 0 and all other values unchanged; migrating a Schema_Version 3 Data_Model returns it unchanged; and serializing then parsing a Schema_Version 3 Data_Model returns an equal Data_Model.
 8. THE Library_App SHALL include an example test that a Schema_Version 2 Data_Model saved before this spec loads without being rejected and keeps its books, shelves, positions, profile and stats.
 9. WHEN a property test finds a counterexample, THE Library_App SHALL record it in `docs/BUILD_LOG.md`.
+10. THE Library_App SHALL include example tests for the Effect_Options covering: the defaults are 'flame', 'smoke' and 'burn'; each of 'pool', 'fog' and 'fade' selects the earlier implementation when set alone; and an unlisted value falls back to the default.
+11. THE Library_App SHALL include example tests that a click and a key press each end the Burn at once, that Reduced_Motion skips the Burn and plays the single fade, and that `bookOpen` 'fade' plays no Burn.
+12. THE Library_App SHALL include an example test that Demo_Mode gives a first Peek delay of 3 seconds and later Peek delays between 4 and 6 seconds, that its absence gives 45 to 90 seconds for every Peek, and example tests that the Lurking_Ghost schedules no Peek in Gentle mode or under Reduced_Motion, in Demo_Mode as well.
+
+### Requirement 13: Effect options file
+
+**User Story:** As a developer, I want every visual choice in one file, so that I can switch between the new looks and the earlier looks by changing one value.
+
+#### Acceptance Criteria
+
+1. THE Library_App SHALL keep every visual choice for the Shell effects in the single file `src/ui/shellEffects.ts`.
+2. THE Effect_Options SHALL export the option `cursorLight` with the values 'flame' and 'pool', the option `ambient` with the values 'smoke' and 'fog', and the option `bookOpen` with the values 'burn' and 'fade'.
+3. THE Effect_Options SHALL default to `cursorLight` 'flame', `ambient` 'smoke' and `bookOpen` 'burn'.
+4. THE Effect_Options SHALL export named strengths for the image brightness, image saturation, background brightness, Vignette, light radius, Flame_Glow radius and peak alpha, Smoke_Layer peak alpha and rise time, Burn duration and spark count, ghost height, ghost visible fraction, and both Peek_Delay_Ranges.
+5. WHEN one option value in the Effect_Options is changed to 'pool', 'fog' or 'fade', THE Shell SHALL switch to that earlier look with no other source edit.
+6. THE Library_App SHALL keep the Candle_Pool, the Fog_Layer and the plain Opening_Transition fade working as before.
+7. IF an option value is not one of its listed names, THEN THE Effect_Options SHALL resolve it to the default for that option.
+8. THE Library_App SHALL read each option and strength only from the Effect_Options, and SHALL NOT repeat those values as constants in any other file.
+
+### Requirement 14: Darkness outside the light
+
+**User Story:** As a reader, I want the library to be properly dark except where my light falls, so that the room feels haunted and the light feels earned.
+
+#### Acceptance Criteria
+
+1. WHILE the Shell is shown, THE Shell SHALL dim and desaturate every cover image and the Shell background, outside the Cursor_Light, to a brightness between 35 and 45 percent of its normal brightness.
+2. WHILE the Shell is shown, THE Shell SHALL draw the Vignette so that the screen edges are darker than the centre.
+3. WHEN a cover image is under the Cursor_Light, THE Shell SHALL show that part of the cover in full colour and full brightness.
+4. THE Shell SHALL apply the dimming and desaturation to images and backgrounds only, and SHALL NOT change the colour or opacity of any text.
+5. THE Shell SHALL keep every text colour at a contrast ratio of at least 4.5:1 against the dimmed and vignetted background it sits on.
+6. THE Shell SHALL NOT apply the dimming, desaturation or Vignette on the reading page.
+7. WHILE Reduced_Motion is active, THE Shell SHALL move the lit area with the Light_Anchor without easing animation.
+
+### Requirement 15: Flame cursor
+
+**User Story:** As a reader, I want a small flame at my pointer, so that I carry my own light through the dark library.
+
+#### Acceptance Criteria
+
+1. WHERE `cursorLight` is 'flame', THE Shell SHALL draw a Flame_Cursor at the pointer position, in reddish-orange, with CSS or canvas and without a new dependency.
+2. WHERE `cursorLight` is 'flame', THE Shell SHALL draw a Flame_Glow around the Flame_Cursor that flickers with the flame and lights what is under it as Requirement 14 describes.
+3. WHERE `cursorLight` is 'flame', THE Shell SHALL keep the system pointer visible and usable, and SHALL NOT capture pointer events with the Flame_Cursor or the Flame_Glow.
+4. WHEN an element receives keyboard focus and `cursorLight` is 'flame', THE Shell SHALL centre the Flame_Glow on the focused element.
+5. WHEN the reader touches the screen and `cursorLight` is 'flame', THE Shell SHALL draw the Flame_Cursor and Flame_Glow at the touch position until the next pointer, touch or focus event.
+6. WHILE Reduced_Motion is active and `cursorLight` is 'flame', THE Shell SHALL show a still Flame_Cursor and a steady Flame_Glow with no flicker.
+7. THE Flame_Cursor and the Flame_Glow SHALL NOT change in brightness more than 3 times per second.
+8. THE Flame_Glow SHALL stay local, with a radius no larger than the light radius strength and a peak alpha of at most 0.16, so that no full-screen saturated red flash occurs.
+9. THE Shell SHALL keep every text colour at a contrast ratio of at least 4.5:1 against the Flame_Glow at its peak alpha composited over the Darkness, `--bg` and `--surface`.
+10. THE Shell SHALL NOT draw the Flame_Cursor or the Flame_Glow on the reading page.
+
+### Requirement 16: Smoke
+
+**User Story:** As a reader, I want smoke rising slowly from the bottom of the screen, so that the room feels alive without getting in my way.
+
+#### Acceptance Criteria
+
+1. WHERE `ambient` is 'smoke', THE Shell SHALL draw a Smoke_Layer of visible wisps that rise from the bottom of the screen, with CSS or canvas and without a new dependency.
+2. THE Smoke_Layer SHALL sit behind all content, SHALL NOT capture pointer events, and SHALL NOT take keyboard focus.
+3. THE Smoke_Layer SHALL stay under all text, so that no wisp is drawn over any text.
+4. WHILE Reduced_Motion is not active, THE Smoke_Layer SHALL move each wisp from the bottom to the top of its path in at least 15 seconds.
+5. WHEN the document is hidden, THE Smoke_Layer SHALL pause its animation.
+6. WHILE Reduced_Motion is active, THE Smoke_Layer SHALL show a still smoky haze with no movement.
+7. THE Smoke_Layer SHALL NOT change in brightness more than 3 times per second.
+8. THE Shell SHALL keep every text colour at a contrast ratio of at least 4.5:1 against the Smoke_Layer at its peak alpha, at most 0.10, composited over the Darkness, `--bg` and `--surface`.
+9. THE Shell SHALL NOT draw the Smoke_Layer on the reading page.
+
+### Requirement 17: Burn on open
+
+**User Story:** As a reader, I want the cover I choose to burn away before the book opens, so that opening a book feels like a dark little ritual.
+
+#### Acceptance Criteria
+
+1. WHERE `bookOpen` is 'burn' and Reduced_Motion is not active, WHEN a book is chosen from the Library_Tab, THE Opening_Transition SHALL start with the Burn: the chosen cover catches fire from its edges and burns away with a glowing ember edge and rising sparks, for about 1200 ms.
+2. WHEN the Burn ends, THE Opening_Transition SHALL play the existing sequence of Requirement 6 unchanged.
+3. WHEN the reader presses any key, clicks, or touches the screen during the Burn, THE Opening_Transition SHALL end the Burn at once and end the whole Opening_Transition as Requirement 6 describes.
+4. WHILE Reduced_Motion is active, THE Opening_Transition SHALL skip the Burn and play the single fade of Requirement 6.
+5. WHERE `bookOpen` is 'fade', THE Opening_Transition SHALL play no Burn.
+6. THE Burn SHALL NOT change in brightness more than 3 times per second, SHALL show no more than 12 sparks at once, and SHALL keep the ember edge on the chosen cover, so that no full-screen saturated red flash occurs.
+7. THE Burn SHALL use no sound and SHALL NOT block pointer or keyboard input.
+8. THE Burn SHALL start the book text loading in parallel, and SHALL NOT delay it.
+9. IF the book fails to open during the Burn, THEN THE Opening_Transition SHALL end the Burn at once and show the existing error and "Back to library" button.
+10. IF the Burn cannot be drawn, THEN THE Opening_Transition SHALL skip it and play the existing sequence.
+
+### Requirement 18: Larger lurking ghost and demo switch
+
+**User Story:** As a reader browsing the library, I want the ghost to be big and to peek half behind the screen edge, and as a developer I want a URL switch for short peek times, so that I can check the ghost without waiting.
+
+#### Acceptance Criteria
+
+1. WHEN a Peek starts, THE Lurking_Ghost SHALL be drawn at a height between 30 and 35 percent of the viewport height.
+2. WHEN a Peek starts, THE Lurking_Ghost SHALL appear partly behind the screen edge, with at most 70 percent of its bounding box inside the viewport at its fullest.
+3. IF the ghost's visible part overlaps a Control at a candidate edge position, THEN THE Lurking_Ghost SHALL try the other edge positions before skipping the Peek as Requirement 7 describes.
+4. WHERE the page URL query contains `demo=1`, THE Lurking_Ghost SHALL start the first Peek after the page loads exactly 3 seconds after the Library_Tab is first shown, and SHALL use a random delay between 4 and 6 seconds before every later Peek, in place of 45 to 90 seconds.
+5. WHERE the page URL query does not contain `demo=1`, THE Lurking_Ghost SHALL use a random Peek delay between 45 and 90 seconds before every Peek.
+6. WHILE Demo_Mode is active, THE Lurking_Ghost SHALL obey every other rule of Requirement 7: no overlap with Controls, none in Gentle mode, none under Reduced_Motion, none on other tabs, none while the document is hidden.
+7. THE Demo_Mode switch SHALL change no setting, store no value and affect no other feature.

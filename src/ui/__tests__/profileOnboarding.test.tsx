@@ -26,6 +26,7 @@ const STATS: Stats = {
   lookAwayCount: 2,
   sessionCount: 3,
   awaySeconds: 12,
+  wordsRead: 340,
 };
 
 /** A model with a name, a book, a shelf entry, a position, per-book stats and daily stats. */

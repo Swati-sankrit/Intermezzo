@@ -9,6 +9,8 @@ The work splits cleanly into two risk tiers:
 - **Numeric/data logic** (Ledger_Calculator, the `wordsRead` migration): wrong output here is silently wrong forever, because it feeds decisions ("read a bit longer") and because migration bugs can corrupt or lose a reader's saved history. This gets property-based tests.
 - **Visual/interaction logic** (Tab_Bar, Candle_Pool, Fog_Layer, Cover_Effect, Opening_Transition, Lurking_Ghost): these are DOM/CSS/animation concerns. A bug here is visible immediately and costs nothing to fix; property tests would mostly assert "a number is a number" about timing constants. Per the workspace testing rule, this is handled with a few example tests and, for the parts the requirements explicitly forbid testing (12.6), no tests at all.
 
+A later browser check asked for a darker room and new default looks: a flame cursor instead of the round candle pool, rising smoke instead of faint fog, a burn-away of the chosen cover on open, and a bigger lurking ghost with a `?demo=1` switch. All visual choices move into one options file, `src/ui/shellEffects.ts`, so each new look can be switched back to the earlier one ('pool', 'fog', 'fade') by changing one value. See "Visual revision" below. This revision is implemented as task 11, which runs before tasks 5 to 7.
+
 Given the two-day budget, the shell's visual layer is designed as thin, independent CSS/React pieces layered over the existing `LibraryScreen`/`ProfileSettings` content, not as a rewrite of library-v2.
 
 ## Architecture
@@ -18,8 +20,9 @@ flowchart TD
     subgraph Shell["src/ui/shell/ (new)"]
         TabBar["TabBar.tsx"]
         LibraryShellNew["LibraryShell.tsx (modified: renders Shell instead of bare LibraryScreen)"]
-        Darkness["Darkness.tsx + CandlePool.tsx"]
-        Fog["FogLayer.tsx"]
+        Effects["src/ui/shellEffects.ts (options + strengths)"]
+        Darkness["Darkness.tsx + CandlePool.tsx + FlameCursor.tsx"]
+        Fog["FogLayer.tsx + SmokeLayer.tsx"]
         Opening["OpeningTransition.tsx"]
         LurkingGhost["LurkingGhost.tsx"]
         LedgerTab["LedgerTab.tsx"]
@@ -44,6 +47,10 @@ flowchart TD
     end
 
     LibraryShellNew --> TabBar
+    Effects --> Darkness
+    Effects --> Fog
+    Effects --> Opening
+    Effects --> LurkingGhost
     LibraryShellNew --> Darkness
     LibraryShellNew --> Fog
     LibraryShellNew --> Opening
@@ -244,6 +251,107 @@ export function migrateV2ToV3(model: DataModel /* v2 or v3 shape at the type lev
 
 `validator.ts`: `STATS_FIELDS` already drives the generic per-field "non-negative whole number" check in `checkDaily`/`checkStats`; adding `'wordsRead'` to `STATS_FIELDS` and to `Stats` is sufficient — no new validation code, only the new field name flowing through existing loops (Requirement 11.9).
 
+## Visual revision (Requirements 13 to 18)
+
+### 5. Effect options (`src/ui/shellEffects.ts`)
+
+One file holds every visual choice. Effect components import from it and nothing else holds these values.
+
+```ts
+export type CursorLight = 'flame' | 'pool';
+export type Ambient = 'smoke' | 'fog';
+export type BookOpen = 'burn' | 'fade';
+
+export interface EffectStrengths {
+  imageBrightness: number;      // 0.40 (allowed 0.35-0.45)
+  imageSaturation: number;      // 0.40
+  backgroundBrightness: number; // 0.40
+  vignette: number;             // 0.6 edge darkness
+  lightRadiusPx: number;        // 280 (pool) and the cap for the flame glow
+  flameGlowRadiusPx: number;    // 220
+  flameGlowMaxAlpha: number;    // 0.16, measured below
+  flameFlickerMaxHz: number;    // 2.5, under the 3 per second limit
+  smokeMaxAlpha: number;        // 0.10, measured below
+  smokeRiseSeconds: number;     // 20, at least 15
+  burnMs: number;               // 1200
+  burnMaxSparks: number;        // 12
+  ghostHeightVh: number;        // 32, allowed 30-35
+  ghostVisibleFraction: number; // 0.6, at most 0.7
+  peekDelaySeconds: readonly [number, number];     // [45, 90]
+  demoFirstPeekDelaySeconds: number;               // 3, first Peek after page load in Demo_Mode
+  demoPeekDelaySeconds: readonly [number, number]; // [4, 6], later Peeks in Demo_Mode
+}
+
+export interface ShellEffects {
+  cursorLight: CursorLight; ambient: Ambient; bookOpen: BookOpen; strengths: EffectStrengths;
+}
+
+export const DEFAULT_EFFECTS: ShellEffects = {
+  cursorLight: 'flame', ambient: 'smoke', bookOpen: 'burn', strengths: { /* values above */ } as EffectStrengths,
+};
+export const shellEffects: ShellEffects = DEFAULT_EFFECTS; // the one place to edit
+
+/** Pure. Unlisted option names resolve to the default for that option (13.7). */
+export function resolveEffects(raw: Partial<Record<'cursorLight' | 'ambient' | 'bookOpen', unknown>>): ShellEffects;
+```
+
+Each effect component takes an optional `effects: ShellEffects` prop that defaults to `shellEffects`, so tests can pass 'pool', 'fog' or 'fade' without editing the file. `ShellFrame` picks `CandlePool` or `FlameCursor`, `FogLayer` or `SmokeLayer`, and `OpeningTransition` picks the burn or the plain fade, from these options. The Candle_Pool, Fog_Layer and plain fade stay exactly as built in tasks 3.1 and 3.3.
+
+### 6. Darkness, Vignette and lit covers (Requirement 14)
+
+`Darkness.tsx` stays a fixed layer behind all content, and gains the Vignette (a radial gradient from clear in the centre to dark at the edges) and a background brightness set from `backgroundBrightness`. The covers are dimmed by a new `LitCover` wrapper used by Cover_Card:
+
+- Base image: CSS `filter: brightness(imageBrightness) saturate(imageSaturation)`.
+- Lit image: the same image again on top, full colour, with a `mask-image` radial gradient centred on the Light_Anchor translated into the card's own coordinates. Only the covers inside the viewport are updated, once per animation frame, so cost stays small.
+- Title and author text are siblings of the image layers and are never filtered, so text colour and opacity do not change. Text contrast is checked against the darker background, which can only raise it.
+
+The reading page does not mount any of this.
+
+### 7. Flame cursor (Requirement 15)
+
+`FlameCursor.tsx` draws a small canvas (about 40 by 56 px, no dependency) at the Light_Anchor: layered teardrop gradients from reddish-orange to pale amber. `pointer-events: none`, and the system pointer is left visible. The Flame_Glow is a CSS radial gradient (red-amber, `flameGlowRadiusPx`, centre alpha at most `flameGlowMaxAlpha`) on the same layer as the Candle_Pool today, and the same mask feeds the lit covers.
+
+- Flicker: the flame shape wobbles with a smoothed noise value. Glow brightness follows a value that is resampled at most `flameFlickerMaxHz` times per second and eased between samples, so brightness changes stay under 3 per second.
+- Keyboard focus: the glow moves to the focused element's centre and the flame is not drawn there. Touch: flame and glow go to the touch point until the next pointer, touch or focus event.
+- Reduced motion: still flame, steady glow at a fixed alpha, no animation loop.
+- 'pool': `CandlePool` is used unchanged.
+
+### 8. Smoke layer (Requirement 16)
+
+`SmokeLayer.tsx` draws a small number of soft wisps (canvas or CSS gradients, no dependency) that drift upward from the bottom, each taking `smokeRiseSeconds` or longer, fading in and out along the path. It sits behind content with `pointer-events: none`, no focus, at peak alpha `smokeMaxAlpha`. It pauses on `visibilitychange` hidden. Under reduced motion it renders one still haze gradient. `FogLayer` is unchanged and used when `ambient` is 'fog'.
+
+### 9. Burn on open (Requirement 17)
+
+`BurnOverlay.tsx` is rendered by `OpeningTransition` before the existing sequence when `bookOpen` is 'burn' and reduced motion is off.
+
+- The clicked cover's rectangle and image are passed in from the click. The overlay draws that image on a canvas at the same rectangle, and hides the real card for the duration.
+- Burn effect: a low-resolution value-noise grid generated in code (no dependency) is scaled up. Each frame has a threshold that rises from 0 to 1 over `burnMs`, starting at the card edges (noise plus distance from the edge). Pixels below the threshold are erased. Pixels within a thin band above it are painted as a glowing orange ember rim. At most `burnMaxSparks` small sparks rise from the rim.
+- Brightness: the rim has a steady glow that ramps up and down once, so there is no flicker above 3 per second, and everything is local to the cover, with no full-screen red.
+- Timing: the book text starts loading at the click, in parallel. When the burn ends (`burnMs`, about 1200 ms), the existing gutter, dim and fade-up plays unchanged. The total limit is about 1200 + 1500 = 2700 ms when the book is ready by the end of the dim. If the book is still loading, the screen holds dark under the existing rule, so the extra wait is the load time only.
+- Skip: a key press, click or touch calls the same `end()` the existing transition uses, which ends the burn and the whole transition. Reduced motion skips the burn and plays the single fade of at most 300 ms. 'fade' skips the burn. A failed open or a draw error also skips it.
+- The overlay uses `pointer-events: none` and listens on `window`, as the existing transition does, so input reaches the page beneath.
+
+### 10. Lurking ghost size and demo switch (Requirement 18)
+
+Pure helpers in a new `src/ui/shell/ghostPlacement.ts`, so they can be example-tested:
+
+```ts
+/** True when the query string contains demo=1. */
+export function isDemoMode(search: string): boolean;
+/** Peek delay in ms, given rand in [0,1). Normal: 45-90 s for every Peek. Demo: exactly 3 s when
+ *  isFirst is true (first Peek after page load), otherwise 4-6 s. */
+export function nextPeekDelayMs(rand: number, demo: boolean, isFirst: boolean, fx?: ShellEffects): number;
+/** Ghost box for an edge slot: height ghostHeightVh of the viewport, width from the image aspect ratio,
+ *  pushed past the edge so that ghostVisibleFraction of it is inside the viewport. */
+export function slotRect(edge: Edge, offset: number, viewport: Size, aspect: number, fx?: ShellEffects): Rect;
+/** Part of the ghost inside the viewport; the part behind the edge is ignored (18.3, 7.5). */
+export function visiblePart(rect: Rect, viewport: Size): Rect;
+/** First slot whose visiblePart overlaps no Control rect, or undefined (the Peek is then skipped). */
+export function pickSlot(controls: readonly Rect[], viewport: Size, aspect: number, rand: number, fx?: ShellEffects): Rect | undefined;
+```
+
+`LurkingGhost` reads `window.location.search` once on mount for `isDemoMode`, and uses `nextPeekDelayMs` for every delay, passing `isFirst` true only for the first Peek after the page loads (so a return to the Library tab later uses the 4 to 6 second range). Demo mode changes nothing else: Gentle, reduced motion, other tabs, hidden document, no-free-slot skip and the pointer vanish all behave as before. Nothing is stored. A bigger ghost still never covers a Control because only the inside-viewport part is tested against each Control's bounding box, several slots per edge are tried, and the Peek is skipped when none is free. In a narrow viewport a 32 vh ghost may find no free slot, and then the skip rule applies.
+
 ## Data Models
 
 ```ts
@@ -332,7 +440,8 @@ For any valid Schema_Version 3 `DataModel` (including one where some `Stats` rec
 - **Clear my data**: unchanged `useClearData` contract (all-or-nothing, returns `boolean`); the Shell's own key cleanup (`rod_shell_tab`, `rod_daily_goal`, `rod_volume_cap`) runs only after `useClearData` resolves `true`, so a failed Data_Store clear never leaves the Shell's own keys wiped while book data remains (Requirement 2.14).
 - **Migration failure**: `migrateV2ToV3` is a total function over any object shaped like a Schema_Version 2 `DataModel` and cannot throw; if the *input itself* is not validly shaped (e.g. corrupted JSON), that is caught upstream by the existing `localStore.ts` load path exactly as today (`invalid` / `migration_failed` `FailureKind`s), before migration is attempted. No new failure mode is introduced beyond what `localStore.ts` already reports.
 - **Validator**: extending `STATS_FIELDS` with `'wordsRead'` means a Schema_Version 3 model missing or misshaping `wordsRead` on any `Stats` record is rejected with a problem string naming that record and field, via the existing generic loop — no new error-handling code path.
-- **Shell visual effects** (Darkness, Candle_Pool, Fog_Layer, Cover_Effect, Opening_Transition, Lurking_Ghost): each is wrapped so that a thrown error inside one effect cannot break the Tab_Bar or the active Tab_Panel (Requirement 10.10). Given the project has no dependency for error boundaries beyond React's built-in `ErrorBoundary` class pattern, each effect component is implemented as a self-contained component with a small React error boundary (a local class component, no new dependency) around just that effect, matching the "no new dependency" constraint (Requirement 10.5).
+- **Burn and effect options**: a draw error in the Burn skips it and plays the existing sequence (Requirement 17.10). A draw error in the Flame_Cursor, Smoke_Layer or lit covers leaves the page with the dimmed look only, and never breaks the tabs. An unlisted option value resolves to its default (Requirement 13.7).
+- **Shell visual effects** (Darkness, Candle_Pool, Flame_Cursor, Fog_Layer, Smoke_Layer, Cover_Effect, Opening_Transition, Lurking_Ghost): each is wrapped so that a thrown error inside one effect cannot break the Tab_Bar or the active Tab_Panel (Requirement 10.10). Given the project has no dependency for error boundaries beyond React's built-in `ErrorBoundary` class pattern, each effect component is implemented as a self-contained component with a small React error boundary (a local class component, no new dependency) around just that effect, matching the "no new dependency" constraint (Requirement 10.5).
 
 ## Testing Strategy
 
@@ -358,7 +467,14 @@ Each test tag follows the required format, e.g.:
 - README: a Sources section containing the `Pace_Source` citation verbatim (Requirement 11.14).
 - Contrast: extend `scripts/check-candle-contrast.mjs`'s calculation (or a Vitest test importing the same luminance/ratio functions, lifted into a tiny shared module to avoid duplicating the formula) to check every Shell text colour against `--bg`, `--surface`, and the Darkness colour at 4.5:1 (Requirement 12.5; see the measured table below).
 
-**Explicitly not tested** (pure visuals, per Requirement 12.6 and the workspace testing rule's proportionality guidance): Candle_Pool shape/movement, Fog_Layer drawing/drift timing, Cover_Effect tilt/glow/flicker, Opening_Transition visual sequence, Lurking_Ghost appearance/positioning animation. Their *safety* constraints (no sound, `aria-hidden`, Reduced_Motion fallback, `pointer-events: none`) are covered by the existing `ghost-dread`/`haunt-feature` Safety_Gate tests plus a small number of the example tests above where they intersect with ARIA/focus (e.g. Lurking_Ghost's `aria-hidden="true"` could be one assertion in a `LurkingGhost` smoke test, but the animation timing itself is not asserted).
+**Example tests added by the visual revision** (behaviour only, Requirements 12.10 to 12.12):
+
+- `shellEffects`: defaults are 'flame', 'smoke', 'burn'; `resolveEffects` with 'pool', 'fog' or 'fade' selects the earlier implementation; an unlisted value falls back to the default.
+- `OpeningTransition`: a click and a key press each end the burn at once; reduced motion skips the burn and plays the single fade; `bookOpen` 'fade' plays no burn.
+- `ghostPlacement` and `LurkingGhost`: `isDemoMode('?demo=1')` is true and other queries are false; `nextPeekDelayMs` gives exactly 3000 ms for the first Peek in demo, 4000 to 6000 ms for later Peeks in demo, and 45000 to 90000 ms otherwise (in one example test); no Peek is scheduled in Gentle mode or under reduced motion, in demo mode as well; `pickSlot` returns a slot whose visible part overlaps no Control, and returns nothing when every slot overlaps one.
+- Contrast: the existing contrast test adds the peak composites of the Flame_Glow and the Smoke_Layer (below).
+
+**Explicitly not tested** (pure visuals, per Requirement 12.6 and the workspace testing rule's proportionality guidance): Candle_Pool shape/movement, Flame_Cursor drawing and flicker, Fog_Layer and Smoke_Layer drawing/drift timing, dimming and Vignette look, Burn look, Cover_Effect tilt/glow/flicker, Opening_Transition visual sequence, Lurking_Ghost appearance/positioning animation. Their *safety* constraints (no sound, `aria-hidden`, Reduced_Motion fallback, `pointer-events: none`) are covered by the existing `ghost-dread`/`haunt-feature` Safety_Gate tests plus a small number of the example tests above where they intersect with ARIA/focus (e.g. Lurking_Ghost's `aria-hidden="true"` could be one assertion in a `LurkingGhost` smoke test, but the animation timing itself is not asserted).
 
 ## Measured contrast (Requirement 3.15, 3.16)
 
@@ -416,5 +532,20 @@ At these glow strengths every colour, including the current (unadjusted) `--text
 Both new values keep the same hue and relative character as the originals (`--text-dim` stays a muted warm grey, `--danger` stays a muted red) and are lightened only as far as needed to clear 4.5:1 against the tightest of the three backgrounds (`--surface`, which is the lightest of `--bg`/`--surface`/`--darkness` and therefore the hardest to contrast against). `--text`, `--accent`, and all six Candle_Colours are unchanged.
 
 These two colour changes affect every existing component that uses `--text-dim` (e.g. author text, hints, dimmed paragraphs in the reader) and `--danger` (error messages). Both are app-wide tokens already required to meet 4.5:1 by the `design.md` steering file today — the current values were already slightly failing that rule independent of this spec (`--text-dim` at 4.44:1 vs `--surface`, `--danger` at 3.89:1 vs `--surface` and 4.19:1 vs `--bg`), so this fix is a pre-existing-bug correction surfaced by this spec's explicit measurement requirement, not a new constraint invented for the Shell.
+
+### Flame_Glow and Smoke_Layer composites (Requirements 15.9, 16.8)
+
+Measured with the same formula, using the adjusted `--text-dim` (`#9a8f7e`) and `--danger` (`#d9766b`). The flame glow colour is `#c8481f` and the smoke colour is `#a39d94`, each painted at its peak alpha over the background. A first try with a flame glow peak alpha of 0.28 failed: `--text-dim` fell to 4.47:1 over `--bg` and 4.11:1 over `--surface`. The peak alpha was therefore lowered, to the values below.
+
+| Layer and peak alpha | Over | `--text` | `--text-dim` | `--accent` | `--danger` |
+|---|---|---|---|---|---|
+| Flame glow, 0.16 | `--darkness` | 12.72:1 | 5.43:1 | 8.00:1 | 5.56:1 |
+| Flame glow, 0.16 | `--bg` | 12.02:1 | 5.13:1 | 7.55:1 | 5.25:1 |
+| Flame glow, 0.16 | `--surface` | 11.06:1 | 4.72:1 | 6.95:1 | 4.83:1 |
+| Smoke, 0.10 | `--darkness` | 12.78:1 | 5.46:1 | 8.03:1 | 5.58:1 |
+| Smoke, 0.10 | `--bg` | 12.08:1 | 5.16:1 | 7.59:1 | 5.27:1 |
+| Smoke, 0.10 | `--surface` | 11.05:1 | 4.72:1 | 6.95:1 | 4.82:1 |
+
+All pairs clear 4.5:1, so `flameGlowMaxAlpha` is 0.16 and `smokeMaxAlpha` is 0.10 in the Effect_Options. Dimming covers and the background to about 40 percent brightness only darkens what text sits on, so it cannot lower these ratios.
 
 **This step only records the proposed values and their measured ratios.** No code or `docs/BUILD_LOG.md` entry is changed by this design document; implementation tasks will apply the `--text-dim`/`--danger` change to `src/ui/theme.css` and record it in `docs/BUILD_LOG.md` per Requirement 3.16.

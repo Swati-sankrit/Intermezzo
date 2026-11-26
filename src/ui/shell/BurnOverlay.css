@@ -1,0 +1,7 @@
+/* Burn. Sits over the chosen cover only, takes no pointer events and no focus.
+   The ember colour comes from --accent in the script; nothing here is full screen. */
+.burn-overlay {
+  position: fixed;
+  z-index: 1001;
+  pointer-events: none;
+}

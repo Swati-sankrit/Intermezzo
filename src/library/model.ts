@@ -1,6 +1,6 @@
-/** Library-v2 data model. Pure types and constants; holds no book text. */
+/** Library data model (Schema_Version 3). Pure types and constants; holds no book text. */
 
-export const SCHEMA_VERSION = 2 as const;
+export const SCHEMA_VERSION = 3 as const;
 
 export const CANDLE_COLOURS = ['amber', 'rose', 'violet', 'teal', 'ash', 'moss'] as const;
 export type CandleColour = (typeof CANDLE_COLOURS)[number];
@@ -52,6 +52,8 @@ export interface Stats {
   lookAwayCount: number;
   sessionCount: number;
   awaySeconds: number;
+  /** Words in the paragraphs recorded as read. A number only; no book text. */
+  wordsRead: number;
 }
 
 export interface Shelves {
@@ -81,6 +83,7 @@ export const STATS_FIELDS = [
   'lookAwayCount',
   'sessionCount',
   'awaySeconds',
+  'wordsRead',
 ] as const;
 
 /** First_Visit_State: no name, default colour, onboarding not completed, no books. */

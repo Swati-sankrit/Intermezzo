@@ -10,6 +10,7 @@ import { useEffect, useRef } from 'react';
 import { recordEvent, type StatEvent } from '../library/statsOps';
 import { localDateString } from '../library/statsSelectors';
 import { changeTimer, IDLE_TIMER, tickTimer, type TimerState, type TimerStep } from '../library/statsTimer';
+import { countWords } from '../reader/paceCalc';
 import type { AttentionSignal } from '../attention';
 import type { ReaderSession } from './bookSession';
 
@@ -20,6 +21,8 @@ export interface StatsInput {
   chapterIndex: number;
   paragraphIndex: number;
   chapterComplete: boolean;
+  /** Text of the active paragraph. Only its word count is recorded; the text is never stored. */
+  paragraphText: string;
 }
 
 type Subscribe = (cb: (s: AttentionSignal) => void) => () => void;
@@ -86,7 +89,7 @@ export function useStatsRecorder(input: StatsInput | undefined, subscribeSignal:
     const key = `${bookId}:${chapterIndex}:${paragraphIndex}`;
     if (page.opened.has(key)) return;
     page.opened.add(key);
-    record(inputRef.current, { kind: 'paragraphs', count: 1 });
+    record(inputRef.current, { kind: 'paragraphs', count: 1, words: countWords(inputRef.current.paragraphText) });
   }, [bookId, loaded, chapterIndex, paragraphIndex]);
 
   const complete = input?.chapterComplete ?? false;

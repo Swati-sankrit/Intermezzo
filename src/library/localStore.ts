@@ -1,6 +1,7 @@
 import { EMPTY_DATA_MODEL, SCHEMA_VERSION, type DataModel } from './model';
 import { clearLegacyData, migrateLegacy, type MigrationIo } from './legacyMigration';
 import { parse, serialize } from './serializer';
+import { migrateV2ToV3 } from './schemaV3';
 import { validate } from './validator';
 
 /**
@@ -108,6 +109,10 @@ function hasNewerVersion(data: unknown): boolean {
   return typeof v === 'number' && Number.isFinite(v) && v > SCHEMA_VERSION;
 }
 
+function isVersion2(data: unknown): boolean {
+  return typeof data === 'object' && data !== null && (data as { schemaVersion?: unknown }).schemaVersion === 2;
+}
+
 /** The single creation point for a Data_Store. Catalogue EPUBs are never stored here. */
 export function createLocalStore(): DataStore {
   /** Set once a newer-version record is seen; all saves are refused afterwards. */
@@ -159,8 +164,18 @@ export function createLocalStore(): DataStore {
           locked = true;
           return fail('newer_version');
         }
-        const checked = validate(data);
-        return checked.ok ? { ok: true, value: checked.value } : fail('invalid');
+        const wasV2 = isVersion2(data);
+        const checked = validate(migrateV2ToV3(data));
+        if (!checked.ok) return fail('invalid');
+        if (wasV2) {
+          // Written only after the Validator accepted it. A failed write keeps the old record.
+          try {
+            localStorage.setItem(LIBRARY_STORAGE_KEY, serialize(checked.value));
+          } catch {
+            // the migrated model is still returned; the next save retries
+          }
+        }
+        return { ok: true, value: checked.value };
       } catch (err) {
         return fail(kindOf(err));
       }

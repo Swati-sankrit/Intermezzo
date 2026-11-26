@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { hashBytes } from '../library/bookId';
 import { readAsArrayBuffer } from '../reader/fileIO';
@@ -11,6 +11,11 @@ import { ReaderView } from './ReaderView';
 import { useHeldOpen } from './useHeldOpen';
 import { useLibrary } from './useLibrary';
 import { useProfileActions } from './useProfileActions';
+import { EffectBoundary } from './shell/EffectBoundary';
+import { useCoverCapture, type BurnSource } from './shell/coverCapture';
+import { OpeningTransition } from './shell/OpeningTransition';
+import { ShellFrame } from './shell/ShellFrame';
+import type { ShellTabName } from './shell/tabStorage';
 
 /** The library and the reader, joined by the Book_Id of the book being read. */
 export function LibraryShell() {
@@ -18,15 +23,26 @@ export function LibraryShell() {
   const store = useDataStore();
   const [bookId, setBookId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // The tab shown when a book opened, restored when the reader comes back.
+  const lastTab = useRef<ShellTabName | undefined>(undefined);
 
   const session: ReaderSession | undefined = bookId
     ? { bookId, store, model: lib.model, status: lib.status, updateModel: lib.updateModel }
     : undefined;
 
+  // The Opening_Transition runs only while a book opens, never when returning to the library.
+  const [opening, setOpening] = useState(false);
+  const takeCover = useCoverCapture();
+  const [burnSource, setBurnSource] = useState<BurnSource | null>(null);
+  const [openState, setOpenState] = useState({ ready: false, failed: false });
+  const endOpening = useCallback(() => setOpening(false), []);
   // Opening the book already shown (after a failure) must run the load again.
   const open = (id: string) => {
     setNotice(null);
     flushSync(() => setBookId(null));
+    setOpenState({ ready: false, failed: false });
+    setBurnSource(takeCover());
+    setOpening(true);
     setBookId(id);
   };
 
@@ -64,9 +80,19 @@ export function LibraryShell() {
   const unsavedNotice = onboardingEnded && lib.message === MSG.profileSaveFailed ? MSG.onboardingNotSaved : null;
 
   return (
+    <>
+    {opening && (
+      <EffectBoundary>
+        <OpeningTransition ready={openState.ready} failed={openState.failed} onDone={endOpening} burn={burnSource} />
+      </EffectBoundary>
+    )}
     <ReaderView
       session={session}
-      onLeave={() => setBookId(null)}
+      onOpenState={setOpenState}
+      onLeave={() => {
+        setOpening(false);
+        setBookId(null);
+      }}
       saveFailure={lib.message === MSG.positionSaveFailed || lib.message === MSG.statsSaveFailed ? lib.message : null}
       onDismissSaveFailure={lib.dismissMessage}
       library={(status, back) =>
@@ -88,22 +114,33 @@ export function LibraryShell() {
             />
           </main>
         ) : (
-        <LibraryScreen
-          lib={lib}
-          open={status}
-          failedBookId={status.failure ? bookId : null}
-          notice={notice ?? unsavedNotice}
-          onOpenCatalogue={openCatalogue}
-          onOpenFile={(file) => requestOpen({ kind: 'file', file })}
-          onContinue={(id) => requestOpen({ kind: 'book', id })}
-          onReopenPicked={(id, file) => void reopenPicked(id, file)}
-          onBack={() => {
-            setNotice(null);
-            back();
+        <ShellFrame
+          candleColour={lib.model.profile.candleColour}
+          model={lib.status === 'ready' ? lib.model : undefined}
+          initialTab={lastTab.current}
+          onTabChange={(tab) => {
+            lastTab.current = tab;
           }}
+          library={
+            <LibraryScreen
+              lib={lib}
+              open={status}
+              failedBookId={status.failure ? bookId : null}
+              notice={notice ?? unsavedNotice}
+              onOpenCatalogue={openCatalogue}
+              onOpenFile={(file) => requestOpen({ kind: 'file', file })}
+              onContinue={(id) => requestOpen({ kind: 'book', id })}
+              onReopenPicked={(id, file) => void reopenPicked(id, file)}
+              onBack={() => {
+                setNotice(null);
+                back();
+              }}
+            />
+          }
         />
         )
       }
     />
+    </>
   );
 }

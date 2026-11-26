@@ -1,0 +1,54 @@
+/* Smoke wisps. Behind content (z-index 0; content is 1), no pointer events, no focus.
+   Colour is --candle-ash at --smoke-alpha (0.10 peak, measured in the design). Wisps sit in
+   separate columns so they do not stack above that peak. */
+
+.shell-smoke {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shell-smoke__wisp {
+  position: absolute;
+  bottom: -40vh;
+  height: 40vh;
+  opacity: 0;
+  background: radial-gradient(
+    ellipse closest-side,
+    color-mix(in srgb, var(--candle-ash) var(--smoke-alpha), transparent),
+    transparent
+  );
+  animation: shell-smoke-rise var(--smoke-rise) linear infinite;
+  will-change: transform, opacity;
+}
+
+.shell-smoke--paused .shell-smoke__wisp {
+  animation-play-state: paused;
+}
+
+@keyframes shell-smoke-rise {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  20% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate3d(0, -130vh, 0); opacity: 0; }
+}
+
+/* Reduced motion: one still haze along the bottom, no animation. */
+.shell-smoke__haze {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30vh;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--candle-ash) var(--smoke-alpha), transparent),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-smoke__wisp { animation: none; opacity: 0; }
+}

@@ -2,16 +2,21 @@
   --bg: #14110f;
   --surface: #1d1916;
   --text: #e8dcc4;
-  --text-dim: #8a7f6e;
+  --text-dim: #9a8f7e;
   --accent: #e0a64a;
-  --danger: #c0564b;
+  --danger: #d9766b;
   --shadow: rgba(0, 0, 0, 0.6);
+  --darkness: #0d0b0a;
   --candle-amber: #e0a64a;
   --candle-rose: #d9788a;
   --candle-violet: #a58bd6;
   --candle-teal: #4fb3a9;
   --candle-ash: #a39d94;
   --candle-moss: #8fae5f;
+  --flame-glow: #c8481f;
+  --flame-outer: #d9441c;
+  --flame-mid: #ff8a2e;
+  --flame-core: #ffd9a0;
   --glow: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 

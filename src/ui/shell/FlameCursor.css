@@ -1,0 +1,64 @@
+/* Flame cursor and glow. Behind content like the Candle_Pool, no pointer events, never focusable.
+   Colours come from theme.css only. Reading page does not mount this. */
+.shell-flame-glow,
+.shell-flame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+  transform: translate3d(-9999px, -9999px, 0);
+}
+
+/* Local glow: peak alpha is --flame-glow-alpha (flameGlowMaxAlpha); opacity only scales it down. */
+.shell-flame-glow {
+  background: radial-gradient(
+    circle closest-side,
+    color-mix(in srgb, var(--flame-glow) var(--flame-glow-alpha, 16%), transparent),
+    transparent
+  );
+  transition: transform 90ms ease-out;
+  will-change: transform, opacity;
+}
+
+.shell-flame {
+  visibility: hidden;
+  /* The flame is the pointer, so it must show over the page content. It is tiny and takes no pointer events. */
+  z-index: 100;
+  transition: transform 90ms ease-out;
+  will-change: transform;
+}
+
+.shell-flame > span {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  border-radius: 50% 50% 50% 50% / 68% 68% 32% 32%;
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) rotate(var(--flame-sway, 0deg)) scaleY(calc(0.92 + 0.1 * var(--flame-level, 1)));
+}
+
+.shell-flame__outer {
+  width: 22px;
+  height: 52px;
+  background: linear-gradient(to top, var(--flame-outer), transparent 95%);
+  /* A teardrop that narrows to the tip. */
+  clip-path: ellipse(50% 50% at 50% 60%);
+}
+
+.shell-flame__mid {
+  width: 14px;
+  height: 36px;
+  background: linear-gradient(to top, var(--flame-mid), transparent 95%);
+}
+
+.shell-flame__core {
+  width: 7px;
+  height: 18px;
+  background: linear-gradient(to top, var(--flame-core), transparent 95%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-flame-glow,
+  .shell-flame { transition: none; }
+}

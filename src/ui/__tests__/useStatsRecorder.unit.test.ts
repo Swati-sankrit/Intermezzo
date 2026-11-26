@@ -31,7 +31,7 @@ function setup() {
     emit = cb;
     return () => {};
   };
-  const input: StatsInput = { session, chapterIndex: 0, paragraphIndex: 0, chapterComplete: false };
+  const input: StatsInput = { session, chapterIndex: 0, paragraphIndex: 0, chapterComplete: false, paragraphText: 'one two  three\nfour' };
   return { getModel: () => model, subscribe, input, emit: (s: AttentionSignal) => emit(s) };
 }
 
@@ -60,6 +60,7 @@ describe('useStatsRecorder', () => {
       expect(s.awaySeconds).toBe(3);
       expect(s.sessionCount).toBe(1);
       expect(s.paragraphsRead).toBe(1);
+      expect(s.wordsRead).toBe(4);
     }
   });
 
@@ -74,5 +75,22 @@ describe('useStatsRecorder', () => {
     resetStatsPage();
     renderHook(() => useStatsRecorder(t.input, t.subscribe)).unmount();
     expect(statsForBook(t.getModel(), 'book').sessionCount).toBe(2);
+  });
+  it('adds countWords(text) once per paragraph key, not again on re-render or re-open', () => {
+    const t = setup();
+    const { rerender, unmount } = renderHook((p: StatsInput) => useStatsRecorder(p, t.subscribe), { initialProps: t.input });
+    expect(statsForBook(t.getModel(), 'book').wordsRead).toBe(4);
+    rerender({ ...t.input });
+    rerender({ ...t.input, paragraphText: 'a much longer text that must not be counted again' });
+    expect(statsForBook(t.getModel(), 'book').wordsRead).toBe(4);
+    expect(statsForBook(t.getModel(), 'book').paragraphsRead).toBe(1);
+    // a different paragraph key adds its own count; going back to the first adds nothing
+    rerender({ ...t.input, paragraphIndex: 1, paragraphText: 'five six seven' });
+    expect(statsForBook(t.getModel(), 'book').wordsRead).toBe(7);
+    rerender({ ...t.input, paragraphIndex: 0 });
+    expect(statsForBook(t.getModel(), 'book').wordsRead).toBe(7);
+    expect(statsForBook(t.getModel(), 'book').paragraphsRead).toBe(2);
+    expect(statsForDate(t.getModel(), '2025-01-31').wordsRead).toBe(7);
+    unmount();
   });
 });

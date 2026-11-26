@@ -1,0 +1,469 @@
+{
+  "pbtResults": {
+    "5.3 Write property test for v2→v3 migration": {
+      "status": "passed",
+      "lastRunTimestamp": 1795671787152
+    },
+    "5.4 Write property test for migration idempotence": {
+      "status": "passed",
+      "lastRunTimestamp": 1795671876138
+    },
+    "6.2 Write property test for Focus_Score bounds": {
+      "status": "passed",
+      "lastRunTimestamp": 1795672297278
+    },
+    "6.3 Write property test for the 7-day Focus_Score": {
+      "status": "passed",
+      "lastRunTimestamp": 1795672419366
+    },
+    "6.4 Write property test for Moon_Phase": {
+      "status": "passed",
+      "lastRunTimestamp": 1795672498647
+    },
+    "6.5 Write property test for Goal_Progress": {
+      "status": "passed",
+      "lastRunTimestamp": 1795672581394
+    },
+    "6.6 Write property test for Measured_Pace": {
+      "status": "passed",
+      "lastRunTimestamp": 1795672673186
+    }
+  },
+  "executionHistory": {
+    "1.1 Update `src/ui/theme.css` and `docs/BUILD_LOG.md`": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795633371433
+      },
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795633453352
+      }
+    ],
+    "1.2 Write example test for text contrast": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795633456863
+      },
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795633563267
+      }
+    ],
+    "1. Fix theme colours and add the Darkness colour": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795633563287
+      }
+    ],
+    "2.1 Create `src/ui/shell/TabBar.tsx`, `ShellFrame.tsx` and a guarded tab-storage helper": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795633564054
+      },
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795633969692
+      }
+    ],
+    "2.2 Write example tests for the Tab_Bar": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795633974124
+      },
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795634054222
+      }
+    ],
+    "2. Build the Shell frame and Tab_Bar": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795634054268
+      }
+    ],
+    "3.1 Darkness, Candle_Pool and Fog_Layer": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795634057675
+      },
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795657596687
+      }
+    ],
+    "3.2 Cover_Effect on cover cards": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795657601812
+      },
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795657711506
+      }
+    ],
+    "3.3 Opening_Transition": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795657715025
+      },
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795657828920
+      }
+    ],
+    "3.4 Lurking_Ghost": [
+      {
+        "executionId": "b41eab50-1776-43a1-b634-16745ba3c8a1",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795657833630
+      },
+      {
+        "executionId": "b5f0662f-bd0e-4d81-8366-3003a3c85a36",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795660060118
+      }
+    ],
+    "3. Add the visual layers (no tests, per Requirement 12.6)": [
+      {
+        "executionId": "b5f0662f-bd0e-4d81-8366-3003a3c85a36",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795660060177
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "b5f0662f-bd0e-4d81-8366-3003a3c85a36",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795660063560
+      },
+      {
+        "executionId": "b5f0662f-bd0e-4d81-8366-3003a3c85a36",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795660307375
+      }
+    ],
+    "11.1 Create `src/ui/shellEffects.ts` and wire the existing effects to it": [
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795661991668
+      },
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795662491427
+      }
+    ],
+    "11.2 Strengthen the Darkness and Vignette, and dim covers outside the light": [
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795662495167
+      },
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795662733970
+      }
+    ],
+    "11.3 Flame cursor and glow, with the 'pool' fallback": [
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795662737496
+      },
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795663160274
+      }
+    ],
+    "11.4 Smoke layer, with the 'fog' fallback": [
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795663163644
+      },
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795663499412
+      }
+    ],
+    "11.5 Burn on open, with the 'fade' fallback": [
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795663502516
+      },
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795664840177
+      }
+    ],
+    "11.6 Bigger lurking ghost and the `?demo=1` switch": [
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795664853670
+      },
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795665350671
+      }
+    ],
+    "11.7 Checkpoint - Run `tsc` and the full test suite": [
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795665351062
+      },
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795665627544
+      }
+    ],
+    "11. Visual revision (run before tasks 5–7)": [
+      {
+        "executionId": "6a5e29c5-8b73-4cfa-a29a-172cc0b3cacf",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795665627578
+      }
+    ],
+    "12.1 First peek at 3 s and 4–6 s repeats under `?demo=1`": [
+      {
+        "executionId": "eccdea66-3365-4ae3-a26b-6c534da670b0",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795666017084
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671424792
+      }
+    ],
+    "12. Demo switch for filming (run before tasks 5–7)": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671424859
+      }
+    ],
+    "5.1 Extend model, stats ops, validator, migrator and store": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671424969
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671602304
+      }
+    ],
+    "5.2 Record words when a paragraph is recorded": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671602847
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671732748
+      }
+    ],
+    "5.3 Write property test for v2→v3 migration": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671733307
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671834157
+      }
+    ],
+    "5.4 Write property test for migration idempotence": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671834856
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671915727
+      }
+    ],
+    "5.5 Write property test for recording a paragraph": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795671916595
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672053428
+      }
+    ],
+    "5.6 Write example tests for load and validation": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672054159
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672149889
+      }
+    ],
+    "5. Add `wordsRead` and Schema_Version 3 to the data model": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672149917
+      }
+    ],
+    "6.1 Implement `src/library/ledgerCalculator.ts`": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672150418
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672255992
+      }
+    ],
+    "6.2 Write property test for Focus_Score bounds": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672256507
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672346125
+      }
+    ],
+    "6.3 Write property test for the 7-day Focus_Score": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672346598
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672459605
+      }
+    ],
+    "6.4 Write property test for Moon_Phase": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672458987
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672540628
+      }
+    ],
+    "6.5 Write property test for Goal_Progress": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672540041
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672622557
+      }
+    ],
+    "6.6 Write property test for Measured_Pace": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672622119
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672712126
+      }
+    ],
+    "6. Build the pure Ledger_Calculator": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672712184
+      }
+    ],
+    "7.1 Create `src/ui/shell/LedgerTab.tsx` (plus small parts under 200 lines each) and wire it into `ShellFrame`": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672712702
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672980176
+      }
+    ],
+    "7.2 Write example tests for the Ledger tab": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795672980554
+      },
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795673494386
+      }
+    ],
+    "7. Build The Ledger tab": [
+      {
+        "executionId": "714c6bd0-8052-4378-baea-efec59fb2b47",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795673494443
+      }
+    ],
+    "8.1 Create `src/ui/shell/SeanceTab.tsx` and `volumeCap.ts`": [
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795673633388
+      }
+    ]
+  }
+}

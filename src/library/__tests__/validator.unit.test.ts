@@ -15,13 +15,13 @@ function baseModel(): DataModel {
     },
     positions: { b1: { chapterIndex: 0, paragraphIndex: 3, savedAt: 5, progress: 40 } },
     stats: {
-      b1: { paragraphsRead: 3, chaptersFinished: 0, activeReadingSeconds: 60, lookAwayCount: 1, sessionCount: 1, awaySeconds: 5 },
-      b2: { paragraphsRead: 0, chaptersFinished: 0, activeReadingSeconds: 0, lookAwayCount: 0, sessionCount: 0, awaySeconds: 0 },
+      b1: { paragraphsRead: 3, chaptersFinished: 0, activeReadingSeconds: 60, lookAwayCount: 1, sessionCount: 1, awaySeconds: 5, wordsRead: 7 },
+      b2: { paragraphsRead: 0, chaptersFinished: 0, activeReadingSeconds: 0, lookAwayCount: 0, sessionCount: 0, awaySeconds: 0, wordsRead: 0 },
     },
   };
 }
 
-const DAY = { paragraphsRead: 2, chaptersFinished: 0, activeReadingSeconds: 30, lookAwayCount: 1, sessionCount: 1, awaySeconds: 4 };
+const DAY = { paragraphsRead: 2, chaptersFinished: 0, activeReadingSeconds: 30, lookAwayCount: 1, sessionCount: 1, awaySeconds: 4, wordsRead: 9 };
 
 function problemsOf(model: unknown): string[] {
   const r = validate(model);
@@ -90,6 +90,25 @@ describe('validate', () => {
     }
   });
 
+  it('rejects a missing, negative, fractional or non-numeric wordsRead in a book or day record, naming the record and field', () => {
+    const bad: [string, unknown][] = [['negative', -1], ['fractional', 2.5], ['string', '7'], ['null', null], ['NaN', Number.NaN]];
+    for (const [, value] of bad) {
+      const m = baseModel() as unknown as { stats: Record<string, Record<string, unknown>>; daily: Record<string, Record<string, unknown>> };
+      m.stats.b1.wordsRead = value;
+      expect(problemsOf(m).some((p) => p.startsWith('stats[b1].wordsRead'))).toBe(true);
+      const d = baseModel() as unknown as { daily: Record<string, Record<string, unknown>> };
+      d.daily = { '2025-03-04': { ...DAY, wordsRead: value } };
+      expect(problemsOf(d).some((p) => p.startsWith('daily[2025-03-04].wordsRead'))).toBe(true);
+    }
+    const missingBook = baseModel() as unknown as { stats: Record<string, Record<string, unknown>> };
+    delete missingBook.stats.b1.wordsRead;
+    expect(problemsOf(missingBook).some((p) => p.startsWith('stats[b1].wordsRead'))).toBe(true);
+    const { wordsRead: _w, ...dayNoWords } = DAY;
+    void _w;
+    const missingDay = baseModel() as unknown as { daily: Record<string, unknown> };
+    missingDay.daily = { '2025-03-04': dayNoWords };
+    expect(problemsOf(missingDay).some((p) => p.startsWith('daily[2025-03-04].wordsRead'))).toBe(true);
+  });
   it('accepts a daily record, including a leap day, an orphan date and an empty record', () => {
     const m = baseModel();
     m.daily = { '2024-02-29': { ...DAY }, '2025-01-01': { ...DAY } };
@@ -110,6 +129,8 @@ describe('validate', () => {
       [{ paragraphsRead: -1 }, 'paragraphsRead'],
       [{ awaySeconds: 1.5 }, 'awaySeconds'],
       [{ sessionCount: Number.NaN }, 'sessionCount'],
+      [{ wordsRead: -1 }, 'wordsRead'],
+      [{ wordsRead: 2.5 }, 'wordsRead'],
     ];
     for (const [patch, field] of cases) {
       const m = baseModel();

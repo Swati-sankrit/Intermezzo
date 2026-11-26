@@ -1,0 +1,22 @@
+.shell-frame {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.shell-frame__panel[hidden] {
+  display: none;
+}
+
+.shell-frame__placeholder {
+  margin: 2rem clamp(1rem, 4vw, 2.5rem);
+  color: var(--text-dim);
+  font-family: system-ui, sans-serif;
+  text-align: center;
+}
+
+/* Content sits above the Darkness, Fog_Layer and Candle_Pool (z-index 0). */
+.shell-frame__content {
+  position: relative;
+  z-index: 1;
+}

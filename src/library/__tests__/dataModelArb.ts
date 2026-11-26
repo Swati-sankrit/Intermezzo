@@ -34,6 +34,7 @@ const stats: fc.Arbitrary<Stats> = fc
     lookAwayCount: count,
     sessionCount: count,
     awaySeconds: count,
+    wordsRead: count,
   })
   .map((s) => ({ ...s }));
 

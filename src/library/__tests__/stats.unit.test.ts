@@ -20,11 +20,11 @@ const D2 = '2025-03-11';
 describe('stats events', () => {
   const sequence: Array<[string, StatEvent, string]> = [
     ['a', { kind: 'session' }, D1],
-    ['a', { kind: 'paragraphs', count: 3 }, D1],
+    ['a', { kind: 'paragraphs', count: 3, words: 30 }, D1],
     ['a', { kind: 'active', seconds: 40 }, D1],
     ['a', { kind: 'lookAway' }, D1],
     ['a', { kind: 'away', seconds: 12 }, D1],
-    ['b', { kind: 'paragraphs', count: 2 }, D2],
+    ['b', { kind: 'paragraphs', count: 2, words: 20 }, D2],
     ['b', { kind: 'chapter' }, D2],
     ['a', { kind: 'active', seconds: 5 }, D2],
   ];
@@ -44,6 +44,7 @@ describe('stats events', () => {
     expect(statsForBook(model, 'a')).toEqual({
       paragraphsRead: 3, chaptersFinished: 0, activeReadingSeconds: 45,
       lookAwayCount: 1, sessionCount: 1, awaySeconds: 12,
+      wordsRead: 30,
     });
   });
 
@@ -86,7 +87,7 @@ describe('stats events', () => {
   it('invalid amounts leave the model unchanged', () => {
     const model = seeded();
     for (const bad of [-1, 1.5, NaN, Infinity]) {
-      expect(recordEvent(model, 'a', { kind: 'paragraphs', count: bad }, D1)).toBe(model);
+      expect(recordEvent(model, 'a', { kind: 'paragraphs', count: bad, words: 1 }, D1)).toBe(model);
       expect(recordEvent(model, 'a', { kind: 'active', seconds: bad }, D1)).toBe(model);
       expect(recordEvent(model, 'a', { kind: 'away', seconds: bad }, D1)).toBe(model);
     }

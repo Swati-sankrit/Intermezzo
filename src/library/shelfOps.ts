@@ -9,6 +9,7 @@ const ZERO_STATS: Stats = {
   lookAwayCount: 0,
   sessionCount: 0,
   awaySeconds: 0,
+  wordsRead: 0,
 };
 
 function hasBook(model: DataModel, bookId: string): boolean {
