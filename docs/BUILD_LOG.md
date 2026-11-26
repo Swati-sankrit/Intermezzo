@@ -1314,3 +1314,102 @@ Ratios use the `scripts/check-candle-contrast.mjs` formula (WCAG relative lumina
 - `HauntStage.css`: removed the `.haunt-layer > svg:not([preserveAspectRatio='none'])` ghost sizing rule. The only other SVG layer (`whispers.ts`) uses `preserveAspectRatio="none"`, which the rule excluded. In `hauntStage.unit.test.tsx` the one assertion that checked this rule was removed; the overlay `pointer-events` assertion stays.
 - Red_Coverage method (Python PIL, no new dependency): take the visible part of `ghost-face.png` (alpha box x 66..1335, y 0..768, 1269 x 768 px), count pixels with alpha >= 128 whose HSV hue is within 15 degrees of red, saturation >= 0.6 and value >= 0.4 (strict band): 14,371 px, 1.47 percent of the visible part. A looser band (hue within 25 degrees, S >= 0.4, V >= 0.25) gives 33,181 px, 3.40 percent.
 - Largest scale: the Image_Layer never draws larger than its region, and a region cannot exceed the viewport, so the bound is the visible part scaled to fit (contain) the whole viewport. Red pixels scale with fit squared. Results (strict / loose): 1440x900 1.43 / 3.30 percent; 1920x1080 1.37 / 3.16; 1280x720 1.37 / 3.16; 768x1024 0.67 / 1.55; 390x844 0.41 / 0.95. Worst case 3.30 percent, under the 15 percent limit (ghost-dread Requirement 15 criterion 6). The measure counts every red-band pixel, not only the eyes, so it over-counts the eyes.
+
+## Task 18.1: coverage-floor margins (measured; reshaping NOT done)
+
+Method: a temporary vitest alias recorded every coverage assertion (actual count, floor) from the real generators and let the run continue. Margin = mean(actual - floor) / SD(actual - floor) over independent batches with fresh random seeds. Light tests: 300 batches. Heavy async tests (gateCap.gd23, gateCap.p14, gateReturn.gd24, reducedMotion.p15): 93 batches. dialogOrder.p19: 48 batches. Reduced batch counts were forced by the 40-minute limit. The measuring files were removed from the repo.
+
+419 floors measured; 49 are under 4 SD. No generator was changed, no floor was lowered, no assertion was touched.
+
+### Floors under 4 SD
+
+| Test | Feature | Floor | Mean | SD | Margin before (SD) | Change | Margin after |
+|---|---|---|---|---|---|---|---|
+| ghostDistance.gd03 | nan | 0.0100 | 0.0217 | 0.0046 | 2.56 | none | not measured |
+| gateReturn.gd24 | scripts with: staleLayerOp | 120.00 | 145.04 | 9.15 | 2.74 | none | not measured |
+| planner.gd13 | roll:low | 50.00 | 71.88 | 7.91 | 2.77 | none | not measured |
+| planner.gd12 | long | 63.00 | 86.30 | 7.90 | 2.95 | none | not measured |
+| gateReturn.gd24 | scripts with: secondBegin | 112.00 | 141.41 | 9.75 | 3.02 | none | not measured |
+| registry.gd22 | duplicate id | 90.00 | 116.72 | 8.74 | 3.06 | none | not measured |
+| planner.gd13 | roll:mid | 69.00 | 95.76 | 8.48 | 3.16 | none | not measured |
+| planner.gd13 | roll:high | 49.00 | 72.80 | 7.54 | 3.16 | none | not measured |
+| registry.gd22 | valid effect | 120.00 | 146.02 | 7.84 | 3.32 | none | not measured |
+| ghostDistance.gd03 | infinite | 0.0200 | 0.0434 | 0.0070 | 3.36 | none | not measured |
+| gateCap.p14 | combo footsteps+knock | 2.00 | 19.66 | 5.17 | 3.41 | none | not measured |
+| planner.gd13 | mid-only-nightmare | 16.00 | 35.57 | 5.73 | 3.41 | none | not measured |
+| settings.gd01 | migrate | 9.00 | 24.92 | 4.60 | 3.46 | none | not measured |
+| dialogOrder.p19 | choice 'unanswered' | 109.00 | 148.38 | 11.39 | 3.46 | none | not measured |
+| gateCap.p14 | combo whispers+breathing | 2.00 | 19.58 | 5.05 | 3.48 | none | not measured |
+| gateCap.p14 | combo ghostFigure+knock | 2.00 | 19.22 | 4.93 | 3.49 | none | not measured |
+| gateCap.p14 | combo candle | 2.00 | 17.41 | 4.21 | 3.66 | none | not measured |
+| dialogOrder.p19 | other string choice | 109.00 | 150.27 | 11.27 | 3.66 | none | not measured |
+| plan.p11 | infinite | 15.00 | 36.47 | 5.85 | 3.67 | none | not measured |
+| planner.gd12 | bind:classic | 114.00 | 148.74 | 9.38 | 3.70 | none | not measured |
+| gateCap.p14 | combo whispers+knock | 2.00 | 19.14 | 4.59 | 3.73 | none | not measured |
+| gateCap.p14 | ensemble: jumpReducedRan | 17.00 | 42.37 | 6.78 | 3.74 | none | not measured |
+| gateCap.p14 | combo knock+whispers | 2.00 | 19.78 | 4.75 | 3.74 | none | not measured |
+| reducedMotion.p15 | #19 | 25.00 | 49.58 | 6.57 | 3.74 | none | not measured |
+| planner.gd09 | reduced:on | 117.00 | 150.28 | 8.87 | 3.75 | none | not measured |
+| planner.gd11 | qualifying:scares | 56.00 | 84.97 | 7.71 | 3.76 | none | not measured |
+| gateCap.p14 | combo footsteps+whispers | 2.00 | 20.12 | 4.80 | 3.78 | none | not measured |
+| levelLogic.p05 | one | 0.1000 | 0.1908 | 0.0240 | 3.79 | none | not measured |
+| gateCap.p14 | combo whispers+footsteps | 2.00 | 19.46 | 4.60 | 3.80 | none | not measured |
+| gateCap.p14 | combo knock+breathing | 2.00 | 20.26 | 4.80 | 3.80 | none | not measured |
+| dialogOrder.p19 | consent visible | 43.00 | 73.58 | 8.04 | 3.80 | none | not measured |
+| gateCap.p14 | combo breathing+knock | 2.00 | 20.29 | 4.80 | 3.81 | none | not measured |
+| reducedMotion.p15 | #20 | 25.00 | 47.88 | 6.00 | 3.81 | none | not measured |
+| gateCap.p14 | combo breathing+footsteps | 2.00 | 19.47 | 4.58 | 3.82 | none | not measured |
+| gateCap.p14 | combo ghostFigure | 2.00 | 17.74 | 4.10 | 3.84 | none | not measured |
+| gateCap.p14 | combo footsteps+breathing | 2.00 | 18.83 | 4.37 | 3.85 | none | not measured |
+| gateCap.p14 | combo footsteps | 2.00 | 17.46 | 4.01 | 3.86 | none | not measured |
+| ghostBox.gd05 | nonFinite | 0.0500 | 0.0865 | 0.0094 | 3.88 | none | not measured |
+| gateCap.p14 | combo knock | 2.00 | 17.31 | 3.94 | 3.89 | none | not measured |
+| planner.gd12 | bind:nightmare | 67.00 | 99.28 | 8.28 | 3.90 | none | not measured |
+| ghostDistance.gd03 | each[2] | 0.0200 | 0.0464 | 0.0068 | 3.90 | none | not measured |
+| planner.gd10 | mode:classic | 118.00 | 150.43 | 8.26 | 3.93 | none | not measured |
+| levelLogic.p05 | zero | 0.1000 | 0.1897 | 0.0228 | 3.94 | none | not measured |
+| gateCap.p14 | combo ghostFigure+whispers | 2.00 | 20.25 | 4.63 | 3.94 | none | not measured |
+| plan.p10 | sound on and unlocked | 45.00 | 74.88 | 7.55 | 3.96 | none | not measured |
+| gateCap.p14 | combo knock+ghostFigure | 2.00 | 20.48 | 4.65 | 3.98 | none | not measured |
+| planner.gd09 | rolls:would-scare-in-nightmare | 88.00 | 122.49 | 8.66 | 3.98 | none | not measured |
+| gateCap.p14 | combo breathing | 2.00 | 16.94 | 3.74 | 3.99 | none | not measured |
+| registry.gd22 | valid haunt | 120.00 | 155.11 | 8.78 | 4.00 | none | not measured |
+
+### Every test file with coverage floors
+
+| Test file | Floors | Batches | Lowest margin (SD) | Floors under 4 SD |
+|---|---|---|---|---|
+| awayCounter.gd04 | 7 | 300 | 5.90 | 0 |
+| dialogOrder.p19 | 11 | 48 | 3.46 | 3 |
+| engine.gd28 | 11 | 300 | 4.10 | 0 |
+| engine.p20 | 12 | 300 | 4.17 | 0 |
+| gateCap.gd23 | 11 | 93 | 5.97 | 0 |
+| gateCap.p14 | 71 | 93 | 3.41 | 19 |
+| gateReturn.gd24 | 22 | 93 | 2.74 | 2 |
+| ghostBox.gd05 | 16 | 300 | 3.88 | 1 |
+| ghostDistance.gd03 | 10 | 300 | 2.56 | 3 |
+| levelLogic.gd02 | 6 | 300 | 10.24 | 0 |
+| levelLogic.p01 | 1 | 300 | 13.28 | 0 |
+| levelLogic.p02 | 1 | 300 | 11.61 | 0 |
+| levelLogic.p05 | 7 | 300 | 3.79 | 2 |
+| levelLogic.p06 | 7 | 300 | 4.04 | 0 |
+| levelLogic.p07 | 7 | 300 | 6.05 | 0 |
+| levelLogic.p08 | 8 | 300 | 4.97 | 0 |
+| plan.p09 | 4 | 300 | 6.34 | 0 |
+| plan.p10 | 4 | 300 | 3.96 | 1 |
+| plan.p11 | 11 | 300 | 3.67 | 1 |
+| plan.p12 | 7 | 300 | 4.46 | 0 |
+| planner.gd08 | 18 | 300 | 6.80 | 0 |
+| planner.gd09 | 5 | 300 | 3.75 | 2 |
+| planner.gd10 | 5 | 300 | 3.93 | 1 |
+| planner.gd11 | 6 | 300 | 3.76 | 1 |
+| planner.gd12 | 6 | 300 | 2.95 | 3 |
+| planner.gd13 | 6 | 300 | 2.77 | 4 |
+| pulses.gd07 | 11 | 300 | 6.21 | 0 |
+| reducedMotion.p15 | 34 | 93 | 3.74 | 2 |
+| regions.p18 | 6 | 300 | 4.27 | 0 |
+| registry.gd22 | 9 | 300 | 3.06 | 3 |
+| registry.p17 | 7 | 300 | 4.28 | 0 |
+| returnRules.gd26 | 49 | 300 | 9.91 | 0 |
+| settings.gd01 | 11 | 300 | 3.46 | 1 |
+| spatial.gd06 | 12 | 300 | 6.18 | 0 |

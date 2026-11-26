@@ -485,7 +485,7 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 #### Acceptance Criteria
 
 1. WHEN the stats recorder records the away seconds of one Look_Away, THE stats recorder SHALL add at most the Away_Cap (120 seconds) in total for that Look_Away to the away seconds of the book and of the day.
-2. WHEN a Look_Away lasts the Away_Cap or less, THE stats recorder SHALL record its whole seconds exactly, as before.
+2. WHEN a Look_Away lasts the Away_Cap or less, THE stats recorder SHALL record its whole seconds exactly, as before (the whole seconds are counted by the timer, which may carry a part of a second into the Look_Away).
 3. WHEN a Look_Away lasts more than the Away_Cap (a Break_Period), THE stats recorder SHALL record exactly 120 away seconds for it and SHALL record none of the time after the first 120 seconds.
 4. THE stats recorder SHALL apply criteria 1 to 3 however the time of one Look_Away is split across periodic updates and signal changes, so that the total for the Look_Away is the same.
 5. WHEN the Attention_Signal changes to `away` again after `present`, THE stats recorder SHALL start a new Look_Away with 0 seconds counted, so that each Look_Away has its own cap.

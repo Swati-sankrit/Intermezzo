@@ -305,8 +305,18 @@ Testing follows the design: property tests only for the Ledger calculations (Pro
 - [x] 17. Final checkpoint - Run `tsc` and the full suite
   - Run the type check and `npx vitest --run`, confirm Property 9 and all earlier property tests pass, and ask the user if questions arise
 
+- [ ] 18. Coverage-floor sweep
+  - [-] 18.1 Measure and reshape property-test coverage floors
+    - Maintenance task outside the haunted-shell requirements; it has no requirement numbers. Reference: the ghost-dread property tests. Time limit: 40 minutes; if it needs more, stop and ask the user
+    - List every property test that asserts a coverage floor (a minimum count of generated cases that have some feature, for example `gateReturn.gd24`, `gd11`, `gd08`)
+    - Measure each floor's margin over 300 batches with a temporary script, then delete the script
+    - Reshape the generator inputs for any floor that sits under 4 standard deviations from its mean; do NOT lower any floor, and do not weaken or delete any assertion
+    - Log a table in `docs/BUILD_LOG.md` (test, floor, mean, standard deviation, margin in standard deviations before and after, change made)
+    - Run the full suite twice (`npx vitest --run`) and report both results
+
 ## Notes
 
+- Task 18 is a maintenance sweep and is not tied to any haunted-shell requirement.
 - Tasks 13 to 17 are appended after task 12 and run in order of their waves. Task 13 and task 15 do not depend on each other. Task 14 needs task 13 (the shared width). Task 16 needs only the earlier visual work. Task 15.2 is the one deliberate property test outside the Ledger and migration scope (Requirement 12.13); Property 9 runs at least 100 cases and its cases and any counterexample are reported and recorded in `docs/BUILD_LOG.md`.
 - Tests for tasks 13 to 16 are example tests only where behaviour changes (the Ledger values and structure, the haunts using the bundled images). Layout, card styling and drawing are checked by hand and recorded in `docs/BUILD_LOG.md`.
 - Task 12 is numbered last but runs before tasks 5 to 7, after task 11. It supersedes the "3 to 6 second" demo delay written in task 11.6, which stays as recorded history.
@@ -336,7 +346,8 @@ Testing follows the design: property tests only for the Ledger calculations (Pro
     { "id": 10, "tasks": ["13.1", "15.1", "16.1"] },
     { "id": 11, "tasks": ["13.2", "14.1", "14.2", "14.3", "14.4", "15.2", "15.3", "16.2", "16.4"] },
     { "id": 12, "tasks": ["14.5", "16.3"] },
-    { "id": 13, "tasks": ["17"] }
+    { "id": 13, "tasks": ["17"] },
+    { "id": 14, "tasks": ["18.1"] }
   ]
 }
 ```

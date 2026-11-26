@@ -420,7 +420,8 @@ export interface TimerState {
 export const IDLE_TIMER: TimerState = { value: null, at: 0, rest: 0, awayCredited: 0 };
 ```
 
-- `tickTimer` while `away`: `seconds = floor(total / 1000)` as now, then `credit = min(seconds, AWAY_CAP_SECONDS - awayCredited)`, `away = credit`, `awayCredited += credit`. The remainder in `rest` is kept as now, so time is not lost or double counted below the cap; once the cap is reached, further seconds are consumed and not recorded.
+- Per look-away, the recorded total is `min(floor((carried rest + duration) / 1000), 120)`, where the carried rest is the part of a present second that the timer carries into the look-away. This equals `floor(duration / 1000)` only when the carried rest is 0.
+- `tickTimer` while `away`: `seconds = floor(total / 1000)` as now (`total` includes the carried `rest`), then `credit = min(seconds, AWAY_CAP_SECONDS - awayCredited)`, `away = credit`, `awayCredited += credit`. The remainder in `rest` is kept as now, so time is not lost or double counted below the cap; once the cap is reached, further seconds are consumed and not recorded.
 - `changeTimer` to `away` from any other value resets `awayCredited` to 0 (a new look-away). `away` to `away` keeps it. `away` to `present` or `null` resets it to 0.
 - `useStatsRecorder.ts` needs no change: it already spreads the timer state returned by each step. The 5-second flush, signal changes and close all go through the same two functions, so the cap holds however the time is split.
 - `lookAway` is still 1 on each present to away change, so a Break_Period still counts as one look-away.
@@ -571,7 +572,7 @@ For any valid Schema_Version 3 `DataModel` (including one where some `Stats` rec
 
 ### Property 9: Away seconds recorded per look-away never exceed 120
 
-For any list of tick durations (in ms, including zero and very long ones) and any splitting of one away period into `tickTimer` calls and `changeTimer` calls that keep the value `away`, the sum of `away` seconds returned for that look-away equals `min(floor(total elapsed ms / 1000), 120)` (a look-away of 120 s or less is recorded exactly, a longer one records exactly 120), and never exceeds 120. A new present then away change starts a new look-away with its own cap, and `lookAway` is reported once per such change.
+For any list of tick durations (in ms, including zero and very long ones) and any splitting of one away period into `tickTimer` calls and `changeTimer` calls that keep the value `away`, the sum of `away` seconds returned for that look-away equals `min(floor((carried rest + duration) / 1000), 120)`, where "carried rest" is the part of a present second (under 1000 ms) that the timer carries into the look-away, and `duration` is the total time spent away. This equals `floor(duration / 1000)` only when the carried rest is 0. A look-away whose whole seconds come to 120 or less is recorded in full, and a longer one records exactly 120, and never exceeds 120. A new present then away change starts a new look-away with its own cap, and `lookAway` is reported once per such change.
 
 **Validates: Requirements 21.1, 21.2, 21.3, 21.4, 21.5**
 

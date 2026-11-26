@@ -731,6 +731,13 @@
         "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
         "timestamp": 1795688166745
       }
+    ],
+    "18.1 Measure and reshape property-test coverage floors": [
+      {
+        "executionId": "40dcbce6-f513-4d0c-adf5-a9eaad269519",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795688561490
+      }
     ]
   }
 }
