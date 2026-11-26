@@ -27,6 +27,10 @@
     "6.6 Write property test for Measured_Pace": {
       "status": "passed",
       "lastRunTimestamp": 1795672673186
+    },
+    "15.2 Write property test for the away cap": {
+      "status": "passed",
+      "lastRunTimestamp": 1795685119864
     }
   },
   "executionHistory": {
@@ -518,6 +522,214 @@
         "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
         "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
         "timestamp": 1795674774398
+      }
+    ],
+    "13.1 Share one width and padding across the Tab_Bar and every tab": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795682702344
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795683022463
+      }
+    ],
+    "13.2 Séance two columns on desktop, then check every width": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795683023286
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795683687468
+      }
+    ],
+    "13. Responsive shell width": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795683687558
+      }
+    ],
+    "14.1 Card shell and the top row: Focus, Pace and Daily goal": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795683688061
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795683864458
+      }
+    ],
+    "14.2 Look-aways card: 7 columns": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795683865109
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795684054816
+      }
+    ],
+    "14.3 Moon card: one tidy row with today and a legend": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795684054120
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795684190353
+      }
+    ],
+    "14.4 Your reading card: four Stat_Tiles": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795684189454
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795684378757
+      }
+    ],
+    "14.5 Compose the dashboard, check contrast and update existing tests": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795684377999
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795684953756
+      }
+    ],
+    "14. Ledger dashboard": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795684953799
+      }
+    ],
+    "15.1 Cap the away seconds in the pure stats timer": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795684954040
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795685027248
+      }
+    ],
+    "15.2 Write property test for the away cap": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795685026633
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795685245273
+      }
+    ],
+    "15.3 Record the change in the build log and the requirement notes": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795685245007
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795686268856
+      }
+    ],
+    "16.1 Add the Image_Layer to the Safety_Gate": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795686268272
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795686720691
+      }
+    ],
+    "15. Focus-score away cap": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795686268902
+      }
+    ],
+    "16.2 Use the images in `ghostFigure` and `jumpscare`": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795686720241
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795687533992
+      }
+    ],
+    "16.3 Remove the drawn ghost and measure the close-up": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795687534493
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795687821963
+      }
+    ],
+    "16.4 Make the lurking ghost about 22% of the viewport height": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795687821476
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795688045009
+      }
+    ],
+    "16. Ghost unification and a smaller lurking ghost": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795688045065
+      }
+    ],
+    "17. Final checkpoint - Run `tsc` and the full suite": [
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795688045583
+      },
+      {
+        "executionId": "7078a057-b41c-4330-8d72-1532e7bcea9a",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795688166745
       }
     ]
   }

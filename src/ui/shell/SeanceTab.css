@@ -1,16 +1,28 @@
 /* Nothing here animates, so Reduced_Motion needs no override. */
 .seance {
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
-  max-width: 40rem;
   margin: 0 auto;
-  padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 3rem;
+  padding: 1.5rem 0 3rem;
   color: var(--text);
   font-family: system-ui, sans-serif;
   line-height: 1.6;
   overflow-wrap: anywhere;
+}
+
+/* Two columns from 1024 px. The DOM order is unchanged, so keyboard order is too. */
+@media (min-width: 1024px) {
+  .seance {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2.5rem;
+    align-items: start;
+  }
+
+  .seance > .settings__heading {
+    grid-column: 1 / -1;
+  }
 }
 
 .seance__section,

@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { goalProgress } from '../../library/ledgerCalculator';
 import { saveDailyGoal } from './goalStorage';
 import { GOAL_NOT_SAVED, minutesText } from './ledgerText';
+import { ProgressRing } from './ProgressRing';
 
 interface GoalSectionProps {
   goal: number;
@@ -28,7 +29,7 @@ export function GoalSection({ goal, onGoalChange, todaySeconds }: GoalSectionPro
   const pct = showBar ? goalProgress(todaySeconds, goal) : 0;
   const minutes = showBar ? minutesText(todaySeconds) : 0;
   return (
-    <section className="ledger-section" aria-labelledby={`${id}-h`}>
+    <section className="ledger-card" aria-labelledby={`${id}-h`}>
       <h3 id={`${id}-h`}>Daily goal</h3>
       <label className="ledger-goal__label" htmlFor={`${id}-in`}>Daily goal in minutes</label>
       <input
@@ -44,22 +45,7 @@ export function GoalSection({ goal, onGoalChange, todaySeconds }: GoalSectionPro
         onBlur={() => setDraft(String(goal))}
       />
       {failed && <p className="ledger-note" role="status">{GOAL_NOT_SAVED}</p>}
-      {showBar && (
-        <>
-          <div
-            className="ledger-progress"
-            role="progressbar"
-            aria-label="Progress toward today's goal"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={pct}
-            aria-valuetext={`${minutes} of ${goal} minutes`}
-          >
-            <div className="ledger-progress__fill" style={{ width: `${pct}%` }} />
-          </div>
-          <p className="ledger-note">{`${minutes} of ${goal} minutes`}</p>
-        </>
-      )}
+      {showBar && <ProgressRing percent={pct} valueText={`${minutes} of ${goal} minutes`} />}
     </section>
   );
 }

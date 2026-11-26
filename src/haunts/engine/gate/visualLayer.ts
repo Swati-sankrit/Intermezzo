@@ -1,6 +1,7 @@
 /** One haunt layer: a `div` inside a side region. Writes only to its own element. */
 import type { VisualLayer } from '../types';
 import { planFadeIn, planFadeOut, sweepRate } from './plan';
+import { buildGhostPicture } from './ghostPicture';
 import { parseSvgMarkup } from './svgMarkup';
 
 export interface LayerContext {
@@ -69,6 +70,13 @@ export function createLayerRecord(ctx: LayerContext, key: string): LayerRecord {
         return;
       }
       el.appendChild(parsed);
+    },
+    setImage(name, fit) {
+      if (removed) return;
+      el.replaceChildren();
+      const r = ctx.region.getBoundingClientRect();
+      const pic = buildGhostPicture(ctx.doc, name, fit, { width: r.width, height: r.height }, 'bottom');
+      if (pic !== null) el.appendChild(pic);
     },
     setOpacity(next, fadeMs) {
       if (removed) return;

@@ -21,6 +21,7 @@ import type {
   Haunt,
   HauntAudioContext,
   HauntLevel,
+  ImageFit,
   Unsubscribe,
   VisualLayer,
   VisualOut,
@@ -241,6 +242,7 @@ export interface FakeGatePort extends GatePort {
 export interface FakeVisualLayer extends VisualLayer {
   readonly side: 'left' | 'right';
   readonly markup: string[];
+  readonly images: { name: string; fit: ImageFit }[];
   readonly opacities: number[];
   readonly sweeps: (number | null)[];
   readonly labels: string[];
@@ -249,6 +251,7 @@ export interface FakeVisualLayer extends VisualLayer {
 
 function createFakeLayer(side: 'left' | 'right'): FakeVisualLayer {
   const markup: string[] = [];
+  const images: { name: string; fit: ImageFit }[] = [];
   const opacities: number[] = [];
   const sweeps: (number | null)[] = [];
   const labels: string[] = [];
@@ -256,6 +259,7 @@ function createFakeLayer(side: 'left' | 'right'): FakeVisualLayer {
   return {
     side,
     markup,
+    images,
     opacities,
     sweeps,
     labels,
@@ -263,6 +267,7 @@ function createFakeLayer(side: 'left' | 'right'): FakeVisualLayer {
       return removed;
     },
     setMarkup: (svg) => void markup.push(svg),
+    setImage: (name, fit) => void images.push({ name, fit }),
     setOpacity: (o) => void opacities.push(o),
     setSweep: (p) => void sweeps.push(p),
     setLabel: (text) => void labels.push(text),

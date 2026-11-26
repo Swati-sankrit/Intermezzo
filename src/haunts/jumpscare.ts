@@ -1,4 +1,4 @@
-import { ghostArt } from './engine/ghost/ghostArt';
+import { GHOST_IMAGE_GEOMETRY } from './engine/ghost/imageFit';
 import { buildPulseTrain } from './engine/ghost/pulses';
 import type {
   HauntAudioContext, HauntBufferSource, HauntMode, HauntNode, ReturnPlan, ReturnPort, Unsubscribe,
@@ -12,8 +12,11 @@ export const modes: readonly HauntMode[] = ['classic', 'nightmare'];
 export const jumpSound = true;
 
 const LABEL = 'A ghost lunges at the screen';
-/** Closest Ghost step: the face fills the view. */
-const JUMP_GHOST_STEP = 4;
+/** Nightmare: the face at the closest Ghost step. Classic: the standing ghost, one step smaller. */
+const NIGHTMARE_IMAGE = 'ghost-face.png';
+const NIGHTMARE_STEP = 4;
+const CLASSIC_IMAGE = 'ghost-standing.png';
+const CLASSIC_STEP = 3;
 /** Opacity rise of the full jumpscare. */
 const FULL_FADE_IN_MS = 40;
 /** Slowest-allowed fade under reduced motion; the gate also enforces this floor. */
@@ -54,7 +57,7 @@ function playJump(ctx: HauntAudioContext, reduced: boolean): void {
   source = src;
 }
 
-export function begin(plan: ReturnPlan, p: ReturnPort): void {
+export function begin(plan: ReturnPlan, p: ReturnPort, mode?: HauntMode): void {
   end();
   const j = plan.jumpscare;
   if (j === null) return;
@@ -62,7 +65,8 @@ export function begin(plan: ReturnPlan, p: ReturnPort): void {
   port = p;
 
   overlay = p.visual.createOverlay('jumpscare');
-  overlay.setMarkup(ghostArt(JUMP_GHOST_STEP).markup);
+  const image = mode === 'nightmare' ? NIGHTMARE_IMAGE : CLASSIC_IMAGE;
+  overlay.setImage(image, { step: mode === 'nightmare' ? NIGHTMARE_STEP : CLASSIC_STEP, ...GHOST_IMAGE_GEOMETRY[image] });
   overlay.setLabel(LABEL);
   overlay.setOpacity(1, reduced ? Math.max(REDUCED_FADE_MIN_MS, j.durationMs) : FULL_FADE_IN_MS);
 

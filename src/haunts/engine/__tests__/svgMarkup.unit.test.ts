@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { parseSvgMarkup } from '../gate/svgMarkup';
-import { ghostArt } from '../ghost/ghostArt';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const XHTML_NS = 'http://www.w3.org/1999/xhtml';
@@ -93,16 +92,5 @@ describe('parseSvgMarkup still rejects or strips unsafe content after the namesp
   it('still rejects empty and malformed input', () => {
     expect(parse('')).toBeNull();
     expect(parse('<svg><rect></svg>')).toBeNull();
-  });
-});
-
-describe('parseSvgMarkup with the real ghost art', () => {
-  it.each([0, 1, 2, 3, 4])('accepts ghostArt(%i) markup, which has no xmlns', (step) => {
-    const { markup } = ghostArt(step);
-    expect(markup).not.toMatch(/xmlns/);
-    const root = parse(markup);
-    expect(root).not.toBeNull();
-    expect(root?.namespaceURI).toBe(SVG_NS);
-    expect(root?.querySelectorAll('*').length).toBeGreaterThan(1);
   });
 });

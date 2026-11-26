@@ -76,7 +76,7 @@ export function ShellFrame({ library, initialTab, onTabChange, candleColour, eff
       )}
       {active === 'library' && <EffectBoundary><LurkingGhost effects={effects} /></EffectBoundary>}
       <div className="shell-frame__content">
-      <TabBar active={active} onChange={change} />
+      <div className="shell-frame__inner"><TabBar active={active} onChange={change} /></div>
       {SHELL_TAB_NAMES.map((tab) => (
         <div
           key={tab}
@@ -86,9 +86,11 @@ export function ShellFrame({ library, initialTab, onTabChange, candleColour, eff
           hidden={tab !== active}
           className="shell-frame__panel"
         >
-          {tab === 'library' && library}
-          {tab === 'ledger' && <LedgerTab model={model} today={today ?? localDateString(new Date())} />}
-          {tab === 'seance' && seance && <SeanceTab key={seanceKey} {...seance} onClearData={clearData} />}
+          <div className="shell-frame__inner">
+            {tab === 'library' && library}
+            {tab === 'ledger' && <LedgerTab model={model} today={today ?? localDateString(new Date())} />}
+            {tab === 'seance' && seance && <SeanceTab key={seanceKey} {...seance} onClearData={clearData} />}
+          </div>
         </div>
       ))}
       </div>

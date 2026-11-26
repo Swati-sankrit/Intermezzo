@@ -22,7 +22,7 @@ A privacy-first, in-browser reading app. Book content never leaves the device.
 | @testing-library/user-event | MIT | Simulated user input in component tests |
 | @mediapipe/tasks-vision (1.2.3) | Apache-2.0 | On-device face detection for the attention signal; wasm copied to `public/mediapipe/wasm/` by `scripts/copy-mediapipe.mjs` |
 | face_landmarker.task (model file, `public/models/`) | Apache-2.0 | Face Landmarker model bundle; license sources: the [Hugging Face model card](https://huggingface.co/litert-community/MediaPipe-FaceLandmarker) (Google's Face Landmarker page links to it) and Google's [BlazeFace model card](https://storage.googleapis.com/mediapipe-assets/MediaPipe%20BlazeFace%20Model%20Card%20(Short%20Range).pdf) (Apache-2.0) |
-| sharp | Apache-2.0 | Dev-only, used by the Node script `scripts/fetch-catalogue.mjs` to resize covers and write WebP; not shipped to the browser |
+| sharp | Apache-2.0 | Dev-only, used by the Node script `scripts/fetch-catalogue.mjs` to resize covers and write WebP; not shipped to the browser. Not in `package.json`: run `npm install --no-save sharp` before running the script |
 | @xmldom/xmldom (0.9.12, transitive override) | MIT | Pulled in by epubjs; pinned with `overrides` in `package.json` because the 0.7.13 that epubjs asks for has 15 security advisories (fixed in 0.8.15 and 0.9.x) |
 | @fontsource/literata | OFL-1.1 | Reading text font (bundled, self-hosted) |
 | @fontsource/cormorant-garamond | OFL-1.1 | Headings and titles font (bundled, self-hosted) |

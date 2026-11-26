@@ -69,18 +69,6 @@
 }
 
 /*
- * Ghost step styles. The step is in the markup: `ghostArt(step)` draws a taller silhouette
- * with more detail per step, all in a 100-unit-wide viewBox, aligned to the bottom (YMax).
- * A ghost drawing keeps its aspect ratio, so this rule gives it the same size `ghostBox` gives:
- * at most one px per viewBox unit (width capped at 100px), never larger than the region, and
- * centred in it. Layers with `preserveAspectRatio="none"` are left alone.
- */
-.haunt-layer > svg:not([preserveAspectRatio='none']) {
-  max-width: 100px;
-  margin-inline: auto;
-}
-
-/*
  * Overlays are children of the stage root, not of a region, and the gate creates them only
  * inside a Return_Moment (at most 3 s). They are the only stage content allowed over the
  * reading column. They never take pointer events or focus, and the adapter hides every

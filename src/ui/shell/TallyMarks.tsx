@@ -13,23 +13,34 @@ function Group({ size }: { size: number }) {
   );
 }
 
-/** Look-aways for the last 7 days as ghostly strokes in fives, each count also written out. */
+/** "Mon" from the shared date label ("Mon 3 Mar"); the raw date if it cannot be read. */
+function weekday(date: string): string {
+  return dateLabel(date).split(/[ ,]/)[0];
+}
+
+/** Look-aways for the last 7 days: seven columns, oldest first, today last, marks in fives above the count. */
 export function TallyMarks({ days }: { days: readonly DayStats[] }) {
   return (
     <ul className="ledger-tally" aria-label="Look-aways in the last 7 days">
-      {days.map(({ date, stats }) => {
+      {days.map(({ date, stats }, index) => {
         const count = stats.lookAwayCount;
-        const drawn = drawnTally(count);
-        const label = dateLabel(date);
+        const isToday = index === days.length - 1;
         return (
-          <li key={date} className="ledger-tally__row">
-            <span className="ledger-tally__date">{label}</span>
+          <li
+            key={date}
+            className={isToday ? 'ledger-tally__day ledger-tally__day--today' : 'ledger-tally__day'}
+            aria-current={isToday ? 'date' : undefined}
+          >
             <span className="ledger-tally__marks" aria-hidden="true">
-              {tallyGroups(drawn).map((size, i) => <Group key={i} size={size} />)}
+              {tallyGroups(drawnTally(count)).map((size, i) => <Group key={i} size={size} />)}
             </span>
             <span className="ledger-tally__count">
               {count === 1 ? '1 look-away' : `${count} look-aways`}
               {count > TALLY_CAP ? ` (${TALLY_CAP} marks shown)` : ''}
+            </span>
+            <span className="ledger-tally__date">
+              {weekday(date)}
+              {isToday && <span className="ledger-visually-hidden"> (today)</span>}
             </span>
           </li>
         );

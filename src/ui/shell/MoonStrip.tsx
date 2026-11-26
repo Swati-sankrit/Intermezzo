@@ -19,21 +19,43 @@ function Moon({ phase }: { phase: MoonPhase }) {
   );
 }
 
-/** The last 30 days, oldest first. Each moon carries its date and phase name as text. */
+const PHASES: readonly MoonPhase[] = ['new', 'crescent', 'half', 'gibbous', 'full'];
+
+/** The last 30 days, oldest first, today last. Each moon carries its date and phase name as text. */
 export function MoonStrip({ days, goalMinutes }: { days: readonly DayStats[]; goalMinutes: number }) {
   return (
     <div>
       <ol className="ledger-moons" aria-label="The last 30 days, oldest first">
-        {days.map(({ date, stats }) => {
+        {days.map(({ date, stats }, index) => {
           const phase = moonPhase(stats.activeReadingSeconds, goalMinutes);
+          const isToday = index === days.length - 1;
           return (
-            <li key={date} className="ledger-moons__day">
+            <li
+              key={date}
+              className={isToday ? 'ledger-moons__day ledger-moons__day--today' : 'ledger-moons__day'}
+              aria-current={isToday ? 'date' : undefined}
+            >
               <Moon phase={phase} />
-              <span className="ledger-visually-hidden">{`${dateLabel(date)}: ${PHASE_NAMES[phase]}`}</span>
+              <span className="ledger-visually-hidden">
+                {`${dateLabel(date)}: ${PHASE_NAMES[phase]}`}
+                {isToday ? ' (today)' : ''}
+              </span>
             </li>
           );
         })}
       </ol>
+      <ul className="ledger-moons__legend" aria-label="Moon phases">
+        {PHASES.map((phase) => (
+          <li key={phase} className="ledger-moons__key">
+            <Moon phase={phase} />
+            <span>{PHASE_NAMES[phase]}</span>
+          </li>
+        ))}
+        <li className="ledger-moons__key">
+          <span className="ledger-moons__ring" aria-hidden="true" />
+          <span>today</span>
+        </li>
+      </ul>
       <p className="ledger-note">{FULL_MOON_NOTE}</p>
     </div>
   );

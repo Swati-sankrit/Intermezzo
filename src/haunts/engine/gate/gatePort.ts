@@ -28,6 +28,7 @@ export function wrapVisual(inner: VisualOut): PortVisual {
       layers.push(layer);
       return {
         setMarkup: (svg) => layer.setMarkup(svg),
+        setImage: (name, fit) => layer.setImage(name, fit),
         setOpacity(opacity, fadeMs) {
           if (!faded) layer.setOpacity(opacity, fadeMs);
         },

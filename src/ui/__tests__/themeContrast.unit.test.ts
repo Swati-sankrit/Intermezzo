@@ -25,6 +25,36 @@ describe('theme contrast (WCAG AA, 4.5:1)', () => {
     }
   }
 
+  // Ledger dashboard (tasks 14.1 to 14.4, Requirements 20.14, 12.14). Text pairs need 4.5:1, drawing 3:1.
+  // The moon outline is --text at 50% stroke opacity over the cell colour (--bg).
+  const moonOutline = blend(get('text'), get('bg'), 0.5);
+  const ledgerPairs: ReadonlyArray<readonly [string, string, string, number]> = [
+    ['ring fill (--accent) on --surface', get('accent'), get('surface'), 3],
+    ['ring track (--text-dim) on --surface', get('text-dim'), get('surface'), 3],
+    ['goal field border (--text-dim) on --surface', get('text-dim'), get('surface'), 3],
+    ['pace track border (--text-dim) on --bg', get('text-dim'), get('bg'), 3],
+    ['pace typical marker (--text) on --bg', get('text'), get('bg'), 3],
+    ['pace reader marker (--accent) on --bg', get('accent'), get('bg'), 3],
+    ['pace reader marker edge (--surface) on --accent', get('surface'), get('accent'), 3],
+    ['today tally border (--accent) on --bg', get('accent'), get('bg'), 3],
+    ['today moon ring (--accent) on --bg', get('accent'), get('bg'), 3],
+    ['moon outline (--text at 50%) on --bg', moonOutline, get('bg'), 3],
+    ['lit moon (--text) on --bg', get('text'), get('bg'), 3],
+    ['tally marks (--text-dim) on --bg', get('text-dim'), get('bg'), 3],
+    ['tally count and weekday (--text) on --bg', get('text'), get('bg'), 4.5],
+    ['tally weekday (--text-dim) on --bg', get('text-dim'), get('bg'), 4.5],
+    ['stat tile number (--accent) on --bg', get('accent'), get('bg'), 4.5],
+    ['stat tile label (--text-dim) on --bg', get('text-dim'), get('bg'), 4.5],
+    ['card text (--text) on --surface', get('text'), get('surface'), 4.5],
+    ['card secondary text (--text-dim) on --surface', get('text-dim'), get('surface'), 4.5],
+    ['card big figure (--accent) on --surface', get('accent'), get('surface'), 4.5],
+  ];
+  for (const [label, fg, bg, min] of ledgerPairs) {
+    it(`ledger: ${label} is at least ${min}:1`, () => {
+      expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(min);
+    });
+  }
+
   // Requirement 14.5: the Darkness at backgroundBrightness, and its Vignette edge (black at
   // `vignette` strength). Both are darker than the plain colours, so contrast can only rise.
   {

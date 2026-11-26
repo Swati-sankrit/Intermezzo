@@ -49,6 +49,7 @@ interface Live {
 }
 interface Run {
   readonly plan: ReturnPlan;
+  readonly mode: HauntMode;
   readonly live: Live[];
   readonly timers: unknown[];
 }
@@ -112,7 +113,7 @@ export function createReturnController(deps: ReturnDeps): ReturnController {
     }
     live.port = port;
     live.state = 'running';
-    if (!attempt(`return effect ${effect.id} begin`, () => effect.begin(r.plan, port as ReturnPort))) endEffect(live, true);
+    if (!attempt(`return effect ${effect.id} begin`, () => effect.begin(r.plan, port as ReturnPort, r.mode))) endEffect(live, true);
   }
 
   function finish(fadeMs: number | undefined): void {
@@ -149,7 +150,7 @@ export function createReturnController(deps: ReturnDeps): ReturnController {
       if (plan.qualifying) past = [...past, plan.jumpscare !== null].slice(-HISTORY_KEPT);
       attempt('retire ambient', () => retireAmbient(plan.ambientFadeMs));
       deps.gate.beginReturnMoment();
-      const r: Run = { plan, live: [], timers: [] };
+      const r: Run = { plan, mode: args.mode, live: [], timers: [] };
       run = r;
       const limit = Math.min(plan.durationMs, LATEST_END_MS);
       schedule(r, args.mode, limit);

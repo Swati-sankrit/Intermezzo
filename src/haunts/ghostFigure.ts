@@ -1,4 +1,4 @@
-import { ghostArt, ghostBox } from './engine/ghost/ghostArt';
+import { GHOST_IMAGE_GEOMETRY, imageBox, type ImageFit } from './engine/ghost/imageFit';
 import type {
   AudioOut, HauntLevel, HauntMode, ReturnPlan, ReturnPort, StartInfo, VisualLayer, VisualOut,
 } from './engine/types';
@@ -10,6 +10,9 @@ export const modes: readonly HauntMode[] = ['classic', 'nightmare'];
 export const minLevel: HauntLevel = 1;
 
 const LABEL = 'A ghost stands nearby';
+const IMAGE = 'ghost-standing.png';
+
+const fitFor = (step: number): ImageFit => ({ step, ...GHOST_IMAGE_GEOMETRY[IMAGE] });
 /** Requested fade-in. The gate raises it to at least 1000 ms under reduced motion. */
 const LAYER_FADE_IN_MS = 1000;
 const OVERLAY_FADE_IN_MS = 200;
@@ -33,8 +36,8 @@ function pickSide(info: StartInfo): Side {
 }
 
 /**
- * Draws the Ghost in a side region. Nothing in Gentle, with no start info, or when the region
- * is too small for the Ghost (`ghostBox` is null or has no height). When the engine gives no
+ * Shows the Ghost picture in a side region. Nothing in Gentle, with no start info, or when the region
+ * is too small for the Ghost (`imageBox` is null or has no height). When the engine gives no
  * regions, the layer's own CSS (it fills its region and keeps the aspect ratio) keeps it inside.
  */
 export function start(_level: HauntLevel, _audio: AudioOut, visual: VisualOut, info?: StartInfo): void {
@@ -42,11 +45,11 @@ export function start(_level: HauntLevel, _audio: AudioOut, visual: VisualOut, i
   const side = pickSide(info);
   const region = info.regions?.[side];
   if (region) {
-    const box = ghostBox(info.ghostStep, sizeOf(region));
+    const box = imageBox(info.ghostStep, GHOST_IMAGE_GEOMETRY[IMAGE].visible, sizeOf(region));
     if (box === null || box.height <= 0 || box.width <= 0) return;
   }
   layer = visual.createLayer(side);
-  layer.setMarkup(ghostArt(info.ghostStep).markup);
+  layer.setImage(IMAGE, fitFor(info.ghostStep));
   layer.setLabel(LABEL);
   layer.setOpacity(1, LAYER_FADE_IN_MS);
 }
@@ -67,7 +70,7 @@ export function span(plan: ReturnPlan): { startMs: number; endMs: number } | nul
 export function begin(plan: ReturnPlan, port: ReturnPort): void {
   end();
   overlay = port.visual.createOverlay('ghost');
-  overlay.setMarkup(ghostArt(plan.ghostStep).markup);
+  overlay.setImage(IMAGE, fitFor(plan.ghostStep));
   overlay.setLabel(LABEL);
   overlay.setOpacity(1, OVERLAY_FADE_IN_MS);
 }

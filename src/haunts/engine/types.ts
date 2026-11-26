@@ -7,6 +7,8 @@ import type { HauntAudioContext } from './hauntAudio';
 import type { HauntMode } from './ghost/mode';
 import type { EngineWiringDeps, ReturnPort } from './returnTypes';
 import type { Rect } from './regions';
+import type { GhostAssetName } from './ghost/assets';
+import type { ImageFit } from './ghost/imageFit';
 
 export type {
   HauntAudioContext, HauntBufferSource, HauntFilter, HauntNode, HauntPanner, HauntParam, HauntSink, HauntSpatialPanner,
@@ -16,6 +18,8 @@ export type HauntLevel = 1 | 2 | 3;
 export type Unsubscribe = () => void;
 
 export type { HauntMode } from './ghost/mode';
+export type { GhostAssetName } from './ghost/assets';
+export type { ImageFit } from './ghost/imageFit';
 export type { ReturnEffect, ReturnPlan, ReturnPort } from './returnTypes';
 
 /** Extra start data. Existing haunts may ignore it. */
@@ -77,6 +81,11 @@ export interface GlowControl {
 export interface VisualLayer {
   /** Static SVG or CSS content from a string constant. Parsed by the gate. */
   setMarkup(svg: string): void;
+  /**
+   * Shows one bundled Ghost_Image (replacing the layer's content). The gate resolves the URL; a name
+   * outside GHOST_ASSETS makes no request. A failed load leaves nothing shown.
+   */
+  setImage(name: GhostAssetName, fit: ImageFit): void;
   setOpacity(opacity: number, fadeMs?: number): void;
   /** Slow movement across the layer, one crossing per `periodMs`; null stops it. */
   setSweep(periodMs: number | null): void;

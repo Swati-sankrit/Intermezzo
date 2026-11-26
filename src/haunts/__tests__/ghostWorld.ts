@@ -10,7 +10,7 @@ import { createGate } from '../engine/gate/gate';
 import { createReducedMotion } from '../engine/gate/reducedMotion';
 import { KEYS } from '../engine/settings';
 import type {
-  AudioOut, Gate, GatePort, Haunt, HauntAudioContext, HauntLevel, HauntSpatialPanner, ReturnEffect, ReturnPlan,
+  AudioOut, Gate, GatePort, Haunt, HauntAudioContext, HauntMode, HauntLevel, HauntSpatialPanner, ReturnEffect, ReturnPlan,
   ReturnPort, StartInfo,
 } from '../engine/types';
 import {
@@ -24,6 +24,10 @@ export interface WorldOptions {
   readonly stereoThrows?: boolean;
   readonly constructorThrows?: boolean;
   readonly cap?: string;
+}
+
+function sized(el: HTMLElement, width: number, height: number): void {
+  el.getBoundingClientRect = () => ({ width, height, x: 0, y: 0, top: 0, left: 0, right: width, bottom: height, toJSON: () => ({}) });
 }
 
 export class World {
@@ -45,6 +49,10 @@ export class World {
     const left = document.createElement('div');
     const right = document.createElement('div');
     this.root.append(left, right);
+    // The test DOM has no layout: give the viewport and the side regions a size so a picture can be fitted.
+    sized(this.root, 1000, 700);
+    sized(left, 300, 600);
+    sized(right, 300, 600);
     document.body.append(this.root);
     const create = (): AudioContext => {
       const made = factory.create();
@@ -118,13 +126,13 @@ export class World {
   }
 
   /** Return effect inside a Return_Moment, with its port from the real gate. */
-  async beginEffect(mod: ReturnEffect, plan: ReturnPlan, unlock = true): Promise<EffectRun> {
+  async beginEffect(mod: ReturnEffect, plan: ReturnPlan, unlock = true, mode?: HauntMode): Promise<EffectRun> {
     if (unlock) await this.unlock();
     this.gate.beginReturnMoment();
     const port = this.gate.openReturn(mod.id, mod.jumpSound === true ? { jumpSound: true } : undefined);
     if (port === null) throw new Error('openReturn gave no port inside a Return_Moment');
     const baseline = this.hasContext ? this.ctx.createdNodes.length : 0;
-    mod.begin(plan, port);
+    mod.begin(plan, port, mode);
     return new EffectRun(this, mod, port, baseline);
   }
 

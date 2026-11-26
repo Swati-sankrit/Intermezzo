@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import * as ghostFigure from '../ghostFigure';
 import * as jumpscare from '../jumpscare';
 import * as footsteps from '../footsteps';
+import { GHOST_IMAGE_GEOMETRY, imageBox } from '../engine/ghost/imageFit';
 import { FakeGainNode } from '../engine/__tests__/fakes';
 import { World, plan, startInfo, type WorldOptions } from './ghostWorld';
 
@@ -24,6 +25,7 @@ const JUMP = { startMs: 400, durationMs: 1200 } as const;
 const BIG = { left: 0, right: 300, top: 0, bottom: 600 };
 const TINY = { left: 0, right: 40, top: 0, bottom: 600 };
 const ms = (el: HTMLElement): number => parseFloat(el.style.transitionDuration);
+const srcs = (el: Element): (string | null)[] => [...el.querySelectorAll('img')].map((i) => i.getAttribute('src'));
 
 describe('ghostFigure as a layer', () => {
   it('draws one labelled Ghost, and stop removes every element', async () => {
@@ -38,13 +40,33 @@ describe('ghostFigure as a layer', () => {
     run.stop();
     expect(w.layers()).toHaveLength(0);
   });
-  it('draws the Ghost art into its layer (the gate accepts the markup)', async () => {
+  it('shows ghost-standing.png in its layer, with no SVG, and stop removes the picture', async () => {
     const w = make();
     const run = await w.startLayer(ghostFigure, 2, startInfo());
     expect(w.warnings).toEqual([]);
-    expect(w.layers()[0].querySelector('svg')).not.toBeNull();
-    run.stop();
+    expect(srcs(w.layers()[0])).toEqual(['/ghosts/ghost-standing.png']);
     expect(w.root.querySelector('svg')).toBeNull();
+    run.stop();
+    expect(w.root.querySelector('img')).toBeNull();
+  });
+  it('a failed image load leaves the layer with no picture and no SVG fallback', async () => {
+    const w = make();
+    await w.startLayer(ghostFigure, 2, startInfo());
+    w.layers()[0].querySelector('img')!.dispatchEvent(new Event('error'));
+    expect(w.root.querySelector('img')).toBeNull();
+    expect(w.root.querySelector('svg')).toBeNull();
+    expect(w.warnings).toEqual([]);
+  });
+  it('a higher Ghost_Distance step shows a larger picture', async () => {
+    const widths: number[] = [];
+    for (const step of [0, 2, 4] as const) {
+      const w = make();
+      await w.startLayer(ghostFigure, 1, startInfo({ ghostStep: step }));
+      widths.push(parseFloat(w.layers()[0].querySelector<HTMLElement>('.haunt-picture')!.style.width));
+      w.dispose();
+    }
+    expect(widths[1]).toBeGreaterThan(widths[0]);
+    expect(widths[2]).toBeGreaterThan(widths[1]);
   });
   it('fades in over at least 1000 ms, also under reduced motion', async () => {
     for (const reduced of [false, true]) {
@@ -60,6 +82,7 @@ describe('ghostFigure as a layer', () => {
     const run = await w.startLayer(ghostFigure, 1, startInfo({ mode: 'gentle' }));
     expect(w.layers()).toHaveLength(0);
     expect(w.root.querySelector('svg')).toBeNull();
+    expect(w.root.querySelector('img')).toBeNull();
     expect(w.ctx.createdNodes.filter((n) => n.kind !== 'gain' && n.kind !== 'compressor')).toEqual([]);
     run.stop();
   });
@@ -111,6 +134,8 @@ describe('ghostFigure as a return effect', () => {
     const run = await w.beginEffect(ghostFigure, plan({ ghostStep: 3 }));
     expect(w.overlays('ghost')).toHaveLength(1);
     expect(w.overlays('ghost')[0].getAttribute('aria-label')).toBe('A ghost stands nearby');
+    expect(srcs(w.overlays('ghost')[0])).toEqual(['/ghosts/ghost-standing.png']);
+    expect(w.root.querySelector('svg')).toBeNull();
     ghostFigure.begin(plan(), run.port);
     expect(w.overlays()).toHaveLength(1);
     ghostFigure.end();
@@ -171,12 +196,50 @@ describe('jumpscare', () => {
     expect(gain.valueAt(0.01)).toBeLessThan(target);
     expect(run.sources()).toHaveLength(1);
   });
-  it('draws the close-up art into the overlay (the gate accepts the markup)', async () => {
+  it('Nightmare shows ghost-face.png and Classic shows ghost-standing.png, never SVG', async () => {
+    const expected = [['nightmare', '/ghosts/ghost-face.png'], ['classic', '/ghosts/ghost-standing.png']] as const;
+    for (const [mode, src] of expected) {
+      const w = make();
+      await w.beginEffect(jumpscare, plan({ jumpscare: { ...JUMP, render: 'full' } }), true, mode);
+      expect(w.warnings).toEqual([]);
+      expect(srcs(w.overlays('jumpscare')[0])).toEqual([src]);
+      expect(w.root.querySelector('svg')).toBeNull();
+      jumpscare.end();
+      expect(w.root.querySelector('img')).toBeNull();
+      w.dispose();
+    }
+  });
+  it('the Classic picture is smaller than the Nightmare picture would be at the largest scale', async () => {
     const w = make();
-    await w.beginEffect(jumpscare, plan({ jumpscare: { ...JUMP, render: 'full' } }));
-    expect(w.warnings).toEqual([]);
-    expect(w.overlays('jumpscare')[0].querySelector('svg')).not.toBeNull();
+    await w.beginEffect(jumpscare, plan({ jumpscare: { ...JUMP, render: 'full' } }), true, 'classic');
+    const classic = w.overlays('jumpscare')[0].querySelector<HTMLElement>('.haunt-picture')!;
+    // Same standing image at the largest step (4) in the same 1000 x 700 viewport.
+    const largest = imageBox(4, GHOST_IMAGE_GEOMETRY['ghost-standing.png'].visible, { width: 1000, height: 700 })!;
+    expect(parseFloat(classic.style.width)).toBeLessThan(largest.width);
     jumpscare.end();
+  });
+  it('a failed close-up load shows no picture and no SVG', async () => {
+    const w = make();
+    await w.beginEffect(jumpscare, plan({ jumpscare: { ...JUMP, render: 'full' } }), true, 'nightmare');
+    w.overlays('jumpscare')[0].querySelector('img')!.dispatchEvent(new Event('error'));
+    expect(w.root.querySelector('img')).toBeNull();
+    expect(w.root.querySelector('svg')).toBeNull();
+    jumpscare.end();
+  });
+  it('the picture is gone when the Return_Moment ends, with no image left over', async () => {
+    const w = make();
+    await w.beginEffect(jumpscare, plan({ jumpscare: { ...JUMP, render: 'full' } }), true, 'nightmare');
+    expect(w.root.querySelector('img')).not.toBeNull();
+    w.scheduler.advance(3000);
+    expect(w.root.querySelector('img')).toBeNull();
+  });
+  it('without a jumpscare in the plan no picture is requested, in either mode', async () => {
+    for (const mode of ['classic', 'nightmare'] as const) {
+      const w = make();
+      await w.beginEffect(jumpscare, plan({ jumpscare: null }), true, mode);
+      expect(w.root.querySelector('img')).toBeNull();
+      w.dispose();
+    }
   });
   it('shows the close-up without sound while audio is locked', async () => {
     const w = make();
@@ -198,11 +261,13 @@ describe('jumpscare', () => {
     jumpscare.end();
     expect(w.overlays()).toHaveLength(0);
   });
-  it('under render fade the close-up fades in over at least 1000 ms', async () => {
+  it('under render fade the close-up fades in over at least 1000 ms, with the picture and no sudden change', async () => {
     for (const reduced of [false, true]) {
       const w = make({ reduced });
-      await w.beginEffect(jumpscare, plan({ jumpscare: { startMs: 0, durationMs: 1000, render: 'fade' } }));
+      await w.beginEffect(jumpscare, plan({ jumpscare: { startMs: 0, durationMs: 1000, render: 'fade' } }), true, 'nightmare');
       expect(ms(w.overlays('jumpscare')[0])).toBeGreaterThanOrEqual(1000);
+      expect(srcs(w.overlays('jumpscare')[0])).toEqual(['/ghosts/ghost-face.png']);
+      expect(w.overlays('jumpscare')[0].querySelector('.haunt-picture')!.getAttribute('style')).not.toMatch(/transform|animation/);
       jumpscare.end();
       w.dispose();
     }

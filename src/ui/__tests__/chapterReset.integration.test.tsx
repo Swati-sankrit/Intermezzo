@@ -15,12 +15,13 @@
 //    calls the real `useReadingContext` and renders the real `AttentionLayer` (-> `HauntLayer` ->
 //    `useHauntEngine` -> engine). Only the chapter index comes from a test prop instead of useReader.
 //
-// The step is observed through behaviour only: the height (viewBox) of the ghost SVG the real
-// `ghostFigure` haunt draws in its side layer. It is compared with `ghostArt(step).heightUnits`.
+// The step is observed through behaviour only: the width of the picture box the real `ghostFigure`
+// haunt shows in its side layer. It is compared with `imageBox(step, ...)` for the same region.
+// The test DOM has no layout, so every element reports the same size (see `REGION`).
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { getHauntSettingsStore } from '../hauntSettingsStore';
-import { ghostArt } from '../../haunts/engine/ghost/ghostArt';
+import { GHOST_IMAGE_GEOMETRY, imageBox } from '../../haunts/engine/ghost/imageFit';
 import { createFakeAudioContextFactory, createFakeTime } from '../../haunts/engine/__tests__/fakes';
 import { restoreBook } from '../../reader/bookCodec';
 import type { AttentionSignal, AttentionStatus } from '../../attention';
@@ -79,15 +80,19 @@ function createSignalSource() {
 
 const advance = (ms: number): void => void act(() => void vi.advanceTimersByTime(ms));
 
-/** The step of the ghost drawn now, from its SVG height; null when no ghost is drawn. */
+const REGION = { width: 300, height: 600 };
+
+/** The step of the ghost shown now, from its picture width; null when no ghost is shown. */
 function drawnStep(): number | null {
   const layers = document.querySelectorAll(GHOST);
   if (layers.length === 0) return null;
   expect(layers).toHaveLength(1);
-  const viewBox = layers[0].querySelector('svg')?.getAttribute('viewBox') ?? '';
-  const height = Number(viewBox.split(' ')[3]);
-  const step = [0, 1, 2, 3, 4].find((s) => ghostArt(s).heightUnits === height);
-  expect(step, `no ghost step has height ${height}`).toBeDefined();
+  const frame = layers[0].querySelector<HTMLElement>('.haunt-picture');
+  expect(frame, 'the ghost layer holds a picture').not.toBeNull();
+  const width = parseFloat(frame?.style.width ?? '');
+  const visible = GHOST_IMAGE_GEOMETRY['ghost-standing.png'].visible;
+  const step = [0, 1, 2, 3, 4].find((s) => Math.abs((imageBox(s, visible, REGION)?.width ?? -1) - width) < 0.01);
+  expect(step, `no ghost step has width ${width}`).toBeDefined();
   return step ?? null;
 }
 
@@ -114,6 +119,9 @@ beforeEach(() => {
   localStorage.clear();
   getHauntSettingsStore().set({ mode: 'classic', noticeSeen: true });
   warn = vi.spyOn(console, 'warn');
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    ...REGION, x: 0, y: 0, top: 0, left: 0, right: REGION.width, bottom: REGION.height, toJSON: () => ({}),
+  });
   vi.spyOn(Math, 'random').mockReturnValue(0.9); // no Jumpscare, no False_Calm: a plain return
   const audio = createFakeAudioContextFactory(createFakeTime(0).clock);
   vi.stubGlobal('AudioContext', function FakeAudioContext() {

@@ -9,6 +9,7 @@
 import type { GlitchSpec, OverlayKind, ReturnVisualOut } from '../returnTypes';
 import type { VisualLayer, VisualOut } from '../types';
 import { planOverlayFade, type FadeKind } from './returnRules';
+import { buildGhostPicture } from './ghostPicture';
 import { parseSvgMarkup } from './svgMarkup';
 
 export interface ReturnVisualDeps {
@@ -40,6 +41,7 @@ function unit(n: number): number {
 
 const NOOP_LAYER: VisualLayer = {
   setMarkup: () => {},
+  setImage: () => {},
   setOpacity: () => {},
   setSweep: () => {},
   setLabel: () => {},
@@ -75,6 +77,13 @@ function createOverlay(kind: OverlayKind, deps: ReturnVisualDeps, isEnded: () =>
       el.replaceChildren();
       if (parsed === null) deps.warn('return overlay markup rejected: not usable SVG');
       else el.appendChild(parsed);
+    },
+    setImage(name, fit) {
+      if (removed || isEnded()) return;
+      el.replaceChildren();
+      const r = root.getBoundingClientRect();
+      const pic = buildGhostPicture(doc, name, fit, { width: r.width, height: r.height }, 'center');
+      if (pic !== null) el.appendChild(pic);
     },
     setOpacity(next, fadeMs) {
       if (removed || isEnded()) return;

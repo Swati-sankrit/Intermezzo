@@ -10,7 +10,9 @@ Every visual choice lives in one file, `src/ui/shellEffects.ts`, with named opti
 
 The Ledger is built from the per-day and per-book Stats and the shelves in the library-v2 Data_Model. The Ledger shows the reader's measured reading pace, which needs one deliberate addition to the data model: a `wordsRead` count in every Stats record, raised by the word count of each paragraph when it is recorded as read. Old saved data without `wordsRead` is kept and read as 0. This addition raises the Schema_Version from 2 to 3 and supersedes the six-count wording of library-v2 Requirement 16 and the version-2 wording of its Migrator requirement. `wordsRead` is the only new tracking; it is a number and holds no book text. The one new stored setting is the daily reading goal, kept under its own key like the haunt settings are. The Séance reuses the existing settings logic: `useProfileActions` and `ProfileSettings` content for name, candle colour, pace guide, delete profile and clear data; the haunt settings store for Haunt_Mode; the saved camera choice in `src/attention/storage.ts`; and the `rod_volume_cap` key that the Safety_Gate already reads. The lurking ghost reuses the bundled images in `public/ghosts/` listed in `GHOST_ASSETS`.
 
-Out of scope: any change to the reading page's look or behaviour, the haunt engine, the Safety_Gate, or the catalogue (the only change that touches the reading flow is that the existing stats recorder also passes a word count, see Requirement 11); any data model change other than `wordsRead`; new dependencies; new tracking other than `wordsRead`; the camera recalibration control named in the attention-signal spec (no recalibration exists in the app yet); word-level eye tracking; sound in the library shell (the lurking ghost is silent); a points system.
+Out of scope: any change to the reading page's look or behaviour, the haunt engine, the Safety_Gate, or the catalogue (the only changes that touch the reading flow are that the existing stats recorder also passes a word count, see Requirement 11, that it caps the away seconds it records, see Requirement 21, and that the reading haunts draw the bundled ghost images instead of the drawn ghost, see Requirement 22, which changes no haunt-safety limit); any data model change other than `wordsRead`; new dependencies; new tracking other than `wordsRead`; the camera recalibration control named in the attention-signal spec (no recalibration exists in the app yet); word-level eye tracking; sound in the library shell (the lurking ghost is silent); a points system.
+
+A later revision (Requirements 19 to 22) makes the Shell tabs use a proper desktop width, turns the Ledger into a card dashboard with the same data and calculations, stops one long look-away from ruining the Focus_Score, and gives the app one ghost: the bundled images in `public/ghosts/`, smaller in the library and used by the reading haunts. Requirement 21 supersedes the library-v2 wording of away seconds for newly recorded time. Requirement 22 supersedes, for how the ghost figure and the jumpscare close-up are drawn, the ghost-dread wording that the Ghost is a drawn SVG or canvas silhouette with no image file (ghost-dread Requirement 9 criteria 1 and 7, Requirement 11 criterion 9 and the Ghost glossary entry); ghost-dread Requirements 14 and 15 already name the bundled images, and the ghost-dread spec files are not edited.
 
 Visual rules follow the steering files `design.md` and `haunt-safety.md`: colours only through CSS custom properties, WCAG AA contrast, bundled fonts, no UI component library, visible focus rings, components under 200 lines, and a reading room at night in tone.
 
@@ -42,18 +44,29 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 - **Cover_Card**: A cover in the catalogue grid, the shelves or the Continue_Card.
 - **Cover_Effect**: The set of tilt toward the pointer, warm edge glow and flickering shadow on a Cover_Card.
 - **Opening_Transition**: The sequence shown when a book opens: the Burn first when `bookOpen` is 'burn', then the candle gutters, the screen dims to dark for about 600 ms, and the reader fades up. The part after the Burn is the existing sequence.
-- **Lurking_Ghost**: The existing ghost image from `public/ghosts/` that peeks from a screen edge on the Library_Tab, drawn at 30 to 35 percent of the viewport height.
+- **Lurking_Ghost**: The existing ghost image from `public/ghosts/` that peeks from a screen edge on the Library_Tab, drawn at about 22 percent of the viewport height (20 to 24 percent).
 - **Peek**: One appearance of the Lurking_Ghost, about 1.5 seconds long.
 - **Control**: Any button, link, input, select, slider, tab or other interactive element, including the Continue_Card button.
 - **Haunt_Mode**: One of Gentle, Classic or Nightmare, kept in the haunt settings store. Classic is the default.
 - **Reduced_Motion**: The state in which the browser reports `prefers-reduced-motion: reduce`.
-- **Stats**: The reading counts kept per book and per day: paragraphs read, chapters finished, active reading seconds, look-away count, session count, away seconds and, added by this spec, words read.
+- **Stats**: The reading counts kept per book and per day: paragraphs read, chapters finished, active reading seconds, look-away count, session count, away seconds (capped per Look_Away by the Away_Cap, for time recorded after Requirement 21 is built) and, added by this spec, words read.
 - **Words_Read**: The `wordsRead` count in a Stats record: the sum of the word counts of the paragraphs recorded as read. The word count of a paragraph is the one computed by `countWords` in `src/reader/paceCalc.ts`.
 - **Schema_Version**: The version number stored in the Data_Model. Version 2 is the library-v2 shape without Words_Read. Version 3 is the version 2 shape plus Words_Read in every Stats record.
 - **Paragraph_Recorded**: The existing moment at which the stats recorder (`src/ui/useStatsRecorder.ts`) adds one to paragraphs read, which is the first time a paragraph opens in a page load.
 - **Local_Date**: A calendar date `YYYY-MM-DD` from the device's local time zone.
 - **Today**: The Local_Date of the current moment, passed in to the Ledger calculations so they stay pure.
-- **Focus_Score**: A whole number from 0 to 100 equal to the active reading seconds divided by the sum of active reading seconds and away seconds, times 100, rounded to the nearest whole number. It is undefined when that sum is 0.
+- **Focus_Score**: A whole number from 0 to 100 equal to the active reading seconds divided by the sum of active reading seconds and away seconds, times 100, rounded to the nearest whole number. It is undefined when that sum is 0. The away seconds in it are the recorded away seconds, which Requirement 21 caps per look-away.
+- **Away_Cap**: 120 seconds. The most away time the stats recorder records for one Look_Away.
+- **Look_Away**: One continuous period in which the Attention_Signal is `away`, from the change to `away` to the next change to `present` (or to the book closing).
+- **Break_Period**: A Look_Away longer than the Away_Cap. Its first 120 seconds are recorded as away seconds and the rest is not recorded, so it counts as a break and not as distraction.
+- **Shell_Max_Width**: 75rem (1200 px), the widest the Shell tab content and the Tab_Bar grow, centred, with side padding of `clamp(1rem, 4vw, 2.5rem)`.
+- **Dashboard_Card**: A panel on the Ledger_Tab with a `--surface` background, a rounded corner, the same padding and the same gap to its neighbours, and a Cormorant Garamond heading.
+- **Pace_Bar**: The horizontal bar on the Pace card that shows the Measured_Pace on a scale from 0 to 400 wpm, with markers at 238 and 260 wpm.
+- **Progress_Ring**: The circular progress drawing of the Goal_Progress on the Daily goal card.
+- **Stat_Tile**: One of the four tiles on the "Your reading" card: books finished, books in progress, paragraphs read, chapters read.
+- **Ghost_Image**: One of the bundled files `public/ghosts/ghost-standing.png` and `public/ghosts/ghost-face.png`, listed in `GHOST_ASSETS` and loaded only through `assetUrl` as a same-origin URL beginning with `/ghosts/`.
+- **Image_Layer**: The gate's visual layer that shows one Ghost_Image at a given opacity, scale and position, as defined in ghost-dread. It is the only way a reading haunt shows a ghost.
+- **Reading_Haunts**: The haunts that draw a ghost during reading: `ghostFigure` (the figure while the reader is away) and `jumpscare` (the close-up on return).
 - **Reading_Day**: A Local_Date on which the active reading seconds in the Daily_Stats are above 0.
 - **Daily_Goal**: The number of minutes, a whole number from 1 to 240, that the reader sets as a daily reading target. The default is 15. It is kept under the key `rod_daily_goal`.
 - **Goal_Progress**: A whole number from 0 to 100 equal to Today's active reading seconds divided by the Daily_Goal in seconds, times 100, rounded and capped at 100.
@@ -251,7 +264,7 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 
 1. THE Ledger_Tab SHALL show the Focus_Score for Today and the Focus_Score for the last 7 days, each drawn as a Candle_Gauge that burns down as the score falls, with the score also written as text, for example "82% focus".
 2. THE Ledger_Tab SHALL give each Candle_Gauge a text alternative that states what it shows and the score.
-3. THE Ledger_Tab SHALL show the look-away count for each of the last 7 days as Tally_Marks, grouped in fives, with the count also written as text.
+3. THE Ledger_Tab SHALL show the look-away count for each of the last 7 days as Tally_Marks, grouped in fives, with the count also written as text, laid out as Requirement 20 criterion 5 describes.
 4. IF a day has more than 20 look-aways, THEN THE Ledger_Tab SHALL draw 20 Tally_Marks and write the full number beside them.
 5. THE Ledger_Tab SHALL show the last 30 days as Moon_Phases, one per day, oldest first, with the date and the phase name available to screen readers for each.
 6. THE Ledger_Tab SHALL explain in one line that a full moon means the Daily_Goal was met.
@@ -271,6 +284,7 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 20. THE Ledger_Tab SHALL read only the Data_Model Stats (including Words_Read), the shelves and the Daily_Goal, and SHALL add no tracking beyond Words_Read.
 21. WHILE Reduced_Motion is active, THE Ledger_Tab SHALL draw the Candle_Gauge, Tally_Marks and Moon_Phases as still images with no animation and no flicker.
 22. THE Ledger_Tab SHALL fit within a 360 px wide screen without horizontal scrolling, with the 30 Moon_Phases wrapping onto more rows.
+23. THE Ledger_Tab SHALL arrange the sections listed in criteria 1 to 14 as the Dashboard_Cards of Requirement 20, with the same data, the same calculations and the same text, and where criteria 1 to 22 and Requirement 20 describe the same layout, Requirement 20 applies.
 
 ### Requirement 10: Safety, accessibility and constraints
 
@@ -278,7 +292,7 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 
 #### Acceptance Criteria
 
-1. THE Library_App SHALL keep the reading page unchanged: no Darkness, Cursor_Light, Ambient_Layer, Cover_Effect, Burn or Lurking_Ghost on it, and haunts there only for looking away.
+1. THE Library_App SHALL keep the reading page unchanged: no Darkness, Cursor_Light, Ambient_Layer, Cover_Effect, Burn or Lurking_Ghost on it, no change to its width or layout, and haunts there only for looking away. The only change to what a reading haunt draws is the ghost image of Requirement 22.
 2. WHILE Reduced_Motion is active, THE Shell SHALL show no Ambient_Layer movement, no tilt, no flicker, no Burn and no Lurking_Ghost, a still flame with a steady glow, and SHALL use still images and simple fades.
 3. THE Shell SHALL NOT flash faster than 3 times per second and SHALL NOT flash the full screen in saturated red.
 4. THE Shell SHALL give every effect in this spec `pointer-events: none`, except the Lurking_Ghost's pointer-reach detection and the Cover_Effect on its own Cover_Card.
@@ -330,6 +344,10 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 10. THE Library_App SHALL include example tests for the Effect_Options covering: the defaults are 'flame', 'smoke' and 'burn'; each of 'pool', 'fog' and 'fade' selects the earlier implementation when set alone; and an unlisted value falls back to the default.
 11. THE Library_App SHALL include example tests that a click and a key press each end the Burn at once, that Reduced_Motion skips the Burn and plays the single fade, and that `bookOpen` 'fade' plays no Burn.
 12. THE Library_App SHALL include an example test that Demo_Mode gives a first Peek delay of 3 seconds and later Peek delays between 4 and 6 seconds, that its absence gives 45 to 90 seconds for every Peek, and example tests that the Lurking_Ghost schedules no Peek in Gentle mode or under Reduced_Motion, in Demo_Mode as well.
+13. THE Library_App SHALL include one fast-check property test, beyond the Ledger and migration tests above, that for every look-away the away seconds recorded never exceed 120, that a look-away of 120 seconds or less is recorded exactly (whole seconds), and that a look-away of more than 120 seconds records exactly 120, however its time is split across ticks and signal changes.
+14. THE Library_App SHALL include example tests that the Ledger dashboard keeps the same values and text as before (existing Ledger_Tab tests change only where they depend on the DOM structure), that the Look-aways card has 7 columns with today marked, and that the moon row marks today and keeps a text alternative per day.
+15. THE Library_App SHALL include example tests that `ghostFigure` and `jumpscare` show a Ghost_Image through the Image_Layer (`ghost-standing.png` for the figure, `ghost-face.png` for the Nightmare close-up), that no drawn SVG ghost markup is produced, and that a failed image load shows no cartoon ghost.
+16. THE Library_App SHALL NOT include tests for the pure look of the responsive layout, the card styling, the Pace_Bar or the Progress_Ring drawing.
 
 ### Requirement 13: Effect options file
 
@@ -412,14 +430,84 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 
 ### Requirement 18: Larger lurking ghost and demo switch
 
-**User Story:** As a reader browsing the library, I want the ghost to be big and to peek half behind the screen edge, and as a developer I want a URL switch for short peek times, so that I can check the ghost without waiting.
+**User Story:** As a reader browsing the library, I want the ghost to peek half behind the screen edge without crowding the page, and as a developer I want a URL switch for short peek times, so that I can check the ghost without waiting.
 
 #### Acceptance Criteria
 
-1. WHEN a Peek starts, THE Lurking_Ghost SHALL be drawn at a height between 30 and 35 percent of the viewport height.
+1. WHEN a Peek starts, THE Lurking_Ghost SHALL be drawn at a height between 20 and 24 percent of the viewport height (about 22 percent). This supersedes the earlier 30 to 35 percent.
 2. WHEN a Peek starts, THE Lurking_Ghost SHALL appear partly behind the screen edge, with at most 70 percent of its bounding box inside the viewport at its fullest.
 3. IF the ghost's visible part overlaps a Control at a candidate edge position, THEN THE Lurking_Ghost SHALL try the other edge positions before skipping the Peek as Requirement 7 describes.
 4. WHERE the page URL query contains `demo=1`, THE Lurking_Ghost SHALL start the first Peek after the page loads exactly 3 seconds after the Library_Tab is first shown, and SHALL use a random delay between 4 and 6 seconds before every later Peek, in place of 45 to 90 seconds.
 5. WHERE the page URL query does not contain `demo=1`, THE Lurking_Ghost SHALL use a random Peek delay between 45 and 90 seconds before every Peek.
 6. WHILE Demo_Mode is active, THE Lurking_Ghost SHALL obey every other rule of Requirement 7: no overlap with Controls, none in Gentle mode, none under Reduced_Motion, none on other tabs, none while the document is hidden.
 7. THE Demo_Mode switch SHALL change no setting, store no value and affect no other feature.
+
+### Requirement 19: Responsive shell width
+
+**User Story:** As a reader on a wide screen, I want the library, the Ledger and the Séance to use a proper desktop width instead of a narrow phone-width column, so that the app looks made for my screen.
+
+#### Acceptance Criteria
+
+1. THE Shell SHALL give the Tab_Bar and the content of every Tab_Panel (Library_Tab, Ledger_Tab and Seance_Tab) the same width: the full width of the viewport up to the Shell_Max_Width, centred, with side padding of `clamp(1rem, 4vw, 2.5rem)`.
+2. THE Ledger_Tab and the Seance_Tab SHALL NOT limit their width to 40rem.
+3. WHILE the viewport is at least 1024 px wide, THE Seance_Tab SHALL arrange its sections in two columns, and WHILE the viewport is narrower than 1024 px, THE Seance_Tab SHALL arrange them in one column.
+4. THE Shell SHALL show no horizontal scroll at viewport widths of 1440, 1024, 768, 390 and 360 px.
+5. THE Shell SHALL keep every Control at least 44 px high or wide at 390 px and 360 px, and SHALL keep every text colour at 4.5:1 against its background.
+6. THE Shell SHALL keep one source of the Shell_Max_Width and the side padding, shared by the Tab_Bar and the Tab_Panels.
+7. THE Library_App SHALL NOT change the width or layout of the reading page.
+
+### Requirement 20: Ledger dashboard
+
+**User Story:** As a reader, I want the Ledger laid out as a tidy dashboard of cards, so that I can read my focus, pace, goal and history at a glance.
+
+#### Acceptance Criteria
+
+1. THE Ledger_Tab SHALL show its sections as Dashboard_Cards on `--surface`, with the same padding, the same gap, Cormorant Garamond card headings, and system-UI numbers with tabular figures.
+2. WHILE the viewport is at least 1024 px wide, THE Ledger_Tab SHALL show three cards in the top row: Focus, Pace and Daily goal. WHILE the viewport is between 640 and 1023 px wide, THE Ledger_Tab SHALL show them in two columns, and WHILE it is narrower than 640 px, in one column.
+3. THE Focus card SHALL show the Focus_Score for Today and for the last 7 days as two Candle_Gauges larger than before, each with its text score and text alternative, as Requirement 9 criteria 1 and 2 describe.
+4. THE Pace card SHALL show the Measured_Pace as a large wpm figure with the Pace_Bar beneath it and the "Typical adult: 238 wpm (non-fiction), 260 wpm (fiction)" text and the small Source note below, WHEN the Ledger_Calculator returns a Measured_Pace. IF it returns none, THEN THE Pace card SHALL show "Read a little longer to see your pace." in place of the figure and the Pace_Bar marker.
+5. THE Pace_Bar SHALL show a scale from 0 to 400 wpm, markers at 238 and 260 wpm each with a text label, and the reader's pace as a marker at its position, held at the end of the scale for a pace above 400, and SHALL give the bar a text alternative that states the pace and both markers.
+6. THE Daily goal card SHALL show the Daily_Goal field with its label and save message, and a Progress_Ring for Today's Goal_Progress with `role="progressbar"`, `aria-valuemin` 0, `aria-valuemax` 100, `aria-valuenow` and `aria-valuetext`, and the text "9 of 15 minutes" (the real numbers) inside or beside the ring.
+7. THE Look-aways card SHALL show one column for each of the last 7 days, oldest first with Today last (the same 7 days as Requirement 9 criterion 3), a short weekday label (Mon to Sun) under each column, Tally_Marks or a small bar in each column, and Today's column highlighted by more than colour alone (a label or border), with no long vertical list.
+8. THE Look-aways card SHALL keep the cap of 20 drawn marks and SHALL show each day's full count as text, so that a day with more than 20 look-aways shows its full number.
+9. THE Moon card ("The last 30 days") SHALL show the 30 Moon_Phases in one tidy row on a wide screen and wrapped onto two rows on a phone, oldest first, SHALL mark Today, SHALL show a small legend of the five phases with the full-moon explanation, and SHALL keep the date and phase name as a text alternative for each day.
+10. THE "Your reading" card SHALL show four Stat_Tiles in one row on a wide screen and two by two on a phone: books finished, books in progress, paragraphs read and chapters read, each a number as text with its label.
+11. THE Ledger_Tab SHALL keep the empty state text, the loading skeletons, the focus statement and every other value and text of Requirement 9 unchanged.
+12. THE Ledger_Tab SHALL keep every text colour at 4.5:1 against `--surface`, `--bg` and `--darkness`, including any new combination in the cards, and the new combinations SHALL be measured and recorded in `docs/BUILD_LOG.md`, adjusting a colour in `src/ui/theme.css` if one falls below 4.5:1.
+13. WHILE Reduced_Motion is active, THE Ledger_Tab SHALL draw the Candle_Gauges, the Pace_Bar, the Progress_Ring, the bars and the moons as still drawings.
+14. THE Library_App SHALL keep every new Ledger component under 200 lines.
+15. THE Ledger_Tab SHALL change no calculation and no stored value; the Ledger_Calculator and the Data_Model stay as they are.
+
+### Requirement 21: Away time cap
+
+**User Story:** As a reader, I want one long absence to count as a break and not as distraction, so that my Focus_Score is not ruined by a phone call or a cup of tea.
+
+#### Acceptance Criteria
+
+1. WHEN the stats recorder records the away seconds of one Look_Away, THE stats recorder SHALL add at most the Away_Cap (120 seconds) in total for that Look_Away to the away seconds of the book and of the day.
+2. WHEN a Look_Away lasts the Away_Cap or less, THE stats recorder SHALL record its whole seconds exactly, as before.
+3. WHEN a Look_Away lasts more than the Away_Cap (a Break_Period), THE stats recorder SHALL record exactly 120 away seconds for it and SHALL record none of the time after the first 120 seconds.
+4. THE stats recorder SHALL apply criteria 1 to 3 however the time of one Look_Away is split across periodic updates and signal changes, so that the total for the Look_Away is the same.
+5. WHEN the Attention_Signal changes to `away` again after `present`, THE stats recorder SHALL start a new Look_Away with 0 seconds counted, so that each Look_Away has its own cap.
+6. THE stats recorder SHALL continue to add one to the look-away count of a Break_Period, as for any Look_Away, and SHALL continue to add no away seconds and no look-away count during a break the reader started, as library-v2 Requirement 16 criteria 13 and 14 state.
+7. THE stats recorder SHALL apply the cap only to time recorded from now on, and THE Library_App SHALL NOT change any saved away seconds, the Data_Model shape or the Schema_Version.
+8. THE Ledger_Calculator SHALL keep its Focus_Score formula unchanged; the cap acts only where away seconds are recorded.
+9. THE away time rule SHALL stay consistent with haunt-safety, where break prompts are suggestions and leaving the screen during a break is never counted as a breach, and with the Attention_Module, which still emits `away` and `present` as before and is not changed.
+10. THE capping function SHALL be pure, with no clock, DOM or camera access, and SHALL be part of `src/library/statsTimer.ts`.
+
+### Requirement 22: One ghost everywhere
+
+**User Story:** As a reader, I want the same ghost in the library and in the reading haunts, so that the haunting looks like one creature and not a cartoon.
+
+#### Acceptance Criteria
+
+1. THE `ghostFigure` haunt SHALL draw the Ghost with the Ghost_Image `ghost-standing.png` through the Image_Layer, beside the Reading_Column, with scale and position set from the Ghost_Distance step, WHILE the Attention_Signal is `away` and the Haunt_Mode is Classic or Nightmare.
+2. WHEN the Return_Moment shows the Ghost lingering, THE `ghostFigure` haunt SHALL show `ghost-standing.png` through the Image_Layer.
+3. WHEN the Jumpscare starts in Nightmare, THE `jumpscare` haunt SHALL show `ghost-face.png` through the Image_Layer, and WHEN it starts in Classic, THE `jumpscare` haunt SHALL show `ghost-standing.png` through the Image_Layer at a smaller largest scale than the Nightmare Jumpscare uses, each inside the 3000 ms Return_Moment.
+4. THE Library_App SHALL produce no drawn SVG ghost (the sheet-and-hood silhouette of `ghostArt`) in any haunt, and IF a Ghost_Image fails to load or decode, THEN THE Reading_Haunts SHALL show no ghost picture, leaving the sound and the other effects to carry the haunt, with no error shown to the reader. This supersedes the ghost-dread fallback to the SVG Ghost for the figure and the close-up.
+5. THE Library_App SHALL request a Ghost_Image only through `assetUrl` with an entry of `GHOST_ASSETS`, as a same-origin URL beginning with `/ghosts/`, and SHALL contact no other origin.
+6. THE Image_Layer SHALL be an element of the Safety_Gate, not of the haunt files, so that every limit is applied in the one place: volume is unaffected, opacity fades of at least 1000 ms under Reduced_Motion with no change in scale or position, the Ghost kept outside the Reading_Column bounds while the reader is away, the effects around the text and not over it outside the Return_Moment, and at most 3 flashes per second counted with every other effect.
+7. THE Image_Layer SHALL fit the Ghost_Image inside its region by the visible (non-transparent) part of the image, SHALL keep its aspect ratio, SHALL never draw outside the region, and SHALL use a strictly larger scale for a higher Ghost_Distance step.
+8. THE Library_App SHALL keep every haunt-safety rule: Gentle draws no ghost and no Image_Layer, jump effects happen only in the Return_Moment, the Ghost_Image is removed when the Return_Moment ends so the text is fully readable, the Ghost has a text label for screen readers and takes no keyboard focus, no full-screen saturated red flash occurs, and the Red_Coverage of `ghost-face.png` at its largest scale stays at or below 15 percent of the viewport (ghost-dread Requirement 15 criterion 6), checked once by measurement and recorded in `docs/BUILD_LOG.md`.
+9. THE Lurking_Ghost SHALL be drawn at about 22 percent of the viewport height, set by `ghostHeightVh` in `src/ui/shellEffects.ts`, with every other rule of Requirements 7 and 18 unchanged.
+10. THE Library_App SHALL remove the drawn-ghost code and its tests that are no longer used, and SHALL keep the pure region-fitting code that still serves the Image_Layer.

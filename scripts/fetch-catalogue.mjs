@@ -1,6 +1,9 @@
 // One-off maintainer script: downloads the 16 catalogue EPUBs from Standard
 // Ebooks (CC0) and extracts a small WebP cover from each. The app never runs it.
 //
+// Setup: sharp is not in package.json (it broke `npm install` on Vercel).
+// Run `npm install --no-save sharp` once before running this script.
+//
 //   node scripts/fetch-catalogue.mjs                 (all 16)
 //   node scripts/fetch-catalogue.mjs h-g-wells/the-invisible-man   (one book)
 //
@@ -15,7 +18,6 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, posix } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import JSZip from 'jszip'
-import sharp from 'sharp'
 import { CATALOGUE_SLUGS, slugToFileStem } from './catalogue-slugs.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -68,8 +70,18 @@ export async function extractCover(epubBytes) {
   return cover.async('uint8array')
 }
 
+export const SHARP_MISSING_MESSAGE =
+  'Could not import sharp. Run `npm install --no-save sharp` and then run this script again.'
+async function loadSharp() {
+  try {
+    return (await import('sharp')).default
+  } catch (err) {
+    throw new Error(SHARP_MISSING_MESSAGE, { cause: err })
+  }
+}
 /** Resize to <= 400 px wide and encode WebP, lowering quality until it fits. */
 export async function makeCoverWebp(coverBytes) {
+  const sharp = await loadSharp()
   let last = null
   for (const quality of QUALITY_STEPS) {
     const data = await sharp(coverBytes)

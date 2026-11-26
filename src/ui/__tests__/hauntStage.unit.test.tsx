@@ -163,9 +163,8 @@ describe('HauntStage.css rules (static text check)', () => {
     }
   });
 
-  it('has a stylesheet for overlays and for ghost sizing', () => {
+  it('has a stylesheet for overlays', () => {
     expect(css).toMatch(/\.haunt-overlay\s*\{[^}]*pointer-events:\s*none/);
-    expect(css).toMatch(/\.haunt-layer > svg:not\(\[preserveAspectRatio='none'\]\)\s*\{[^}]*max-width:\s*100px/);
   });
 
   it('disables every animation and any movement under reduced motion, leaving only fades', () => {

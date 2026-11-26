@@ -14,6 +14,7 @@ import { loadDailyGoal } from './goalStorage';
 import { EMPTY_LEDGER_TEXT, FOCUS_STATEMENT } from './ledgerText';
 import { MoonStrip } from './MoonStrip';
 import { PaceSection } from './PaceSection';
+import { StatTiles } from './StatTiles';
 import { TallyMarks } from './TallyMarks';
 import './LedgerTab.css';
 
@@ -31,15 +32,6 @@ function LedgerSkeleton() {
       <Skeleton className="ledger-skeleton ledger-skeleton--tall" />
       <Skeleton className="ledger-skeleton" />
       <Skeleton className="ledger-skeleton" />
-    </div>
-  );
-}
-
-function Count({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="ledger-count">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
     </div>
   );
 }
@@ -70,32 +62,35 @@ export function LedgerTab({ model, today }: LedgerTabProps) {
 
   return (
     <div className="ledger">
-      <section className="ledger-section" aria-labelledby="ledger-focus-h">
-        <h3 id="ledger-focus-h">Focus</h3>
-        <div className="ledger-gauges">
-          <CandleGauge label="Today" score={focusScore(todayStats.activeReadingSeconds, todayStats.awaySeconds)} />
-          <CandleGauge label="Last 7 days" score={sevenDayFocusScore(week)} />
-        </div>
-      </section>
-      <section className="ledger-section" aria-labelledby="ledger-tally-h">
+      <div className="ledger__top">
+        <section className="ledger-card" aria-labelledby="ledger-focus-h">
+          <h3 id="ledger-focus-h">Focus</h3>
+          <div className="ledger-gauges">
+            <CandleGauge
+              size="large"
+              label="Today"
+              score={focusScore(todayStats.activeReadingSeconds, todayStats.awaySeconds)}
+            />
+            <CandleGauge size="large" label="Last 7 days" score={sevenDayFocusScore(week)} />
+          </div>
+        </section>
+        <PaceSection pace={pace} />
+        <GoalSection goal={goal} onGoalChange={setGoal} todaySeconds={todayStats.activeReadingSeconds} />
+      </div>
+      <section className="ledger-card" aria-labelledby="ledger-tally-h">
         <h3 id="ledger-tally-h">Look-aways</h3>
         <TallyMarks days={week} />
       </section>
-      <section className="ledger-section" aria-labelledby="ledger-moons-h">
+      <section className="ledger-card" aria-labelledby="ledger-moons-h">
         <h3 id="ledger-moons-h">The last 30 days</h3>
         <MoonStrip days={month} goalMinutes={goal} />
       </section>
-      <section className="ledger-section" aria-labelledby="ledger-totals-h">
-        <h3 id="ledger-totals-h">Your reading</h3>
-        <dl className="ledger-counts">
-          <Count value={books.finished} label="Books finished" />
-          <Count value={books.inProgress} label="Books in progress" />
-          <Count value={totals.paragraphsRead} label="Paragraphs read" />
-          <Count value={totals.chaptersFinished} label="Chapters read" />
-        </dl>
-      </section>
-      <PaceSection pace={pace} />
-      <GoalSection goal={goal} onGoalChange={setGoal} todaySeconds={todayStats.activeReadingSeconds} />
+      <StatTiles
+        booksFinished={books.finished}
+        booksInProgress={books.inProgress}
+        paragraphsRead={totals.paragraphsRead}
+        chaptersRead={totals.chaptersFinished}
+      />
       <p className="ledger-note">{FOCUS_STATEMENT}</p>
     </div>
   );

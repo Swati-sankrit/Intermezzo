@@ -20,7 +20,7 @@ export interface EffectStrengths {
   smokeRiseSeconds: number; // at least 15
   burnMs: number;
   burnMaxSparks: number;
-  ghostHeightVh: number; // allowed 30-35
+  ghostHeightVh: number; // 22 (allowed 20-24)
   ghostVisibleFraction: number; // at most 0.7
   peekDelaySeconds: readonly [number, number];
   demoFirstPeekDelaySeconds: number; // Demo_Mode: first Peek after page load
@@ -47,7 +47,7 @@ export const DEFAULT_STRENGTHS: EffectStrengths = {
   smokeRiseSeconds: 20,
   burnMs: 1200,
   burnMaxSparks: 12,
-  ghostHeightVh: 32,
+  ghostHeightVh: 22,
   ghostVisibleFraction: 0.6,
   peekDelaySeconds: [45, 90],
   demoFirstPeekDelaySeconds: 3,

@@ -72,7 +72,8 @@ export interface ReturnEffect {
   readonly jumpSound?: boolean;
   /** Pure. When this effect runs inside the Return_Moment, or null when the plan gives it nothing to do. */
   span(plan: ReturnPlan): { startMs: number; endMs: number } | null;
-  begin(plan: ReturnPlan, port: ReturnPort): void;
+  /** `mode` is the Haunt_Mode of this Return_Moment; an effect that does not need it ignores it. */
+  begin(plan: ReturnPlan, port: ReturnPort, mode?: HauntMode): void;
   end(): void;
 }
 

@@ -11,6 +11,8 @@ The work splits cleanly into two risk tiers:
 
 A later browser check asked for a darker room and new default looks: a flame cursor instead of the round candle pool, rising smoke instead of faint fog, a burn-away of the chosen cover on open, and a bigger lurking ghost with a `?demo=1` switch. All visual choices move into one options file, `src/ui/shellEffects.ts`, so each new look can be switched back to the earlier one ('pool', 'fog', 'fade') by changing one value. See "Visual revision" below. This revision is implemented as task 11, which runs before tasks 5 to 7.
 
+A final revision (Requirements 19 to 22, tasks 13 to 17) widens the Shell tabs to a desktop width, rebuilds the Ledger as a card dashboard over the same calculations, caps the away seconds recorded per look-away at 120 s, and replaces the drawn ghost in the reading haunts with the bundled images (also shrinking the lurking ghost to about 22 vh). See "Layout, dashboard, away cap and one ghost" below. Conflicts found while writing it are listed in that section.
+
 Given the two-day budget, the shell's visual layer is designed as thin, independent CSS/React pieces layered over the existing `LibraryScreen`/`ProfileSettings` content, not as a rewrite of library-v2.
 
 ## Architecture
@@ -275,7 +277,7 @@ export interface EffectStrengths {
   smokeRiseSeconds: number;     // 20, at least 15
   burnMs: number;               // 1200
   burnMaxSparks: number;        // 12
-  ghostHeightVh: number;        // 32, allowed 30-35
+  ghostHeightVh: number;        // 22, allowed 20-24 (was 32; Requirement 18.1, 22.9)
   ghostVisibleFraction: number; // 0.6, at most 0.7
   peekDelaySeconds: readonly [number, number];     // [45, 90]
   demoFirstPeekDelaySeconds: number;               // 3, first Peek after page load in Demo_Mode
@@ -350,7 +352,141 @@ export function visiblePart(rect: Rect, viewport: Size): Rect;
 export function pickSlot(controls: readonly Rect[], viewport: Size, aspect: number, rand: number, fx?: ShellEffects): Rect | undefined;
 ```
 
-`LurkingGhost` reads `window.location.search` once on mount for `isDemoMode`, and uses `nextPeekDelayMs` for every delay, passing `isFirst` true only for the first Peek after the page loads (so a return to the Library tab later uses the 4 to 6 second range). Demo mode changes nothing else: Gentle, reduced motion, other tabs, hidden document, no-free-slot skip and the pointer vanish all behave as before. Nothing is stored. A bigger ghost still never covers a Control because only the inside-viewport part is tested against each Control's bounding box, several slots per edge are tried, and the Peek is skipped when none is free. In a narrow viewport a 32 vh ghost may find no free slot, and then the skip rule applies.
+`LurkingGhost` reads `window.location.search` once on mount for `isDemoMode`, and uses `nextPeekDelayMs` for every delay, passing `isFirst` true only for the first Peek after the page loads (so a return to the Library tab later uses the 4 to 6 second range). Demo mode changes nothing else: Gentle, reduced motion, other tabs, hidden document, no-free-slot skip and the pointer vanish all behave as before. Nothing is stored. A bigger ghost still never covers a Control because only the inside-viewport part is tested against each Control's bounding box, several slots per edge are tried, and the Peek is skipped when none is free. In a narrow viewport a 22 vh ghost may find no free slot, and then the skip rule applies.
+
+## Layout, dashboard, away cap and one ghost (Requirements 19 to 22)
+
+### 11. Shell width (Requirement 19)
+
+Today `LedgerTab.css` and `SeanceTab.css` cap their content at `max-width: 40rem`, while `LibraryScreen.css` already uses `75rem` and `TabBar.css` is full width. That mismatch is the narrow column seen on a desktop. The fix is one shared rule in `ShellFrame.css`, with the width and the padding named once:
+
+```css
+.shell-frame { --shell-max-width: 75rem; --shell-pad: clamp(1rem, 4vw, 2.5rem); }
+.shell-frame__inner { box-sizing: border-box; width: 100%; max-width: var(--shell-max-width); margin-inline: auto; padding-inline: var(--shell-pad); }
+```
+
+`TabBar` and each tab panel content wrap in `shell-frame__inner` (or use the same two custom properties). `.ledger` and `.settings` drop their own `max-width` and horizontal padding. `LibraryScreen.css` keeps its `75rem` but reads `--shell-max-width`, so there is one source. The Séance grid is one column below 1024 px and two columns from 1024 px (`grid-template-columns: repeat(2, minmax(0, 1fr))`), with Profile and Haunt mode in the first column and Camera, Volume and the data buttons in the second (DOM order unchanged, so keyboard order is unchanged). `overflow-wrap: anywhere` stays on the panels. The reading page does not use `ShellFrame` and is untouched.
+
+Verification is by hand at 1440, 1024, 768, 390 and 360 px (no horizontal scroll, no overlap). No test is written for it, because it is layout only (Requirement 12.16).
+
+### 12. Ledger dashboard (Requirement 20)
+
+The data flow in `LedgerTab.tsx` does not change: the same `statsForDate`, `statsForLastDays`, `overallStats`, `bookCounts`, `focusScore`, `sevenDayFocusScore`, `measuredPace`, `moonPhase`, `goalProgress`. Only the rendering is regrouped into `Dashboard_Card` sections, each a `<section aria-labelledby>` with an `h3`, so the existing role and text queries keep working. The existing `ledger-section` class becomes the card class (`ledger-card`).
+
+```
+LedgerTab (grid)
+  Row 1 (3 cards)   FocusCard | PaceCard | GoalCard
+  Row 2             LookAwayCard   (7 columns)
+  Row 3             MoonCard       (30 moons, one row, two on phones)
+  Row 4             ReadingCard    (4 Stat_Tiles)
+  Foot note         FOCUS_STATEMENT
+```
+
+Grid: `.ledger__top { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem }` at 1024 px and up, two columns from 640 px, one below. Cards: `background: var(--surface); border-radius: 0.5rem; padding: 1.25rem;`. Headings keep Cormorant Garamond. Numbers use `font-variant-numeric: tabular-nums` in the system UI font.
+
+| File | Role | Change |
+|---|---|---|
+| `LedgerTab.tsx` | Composes the cards, keeps the empty state and skeleton | Regroup only; under 200 lines |
+| `CandleGauge.tsx` | Gauge | Larger size prop (about 96 px tall) |
+| `PaceSection.tsx` | Pace card | Big figure, `PaceBar`, typical-speeds text, Source note, fallback text |
+| `PaceBar.tsx` (new) | Horizontal bar | 0 to 400 wpm scale, markers 238 and 260, reader marker; `role="img"` with a text alternative |
+| `GoalSection.tsx` | Daily goal card | Field kept; progress bar replaced by `ProgressRing` |
+| `ProgressRing.tsx` (new) | Ring | SVG circle; wrapper keeps `role="progressbar"`, `aria-valuemin/max/now/valuetext` and the "N of M minutes" text |
+| `TallyMarks.tsx` | Look-aways card | 7 columns (`grid-template-columns: repeat(7, 1fr)`), weekday label under each, marks above, count as text, today highlighted with a border and the word "Today" for assistive technology |
+| `MoonStrip.tsx` | Moon card | Grid with `repeat(30, 1fr)` (one row) from 1024 px and `repeat(15, 1fr)` (two rows) below that; today marked with a ring and a text label; legend of the five phases |
+| `StatTiles.tsx` (new) | Reading card | `dl` of four tiles; four columns, two by two below 640 px |
+| `LedgerTab.css` | Styling | Cards, grids, tokens only; no hard-coded colours |
+
+Pace_Bar position: `left = clamp(pace, 0, 400) / 400 * 100%`, markers at `238 / 400` and `260 / 400`. The two markers are close (5.5 percent of the width apart), so their labels sit one above and one below the bar. The look-aways card uses the same last 7 days as before.
+
+Contrast: new combinations are text on `--surface` cards over `--darkness`/`--bg` (already measured, so no new ratio), `--accent` ring and bar fills on `--surface` (non-text, 3:1 needed), the ring track in `--text-dim` on `--surface` (3:1 for non-text), and the today highlight border in `--accent`. The text labels on them use `--text` and `--text-dim`, whose ratios against `--surface` are 12.86 and 5.49. Task 14 measures every new pair with the shared contrast module, adds them to `themeContrast.unit.test.ts`, and records the numbers in `docs/BUILD_LOG.md`.
+
+Reduced motion: nothing in the dashboard animates, so no override is needed beyond keeping it that way.
+
+### 13. Away cap (Requirement 21)
+
+Where away seconds are recorded: `useStatsRecorder.ts` feeds `changeTimer`/`tickTimer` (`src/library/statsTimer.ts`), which return whole `away` seconds that `recordStep` sends to `statsOps` as `{ kind: 'away', seconds }`. The cap belongs in the pure timer because it is the only place that knows when one look-away starts and ends. `statsOps`, the Data_Model and the Schema_Version do not change.
+
+```ts
+export const AWAY_CAP_SECONDS = 120;
+
+export interface TimerState {
+  readonly value: TimerValue | null;
+  readonly at: number;
+  readonly rest: number;
+  /** Whole away seconds already recorded for the current look-away (0 to 120). */
+  readonly awayCredited: number;
+}
+export const IDLE_TIMER: TimerState = { value: null, at: 0, rest: 0, awayCredited: 0 };
+```
+
+- `tickTimer` while `away`: `seconds = floor(total / 1000)` as now, then `credit = min(seconds, AWAY_CAP_SECONDS - awayCredited)`, `away = credit`, `awayCredited += credit`. The remainder in `rest` is kept as now, so time is not lost or double counted below the cap; once the cap is reached, further seconds are consumed and not recorded.
+- `changeTimer` to `away` from any other value resets `awayCredited` to 0 (a new look-away). `away` to `away` keeps it. `away` to `present` or `null` resets it to 0.
+- `useStatsRecorder.ts` needs no change: it already spreads the timer state returned by each step. The 5-second flush, signal changes and close all go through the same two functions, so the cap holds however the time is split.
+- `lookAway` is still 1 on each present to away change, so a Break_Period still counts as one look-away.
+
+Property 9 (below) tests this directly on `statsTimer.ts`. Break prompts: the app has no break prompt or break state in code yet (a search for break state found none), so there is nothing to wire; library-v2 criteria 13 and 14 (no away seconds during a reader-started break) stay as the rule for when a break feature is built. The cap is consistent with haunt-safety: it can only record less away time, never more, and leaving the screen for a break is never counted as a breach.
+
+Saved data: values already saved are untouched (no migration, no change to `schemaV3.ts`). The Ledger_Calculator is unchanged. Old long absences stay in old days; only new time is capped.
+
+### 14. One ghost (Requirement 22)
+
+What draws a ghost today:
+
+| Where | What | Change |
+|---|---|---|
+| `src/haunts/ghostFigure.ts` | `ghostArt(step).markup` into a layer and into the return overlay | Image_Layer with `ghost-standing.png` |
+| `src/haunts/jumpscare.ts` | `ghostArt(4).markup` into a jumpscare overlay | Image_Layer with `ghost-face.png` (Nightmare) or `ghost-standing.png` (Classic) |
+| `src/haunts/engine/ghost/ghostArt.ts` | Sheet-and-hood SVG, `ghostBox` fitting | Drawing code removed; `ghostBox` fitting kept and reused for the image |
+| `src/ui/shell/LurkingGhost.tsx` | Already the PNGs via `assetUrl` | Smaller only (`ghostHeightVh` 32 to 22) |
+| `whispers.ts` | Text markup, not a ghost | Unchanged |
+
+Files checked: `public/ghosts/ghost-standing.png` and `ghost-face.png` exist (1376 by 768, RGBA with a transparent background, listed in the README as the project's own work). `GHOST_ASSETS` lists exactly these two names and `assetUrl('ghost', name)` returns `/ghosts/<name>`, a same-origin URL beginning with `/ghosts/`, as ghost-dread Requirement 14 asks. Visible parts (alpha bounding boxes): `ghost-standing.png` 667 by 649 px (starting at 359, 64), `ghost-face.png` 1269 by 768 px (starting at 66, 0). The Image_Layer fits the visible part, not the whole file, so the empty margins do not shrink the ghost.
+
+Image_Layer in the gate. The gate parses SVG markup through `parseSvgMarkup`, which allows only an allowlist of SVG elements and rejects external references, so an `<image>` cannot be passed as markup. Rather than loosen that sanitiser, add to `VisualLayer`:
+
+```ts
+/** Shows one bundled Ghost_Image. The gate resolves the URL; haunts pass only an allowlisted name. */
+setImage(name: GhostAssetName, fit: ImageFit): void;
+interface ImageFit { visible: { x: number; y: number; w: number; h: number }; /* alpha bbox in image px */ }
+```
+
+The gate builds an `<img>` (or an SVG `<image>`) whose `src` comes only from `assetUrl('ghost', name)`; a name that is not in `GHOST_ASSETS` makes no request. The `<img>` uses `alt=""` with the label set on the layer container as today, `decoding="async"`, no `crossorigin` and no query. The same layer already owns opacity fades, reduced-motion minimums, region confinement, and the flash budget, so every haunt-safety limit stays in one place (Requirement 22.6). Scale and position come from a pure function in a new `src/haunts/engine/ghost/imageFit.ts`:
+
+```ts
+/** Rendered size of the visible part inside a region; aspect kept; never larger than the region;
+ *  strictly larger for a higher step (while the region allows). null when the region is under 48 px wide. */
+export function imageBox(step: number, visible: {w: number; h: number}, region: {width: number; height: number}): {width: number; height: number} | null;
+```
+
+It reuses the sanitising and the `MIN_GHOST_BOX_WIDTH` rule of `ghostBox`. The height fractions per step grow like `GHOST_HEIGHT_UNITS`, so the Ghost_Distance still reads as nearer. Unsafe sizes count as 0, as in `ghostBox`.
+
+Load failure: the `<img>` `error` event removes the picture and the layer stays empty. There is no cartoon fallback (Requirement 22.4); the sound haunts and the candle dim still carry the haunt.
+
+Jumpscare: the close-up uses the Image_Layer in the existing overlay with the existing rush timing, fast attack and reduced-motion fade (1000 ms or more, no scale change) from `returnRules.ts`; nothing about those limits changes. The Red_Coverage of `ghost-face.png`, whose eyes are saturated red (see the image), is measured once (task 16) at the largest rendered scale: the red-eye pixels divided by the viewport area must be at most 15 percent, which the eyes, a small part of the picture, should meet by a wide margin; the number is recorded in `docs/BUILD_LOG.md`. If it ever failed, the Nightmare close-up would use `ghost-standing.png` at a smaller scale.
+
+Removing the drawn ghost: `ghostArt()`, its detail drawings and their unit/property tests are removed because the code they test is gone; this is deletion with the code, not weakening a test. The `ghostBox` region-fitting logic and its tests stay. Haunts that import `ghostArt` are updated. `staticScan.unit.test.ts` (checks haunt files for banned patterns) stays and must keep passing.
+
+Superseded ghost-dread text (the spec files are not edited): Requirement 9 criterion 1 ("original silhouette ... using SVG or canvas"), criterion 7 ("SHALL load no image file"), Requirement 11 criterion 9 ("close-up drawn in code") and the Ghost glossary entry. Requirement 15 of ghost-dread already describes images and is the closer match; this spec uses only its Image_Layer, scale-by-step, Reduced_Motion and Red_Coverage parts. The Smoke_Entrance and Rim_Glow of ghost-dread Requirement 15 criteria 12 to 18 are not part of this change.
+
+Lurking ghost size: `ghostHeightVh` goes from 32 to 22 in `src/ui/shellEffects.ts`. `slotRect` already derives the height from this value, and a smaller ghost makes a free slot easier to find. The existing `ghostPlacement` example tests that mention a height are updated to the new value in the same task.
+
+### Conflicts found and resolved
+
+| Conflict | Resolution |
+|---|---|
+| Req "out of scope: haunt engine, Safety_Gate" vs the ghost image change | Requirement 22 is the one allowed change: it adds an Image_Layer to the gate and changes what two haunts draw; no limit changes |
+| Req 10.1 "reading page unchanged" vs reading haunts drawing a different ghost | 10.1 now names the ghost image of Requirement 22 as the only change |
+| ghost-dread "no image file / SVG or canvas" vs the bundled images (and vs ghost-dread Requirement 15) | Requirement 22 supersedes it for the figure and the close-up; ghost-dread files untouched |
+| ghost-dread 15.19 "fall back to the SVG Ghost" vs "one ghost everywhere" | No picture on load failure (22.4) |
+| library-v2 "away seconds are all whole seconds away" vs the cap | Requirement 21 supersedes it for newly recorded time only |
+| library-v2 criteria 13 and 14 (break) vs the cap | Both stay; the cap only records less |
+| Req 9 criteria 3, 14, 22 (list, progress bar) vs the dashboard | Requirement 20 applies where they describe the same layout (9.23) |
+| "Mon to Sun" labels vs "last 7 days" | The columns are the same last 7 days, oldest first, each labelled with its own weekday, today last and highlighted; a fixed Monday-to-Sunday week would change the data window, so it is not used |
+| Req 12.6 "no tests for pure visuals" vs example tests for D | The haunts using images is behaviour, not look, so tested (12.15) |
+| Req 12.1/12.2 allowed property tests only for the Ledger and migration vs the away cap | Requirement 12.13 allows the one extra property test |
+| Req 18.1 height 30 to 35 percent | Changed to 20 to 24 percent |
+| Existing design snippets for `ghostHeightVh` (32) | Updated to 22 |
 
 ## Data Models
 
@@ -433,6 +569,12 @@ For any valid Schema_Version 3 `DataModel` (including one where some `Stats` rec
 
 **Validates: Requirements 11.7**
 
+### Property 9: Away seconds recorded per look-away never exceed 120
+
+For any list of tick durations (in ms, including zero and very long ones) and any splitting of one away period into `tickTimer` calls and `changeTimer` calls that keep the value `away`, the sum of `away` seconds returned for that look-away equals `min(floor(total elapsed ms / 1000), 120)` (a look-away of 120 s or less is recorded exactly, a longer one records exactly 120), and never exceeds 120. A new present then away change starts a new look-away with its own cap, and `lookAway` is reported once per such change.
+
+**Validates: Requirements 21.1, 21.2, 21.3, 21.4, 21.5**
+
 ## Error Handling
 
 - **Shell-local storage keys** (`rod_shell_tab`, `rod_daily_goal`, `rod_volume_cap`): every read and write is wrapped in its own `try/catch`, mirroring `src/attention/storage.ts`. A read failure or an invalid stored value falls back to the stated default without an error message (Requirements 1.10, 1.11, 2.11, 9.15); a write failure for the Daily_Goal keeps the new value for the session and shows a short, non-alarming message (Requirement 9.16); a write failure for the Tab or the Volume_Cap is silent, consistent with how `saveChoice` already treats camera-choice write failures.
@@ -441,6 +583,7 @@ For any valid Schema_Version 3 `DataModel` (including one where some `Stats` rec
 - **Migration failure**: `migrateV2ToV3` is a total function over any object shaped like a Schema_Version 2 `DataModel` and cannot throw; if the *input itself* is not validly shaped (e.g. corrupted JSON), that is caught upstream by the existing `localStore.ts` load path exactly as today (`invalid` / `migration_failed` `FailureKind`s), before migration is attempted. No new failure mode is introduced beyond what `localStore.ts` already reports.
 - **Validator**: extending `STATS_FIELDS` with `'wordsRead'` means a Schema_Version 3 model missing or misshaping `wordsRead` on any `Stats` record is rejected with a problem string naming that record and field, via the existing generic loop — no new error-handling code path.
 - **Burn and effect options**: a draw error in the Burn skips it and plays the existing sequence (Requirement 17.10). A draw error in the Flame_Cursor, Smoke_Layer or lit covers leaves the page with the dimmed look only, and never breaks the tabs. An unlisted option value resolves to its default (Requirement 13.7).
+- **Ghost images**: a failed or blocked Ghost_Image load removes the picture and shows no error and no cartoon (Requirement 22.4); a name outside `GHOST_ASSETS` makes no request. A thrown error in the Pace_Bar or Progress_Ring leaves the card text in place, since every number is also text.
 - **Shell visual effects** (Darkness, Candle_Pool, Flame_Cursor, Fog_Layer, Smoke_Layer, Cover_Effect, Opening_Transition, Lurking_Ghost): each is wrapped so that a thrown error inside one effect cannot break the Tab_Bar or the active Tab_Panel (Requirement 10.10). Given the project has no dependency for error boundaries beyond React's built-in `ErrorBoundary` class pattern, each effect component is implemented as a self-contained component with a small React error boundary (a local class component, no new dependency) around just that effect, matching the "no new dependency" constraint (Requirement 10.5).
 
 ## Testing Strategy
@@ -473,6 +616,13 @@ Each test tag follows the required format, e.g.:
 - `OpeningTransition`: a click and a key press each end the burn at once; reduced motion skips the burn and plays the single fade; `bookOpen` 'fade' plays no burn.
 - `ghostPlacement` and `LurkingGhost`: `isDemoMode('?demo=1')` is true and other queries are false; `nextPeekDelayMs` gives exactly 3000 ms for the first Peek in demo, 4000 to 6000 ms for later Peeks in demo, and 45000 to 90000 ms otherwise (in one example test); no Peek is scheduled in Gentle mode or under reduced motion, in demo mode as well; `pickSlot` returns a slot whose visible part overlaps no Control, and returns nothing when every slot overlaps one.
 - Contrast: the existing contrast test adds the peak composites of the Flame_Glow and the Smoke_Layer (below).
+
+**Added by Requirements 19 to 22:**
+
+- Property test (Property 9): `src/library/__tests__/statsTimer.awayCap.property.test.ts`, at least 100 runs, using fast-check to split one away period into random ticks and signal repeats. It is the one deliberate property test outside the Ledger and migration scope (Requirement 12.13). Existing `stats.unit.test.ts` timer examples (3 s and 4 s away) stay valid because they are below the cap.
+- Example tests: existing Ledger tests change only where they rely on DOM structure (for example reading the progress ring's wrapper instead of the bar); assertions about values and text stay. New examples: 7 look-away columns with today marked and the 20-mark cap with the full count as text; the moon row marks today and keeps a text alternative per day; the Pace_Bar text alternative states the pace and both markers; the fallback pace text still shows; four Stat_Tiles with the same numbers.
+- Example tests for the haunts: `ghostFigure` and `jumpscare` call the Image_Layer with the allowlisted names and produce no SVG ghost markup; a failed image load leaves no ghost picture; Gentle draws nothing; `imageBox` stays inside the region and grows with the step. The existing `ghostHaunts` and `staticScan` tests are updated only where they referred to `ghostArt`.
+- Measurement, not a test: the layout at 1440, 1024, 768, 390 and 360 px, the new contrast pairs, and the Red_Coverage of `ghost-face.png`, each recorded in `docs/BUILD_LOG.md`.
 
 **Explicitly not tested** (pure visuals, per Requirement 12.6 and the workspace testing rule's proportionality guidance): Candle_Pool shape/movement, Flame_Cursor drawing and flicker, Fog_Layer and Smoke_Layer drawing/drift timing, dimming and Vignette look, Burn look, Cover_Effect tilt/glow/flicker, Opening_Transition visual sequence, Lurking_Ghost appearance/positioning animation. Their *safety* constraints (no sound, `aria-hidden`, Reduced_Motion fallback, `pointer-events: none`) are covered by the existing `ghost-dread`/`haunt-feature` Safety_Gate tests plus a small number of the example tests above where they intersect with ARIA/focus (e.g. Lurking_Ghost's `aria-hidden="true"` could be one assertion in a `LurkingGhost` smoke test, but the animation timing itself is not asserted).
 

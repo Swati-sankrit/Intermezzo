@@ -1,4 +1,6 @@
 .shell-frame {
+  --shell-max-width: 75rem;
+  --shell-pad: clamp(1rem, 4vw, 2.5rem);
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
@@ -12,4 +14,12 @@
 .shell-frame__content {
   position: relative;
   z-index: 1;
+}
+/* One width and side padding for the Tab_Bar and every Tab_Panel's content. */
+.shell-frame__inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--shell-max-width);
+  margin-inline: auto;
+  padding-inline: var(--shell-pad);
 }

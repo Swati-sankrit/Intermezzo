@@ -12,7 +12,12 @@ export interface TimerState {
   readonly at: number;
   /** Milliseconds already elapsed but not yet worth a whole second (0 to 999). */
   readonly rest: number;
+  /** Away seconds already credited to the current Look_Away (0 to AWAY_CAP_SECONDS). */
+  readonly awayCredited: number;
 }
+
+/** The most away seconds recorded for one Look_Away. */
+export const AWAY_CAP_SECONDS = 120;
 
 export interface TimerStep {
   readonly state: TimerState;
@@ -24,7 +29,7 @@ export interface TimerStep {
   readonly lookAway: number;
 }
 
-export const IDLE_TIMER: TimerState = { value: null, at: 0, rest: 0 };
+export const IDLE_TIMER: TimerState = { value: null, at: 0, rest: 0, awayCredited: 0 };
 
 /** Credits the time since the last update to the current value. A backwards clock adds nothing. */
 export function tickTimer(state: TimerState, nowMs: number): TimerStep {
@@ -33,11 +38,18 @@ export function tickTimer(state: TimerState, nowMs: number): TimerStep {
   }
   const total = state.rest + Math.max(0, nowMs - state.at);
   const seconds = Math.floor(total / 1000);
-  const next: TimerState = { value: state.value, at: nowMs, rest: total - seconds * 1000 };
+  const away =
+    state.value === 'away' ? Math.min(seconds, Math.max(0, AWAY_CAP_SECONDS - state.awayCredited)) : 0;
+  const next: TimerState = {
+    value: state.value,
+    at: nowMs,
+    rest: total - seconds * 1000,
+    awayCredited: state.awayCredited + away,
+  };
   return {
     state: next,
     active: state.value === 'present' ? seconds : 0,
-    away: state.value === 'away' ? seconds : 0,
+    away,
     lookAway: 0,
   };
 }
@@ -51,7 +63,12 @@ export function changeTimer(state: TimerState, value: TimerValue | null, nowMs: 
   const rest = value === null || state.value === null ? 0 : step.state.rest;
   return {
     ...step,
-    state: { value, at: step.state.at, rest },
+    state: {
+      value,
+      at: step.state.at,
+      rest,
+      awayCredited: state.value === 'away' && value === 'away' ? step.state.awayCredited : 0,
+    },
     lookAway: state.value === 'present' && value === 'away' ? 1 : 0,
   };
 }

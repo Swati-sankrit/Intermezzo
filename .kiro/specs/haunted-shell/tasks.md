@@ -6,6 +6,8 @@ The plan puts the demo-critical visuals first. The theme contrast fixes come fir
 
 Task 11 (visual revision) was added after a browser check of the finished tasks 1 to 4. It is numbered last but runs before tasks 5 to 7, so the reader sees the revised look first. It adds the effect options file and the new default looks (flame cursor, smoke, burn on open, darker room, bigger ghost with a `?demo=1` switch) while keeping the earlier looks working.
 
+Tasks 13 to 17 were added after tasks 1 to 12 were finished and do not change them. Task 13 widens the Shell tabs to a desktop width. Task 14 rebuilds the Ledger as a card dashboard over the same calculations. Task 15 caps the away seconds recorded per look-away at 120 s, with one extra property test. Task 16 gives the reading haunts the bundled ghost images, removes the drawn ghost and shrinks the lurking ghost to about 22% of the viewport height. Task 17 is the final checkpoint.
+
 Testing follows the design: property tests only for the Ledger calculations (Properties 1-5) and the `wordsRead` recording and v2→v3 migration (Properties 6-8); example tests for tabs, Séance, Ledger tab, contrast, and the `rod_daily_goal` and `rod_shell_tab` save-and-reload round trips; no tests for pure visuals (Requirement 12.6). No new dependencies.
 
 ## Tasks
@@ -214,8 +216,99 @@ Testing follows the design: property tests only for the Ledger calculations (Pro
     - Write one example test: with `demo=1` the first delay is 3000 ms and later delays are within 4000 to 6000 ms; without `demo=1` the delay is within 45000 to 90000 ms for the first and later Peeks. Replace the demo range assertion in the task 11.6 test with this one
     - _Requirements: 7.1, 7.12, 18.4, 18.5, 18.6, 18.7, 12.12_
 
+- [x] 13. Responsive shell width
+  - [x] 13.1 Share one width and padding across the Tab_Bar and every tab
+    - In `src/ui/shell/ShellFrame.css` define `--shell-max-width: 75rem` and `--shell-pad: clamp(1rem, 4vw, 2.5rem)` once, with an inner wrapper class (centred, `width: 100%`, `box-sizing: border-box`) used by `TabBar` and by the content of every Tab_Panel in `ShellFrame.tsx`
+    - Remove `max-width: 40rem` and the own horizontal padding from `.ledger` in `LedgerTab.css` and from the settings container in `SeanceTab.css`; make `LibraryScreen.css` read `--shell-max-width` instead of its own `75rem`
+    - Leave the reading page, its CSS and `ReaderView` untouched
+    - _Requirements: 19.1, 19.2, 19.6, 19.7, 10.1_
+
+  - [x] 13.2 Séance two columns on desktop, then check every width
+    - In `SeanceTab.css` use one column below 1024 px and two columns from 1024 px, keeping the DOM order so keyboard order does not change; keep controls at least 44 px high and wide
+    - Check by hand at 1440, 1024, 768, 390 and 360 px for all three tabs: no horizontal scroll, no overlap, focus rings visible; record the check in `docs/BUILD_LOG.md`. No test for the layout look
+    - _Requirements: 19.3, 19.4, 19.5, 10.9, 12.16_
+
+- [x] 14. Ledger dashboard
+  - [x] 14.1 Card shell and the top row: Focus, Pace and Daily goal
+    - Add the `ledger-card` style (`--surface`, rounded corner, shared padding and gap, Cormorant Garamond headings, `font-variant-numeric: tabular-nums` numbers) and the top-row grid (three columns from 1024 px, two from 640 px, one below) to `LedgerTab.css`
+    - Focus card: make `CandleGauge` larger through a size prop, keeping text score and text alternative
+    - Pace card in `PaceSection.tsx`: large wpm figure, new `PaceBar.tsx` (0 to 400 wpm, markers at 238 and 260 with text labels, reader marker clamped at the end, `role="img"` text alternative stating the pace and both markers), the "Typical adult: 238 wpm (non-fiction), 260 wpm (fiction)" text and the small Source note below; keep "Read a little longer to see your pace." and the below/near/above sentence
+    - Daily goal card in `GoalSection.tsx`: keep the field, label and save message; replace the bar with new `ProgressRing.tsx` whose wrapper keeps `role="progressbar"`, `aria-valuemin` 0, `aria-valuemax` 100, `aria-valuenow`, `aria-valuetext` and the "N of M minutes" text
+    - Each file under 200 lines; colours from `theme.css` only; still drawings
+    - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.13, 20.14, 9.1, 9.2, 9.8, 9.9, 9.11, 9.13, 9.14_
+
+  - [x] 14.2 Look-aways card: 7 columns
+    - Rework `TallyMarks.tsx` into a 7-column grid (the same last 7 days, oldest first, today last), a short weekday label under each column, tally marks above (grouped in fives, capped at 20 drawn marks), the full count as text, and today highlighted by a border and a text label for assistive technology, with no long vertical list
+    - Use the existing `dateLabel`, `drawnTally`, `tallyGroups` and `TALLY_CAP` helpers; keep the counting text ("1 look-away", "N look-aways", "(20 marks shown)")
+    - _Requirements: 20.7, 20.8, 9.3, 9.4, 20.13_
+
+  - [x] 14.3 Moon card: one tidy row with today and a legend
+    - Rework `MoonStrip.tsx`: 30 moons in one row from 1024 px and two rows of 15 below it, today marked by a ring and a text label, a small legend of the five phases with the full-moon note, and the date and phase name still available as a text alternative for each day
+    - _Requirements: 20.9, 9.5, 9.6, 9.22, 20.13_
+
+  - [x] 14.4 Your reading card: four Stat_Tiles
+    - New `StatTiles.tsx` (a `dl` of four tiles: books finished, books in progress, paragraphs read, chapters read) in one row from 640 px and two by two below, replacing the `Count` list in `LedgerTab.tsx`
+    - _Requirements: 20.10, 9.7_
+
+  - [x] 14.5 Compose the dashboard, check contrast and update existing tests
+    - In `LedgerTab.tsx` compose the cards in the order Focus, Pace, Daily goal, Look-aways, Moon, Your reading, then the focus statement; keep the empty state, skeletons and every text; keep the file under 200 lines
+    - Measure every new colour pair (ring and bar fills and tracks on `--surface`, today highlight, markers, card text on `--surface` over `--darkness`) with the shared contrast module; add them to `src/ui/__tests__/themeContrast.unit.test.ts`; adjust any colour in `src/ui/theme.css` that falls below 4.5:1 (3:1 for non-text drawing) and record each measurement and change in `docs/BUILD_LOG.md`
+    - Update `src/ui/__tests__/ledgerTab.unit.test.tsx` only where it depends on the old DOM structure (for example the progress bar's wrapper or the tally list); do not change any assertion about values or text
+    - Add example tests: 7 look-away columns with today marked and the 20-mark cap with the full count as text; the moon row marks today and keeps a text alternative per day; the Pace_Bar text alternative states the pace and both markers; four Stat_Tiles with the same numbers
+    - Check by hand at 1440, 1024, 768, 390 and 360 px and record it in `docs/BUILD_LOG.md`
+    - _Requirements: 20.11, 20.12, 20.14, 20.15, 12.14, 12.16, 19.4_
+
+- [x] 15. Focus-score away cap
+  - [x] 15.1 Cap the away seconds in the pure stats timer
+    - In `src/library/statsTimer.ts` add `AWAY_CAP_SECONDS = 120` and `awayCredited` to `TimerState` (and to `IDLE_TIMER`); `tickTimer` credits at most `AWAY_CAP_SECONDS - awayCredited` away seconds and consumes the rest without recording it; `changeTimer` resets `awayCredited` to 0 on a change to `away` from another value and on a change away from `away`, and keeps it for `away` to `away`; `lookAway` is unchanged
+    - Leave `useStatsRecorder.ts`, `statsOps.ts`, the Data_Model, the validator and `ledgerCalculator.ts` unchanged; apply the cap to new time only, with no migration
+    - Fix any fixture that builds a `TimerState` literal
+    - _Requirements: 21.1, 21.2, 21.3, 21.4, 21.5, 21.6, 21.7, 21.8, 21.10_
+
+  - [x] 15.2 Write property test for the away cap
+    - File `src/library/__tests__/statsTimer.awayCap.property.test.ts`; at least 100 runs; split one away period into random ticks and repeated `away` signals (including 0 ms and very long ticks)
+    - **Property 9: Away seconds recorded per look-away never exceed 120**
+    - **Validates: Requirements 21.1, 21.2, 21.3, 21.4, 21.5**
+    - Report cases run and any counterexample; record counterexamples in `docs/BUILD_LOG.md`
+
+  - [x] 15.3 Record the change in the build log and the requirement notes
+    - Add a `docs/BUILD_LOG.md` entry: the 120 s cap, where it applies (`statsTimer.ts`), that saved data is not changed, that a look-away over 120 s still adds one to the look-away count, and the check against haunt-safety (break prompts are suggestions; leaving during a break is never a breach), library-v2 criteria 13 and 14, and the attention-signal pause behaviour (no change to the Attention_Module)
+    - Confirm the existing `stats.unit.test.ts` and `useStatsRecorder.unit.test.ts` still pass unchanged
+    - _Requirements: 21.6, 21.7, 21.9, 12.9_
+
+- [x] 16. Ghost unification and a smaller lurking ghost
+  - [x] 16.1 Add the Image_Layer to the Safety_Gate
+    - Add `setImage(name, fit)` to `VisualLayer` in `src/haunts/engine/types.ts` and implement it in the gate's layer and return-overlay code (`visualLayer.ts`, `returnVisual.ts`, `gatePort.ts`): build the picture only from `assetUrl('ghost', name)` (no request for a name outside `GHOST_ASSETS`), same-origin, no query; on an image error remove the picture and show nothing; leave `parseSvgMarkup` and its allowlist unchanged
+    - Add pure `src/haunts/engine/ghost/imageFit.ts` (`imageBox(step, visible, region)`: aspect kept, inside the region, strictly larger for a higher step, null under 48 px wide, unsafe sizes count as 0), reusing the `ghostBox` rules; the visible parts are 667 by 649 px for `ghost-standing.png` and 1269 by 768 px for `ghost-face.png`
+    - Keep every haunt-safety limit in the gate: Reduced_Motion fade of at least 1000 ms and no scale or position change, jump layers only in the Return_Moment, the Ghost outside the Reading_Column while away, the flash budget, no full-screen saturated red
+    - _Requirements: 22.5, 22.6, 22.7, 22.8_
+
+  - [x] 16.2 Use the images in `ghostFigure` and `jumpscare`
+    - `src/haunts/ghostFigure.ts`: the figure and the return-moment lingering ghost call `setImage('ghost-standing.png', …)` with `imageBox` sizing; nothing in Gentle; same label and removal on stop/end
+    - `src/haunts/jumpscare.ts`: Nightmare uses `ghost-face.png`, Classic uses `ghost-standing.png` at a smaller largest scale, each inside the 3000 ms Return_Moment and with the existing attack, fade and reduced-motion rules
+    - No cartoon fallback: a failed load shows no picture
+    - Find any other component still drawing the cartoon ghost (a search for `ghostArt` showed only these two haunts and `ghostFigure.ts`) and replace it the same way
+    - Write example tests: both haunts call the Image_Layer with the allowlisted names, no SVG ghost markup is produced, a failed load leaves no picture, Gentle draws nothing, `imageBox` stays inside the region and grows with the step; update `src/haunts/__tests__/ghostHaunts*.test.ts` only where they referred to `ghostArt`
+    - _Requirements: 22.1, 22.2, 22.3, 22.4, 22.8, 12.15_
+
+  - [x] 16.3 Remove the drawn ghost and measure the close-up
+    - Delete the drawing code in `src/haunts/engine/ghost/ghostArt.ts` (`ghostArt`, `body`, `eyes`, `detail`) and the tests that cover only that drawing; keep `ghostBox`, `MIN_GHOST_BOX_WIDTH` and their tests, moving them if the file name no longer fits; keep `staticScan.unit.test.ts` passing
+    - Measure the Red_Coverage of `ghost-face.png` at its largest rendered scale (red-eye pixels over viewport area, at most 15 percent) and record the number in `docs/BUILD_LOG.md`
+    - Do not edit any ghost-dread spec file
+    - _Requirements: 22.8, 22.10_
+
+  - [x] 16.4 Make the lurking ghost about 22% of the viewport height
+    - In `src/ui/shellEffects.ts` set `ghostHeightVh` to 22 and its comment to the allowed 20 to 24; update `src/ui/__tests__/ghostPlacement.unit.test.tsx` only where a test used the old height; every other Requirement 7 and 18 rule stays
+    - Check by hand in `?demo=1` that the ghost is smaller and still never covers a Control
+    - _Requirements: 22.9, 18.1, 18.2, 18.3, 13.8_
+
+- [x] 17. Final checkpoint - Run `tsc` and the full suite
+  - Run the type check and `npx vitest --run`, confirm Property 9 and all earlier property tests pass, and ask the user if questions arise
+
 ## Notes
 
+- Tasks 13 to 17 are appended after task 12 and run in order of their waves. Task 13 and task 15 do not depend on each other. Task 14 needs task 13 (the shared width). Task 16 needs only the earlier visual work. Task 15.2 is the one deliberate property test outside the Ledger and migration scope (Requirement 12.13); Property 9 runs at least 100 cases and its cases and any counterexample are reported and recorded in `docs/BUILD_LOG.md`.
+- Tests for tasks 13 to 16 are example tests only where behaviour changes (the Ledger values and structure, the haunts using the bundled images). Layout, card styling and drawing are checked by hand and recorded in `docs/BUILD_LOG.md`.
 - Task 12 is numbered last but runs before tasks 5 to 7, after task 11. It supersedes the "3 to 6 second" demo delay written in task 11.6, which stays as recorded history.
 - Task 11 is numbered last but runs before tasks 5 to 7. It touches only the visual layers from task 3, so it does not conflict with the data work. In the dependency graph below, its waves (6 to 8) are listed after the existing waves only because the existing wave entries are kept unchanged. Task 11 has no dependency on tasks 5 to 8, so run it first.
 - Order: demo-critical visuals (tasks 1-3) come first, then the data, calculator, Ledger and Séance work (tasks 5-8). The Ledger tab (task 7) needs the `wordsRead` field (task 5) and the calculator (task 6); the Séance tab (task 8) and the visuals (task 3) need the Shell frame (task 2.1).
@@ -239,7 +332,11 @@ Testing follows the design: property tests only for the Ledger calculations (Pro
     { "id": 6, "tasks": ["11.1"] },
     { "id": 7, "tasks": ["11.2", "11.3", "11.4", "11.5", "11.6"] },
     { "id": 8, "tasks": ["11.7"] },
-    { "id": 9, "tasks": ["12.1"] }
+    { "id": 9, "tasks": ["12.1"] },
+    { "id": 10, "tasks": ["13.1", "15.1", "16.1"] },
+    { "id": 11, "tasks": ["13.2", "14.1", "14.2", "14.3", "14.4", "15.2", "15.3", "16.2", "16.4"] },
+    { "id": 12, "tasks": ["14.5", "16.3"] },
+    { "id": 13, "tasks": ["17"] }
   ]
 }
 ```
