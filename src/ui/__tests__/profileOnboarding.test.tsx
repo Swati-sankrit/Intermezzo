@@ -69,7 +69,10 @@ const show = (store: DataStore) =>
     </DataStoreProvider>,
   );
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  localStorage.clear(); // the Shell saves the active tab
+});
 
 describe('profileOps', () => {
   it('rejects a 41-character name with the message and keeps the previous name', () => {
@@ -168,9 +171,8 @@ describe('Delete my profile', () => {
     const store = await storeWith(richModel(true));
     show(store);
     expect(await screen.findByRole('heading', { name: 'Welcome back, Mina' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
-    const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete my profile' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'The Séance' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete my profile' }));
     expect(screen.getByRole('heading', { name: 'Delete my profile?' })).toBeTruthy();
     return store;
   };
@@ -180,21 +182,22 @@ describe('Delete my profile', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('heading', { name: 'Delete my profile?' })).toBeNull();
     expect((await saved(store)).profile.displayName).toBe('Mina');
-    expect(screen.getByRole('heading', { name: 'Welcome back, Mina' })).toBeTruthy();
+    expect((screen.getByRole('textbox', { name: /your name/i }) as HTMLInputElement).value).toBe('Mina');
   });
 
   it('Escape cancels the confirmation, and keeps the profile', async () => {
     const store = await openConfirm();
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('heading', { name: 'Delete my profile?' })).toBeNull();
-    expect(screen.getByRole('dialog')).toBeTruthy(); // settings still open
+    expect(screen.getByRole('heading', { name: 'The Séance' })).toBeTruthy(); // the tab stays open
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Delete my profile' })); // focus returns to its opener
     expect((await saved(store)).profile).toEqual(richModel(true).profile);
   });
 
   it('confirm shows onboarding again and keeps books, shelves, positions, stats and daily', async () => {
     const store = await openConfirm();
     const before = richModel(true);
-    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete my profile' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete my profile' })[0]);
     expect(await screen.findByRole('region', { name: /your name and candle/i })).toBeTruthy();
     await waitFor(async () => expect((await saved(store)).profile).toEqual(EMPTY_DATA_MODEL.profile));
     const after = await saved(store);

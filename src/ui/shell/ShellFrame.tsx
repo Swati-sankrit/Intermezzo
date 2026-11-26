@@ -12,6 +12,8 @@ import type { DataModel } from '../../library/model';
 import { localDateString } from '../../library/statsSelectors';
 import { panelId, tabId, TabBar } from './TabBar';
 import { loadShellTab, saveShellTab, SHELL_TAB_NAMES, type ShellTabName } from './tabStorage';
+import { clearShellData } from './clearShellData';
+import { SeanceTab, type SeanceTabProps } from './SeanceTab';
 import './ShellFrame.css';
 
 export interface ShellFrameProps {
@@ -29,14 +31,12 @@ export interface ShellFrameProps {
   model?: DataModel;
   /** Today's Local_Date for the Ledger. Defaults to the device's date. */
   today?: string;
+  /** What the Séance needs. Leave it out and the Séance panel stays empty. */
+  seance?: SeanceTabProps;
 }
 
-const PLACEHOLDERS: Record<'seance', string> = {
-  seance: 'The Séance is coming soon.',
-};
-
 /** Owns the active tab and shows the Tab_Bar with one Tab_Panel per tab. */
-export function ShellFrame({ library, initialTab, onTabChange, candleColour, effects = shellEffects, model, today }: ShellFrameProps) {
+export function ShellFrame({ library, initialTab, onTabChange, candleColour, effects = shellEffects, model, today, seance }: ShellFrameProps) {
   const looks = drawnLooks(effects);
   const s = effects.strengths;
   // Read by LitCover.css so the cover dimming comes from shellEffects.ts alone.
@@ -47,6 +47,17 @@ export function ShellFrame({ library, initialTab, onTabChange, candleColour, eff
     '--light-radius': `${s.lightRadiusPx}px`,
   } as CSSProperties;
   const [active, setActive] = useState<ShellTabName>(() => initialTab ?? loadShellTab());
+
+  // Bumped after a successful "Clear my data" so the Séance remounts showing the defaults.
+  const [seanceKey, setSeanceKey] = useState(0);
+  const clearData = async () => {
+    const ok = (await seance?.onClearData()) ?? false;
+    if (ok) {
+      clearShellData();
+      setSeanceKey((k) => k + 1);
+    }
+    return ok;
+  };
 
   const change = (tab: ShellTabName) => {
     setActive(tab);
@@ -77,7 +88,7 @@ export function ShellFrame({ library, initialTab, onTabChange, candleColour, eff
         >
           {tab === 'library' && library}
           {tab === 'ledger' && <LedgerTab model={model} today={today ?? localDateString(new Date())} />}
-          {tab === 'seance' && <p className="shell-frame__placeholder">{PLACEHOLDERS[tab]}</p>}
+          {tab === 'seance' && seance && <SeanceTab key={seanceKey} {...seance} onClearData={clearData} />}
         </div>
       ))}
       </div>

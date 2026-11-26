@@ -89,6 +89,14 @@ The 16 catalogue books and their covers come from [Standard Ebooks](https://stan
 | `public/covers/the-invisible-man.webp` | Cover image from the same Standard Ebooks edition, resized to at most 400 px wide and converted to WebP by `scripts/fetch-catalogue.mjs` | Standard Ebooks, CC0 1.0 public domain dedication (the underlying work is in the public domain) |
 | `public/covers/the-adventures-of-sherlock-holmes.webp` | Cover image from the same Standard Ebooks edition, resized to at most 400 px wide and converted to WebP by `scripts/fetch-catalogue.mjs` | Standard Ebooks, CC0 1.0 public domain dedication (the underlying work is in the public domain) |
 
+## Sources
+
+Brysbaert, M. (2019). How many words do we read per minute? A review and meta-analysis of reading rate. Journal of Memory and Language, 109, 104047.
+
+This paper supports the typical adult reading speeds shown in The Ledger (238 wpm for non-fiction, 260 wpm for fiction).
+
+The haunted-shell spec added no new dependencies and no new files in `public/ghosts/` or `public/sounds/`, so the tables above are unchanged.
+
 ---
 
 Currently, two official plugins are available:

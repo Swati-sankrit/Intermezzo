@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LIBRARY_MESSAGES as MSG } from './libraryMessages';
 import './theme.css';
 import './LibraryScreen.css';
-import './ProfileSettings.css';
+import './shell/SeanceTab.css';
 
 export interface ClearDataConfirmProps {
   /** Resolves true when everything was deleted. */

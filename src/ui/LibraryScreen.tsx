@@ -1,15 +1,13 @@
-import { useCallback, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useMemo, useRef, type ChangeEvent } from 'react';
 import { ErrorBanner } from './ErrorBanner';
 import { CatalogueGrid } from './CatalogueGrid';
 import { ContinueCard } from './ContinueCard';
 import { OpenOwnBook } from './OpenOwnBook';
-import { ProfileSettings } from './ProfileSettings';
 import { ShelfView } from './ShelfView';
 import { Skeleton } from './Skeleton';
 import { WelcomeHeader } from './WelcomeHeader';
 import type { OpenStatus } from './readerState';
 import type { useLibrary } from './useLibrary';
-import { useProfileActions } from './useProfileActions';
 import './theme.css';
 import './LibraryScreen.css';
 
@@ -45,9 +43,6 @@ export function LibraryScreen({
   const reopenInput = useRef<HTMLInputElement>(null);
   const reopenFor = useRef<string | null>(null);
   const { model, status, catalogue, currentBook } = lib;
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const closeSettings = useCallback(() => setSettingsOpen(false), []);
-  const profileActions = useProfileActions(lib.updateModel);
 
   const progress = useMemo(
     () => Object.fromEntries(Object.entries(model.positions).map(([id, p]) => [id, p.progress])),
@@ -71,25 +66,7 @@ export function LibraryScreen({
       <WelcomeHeader
         displayName={model.profile.displayName}
         candleColour={model.profile.candleColour}
-        actions={
-          <button
-            type="button"
-            className="icon-button"
-            aria-label="Settings"
-            disabled={status !== 'ready'}
-            onClick={() => setSettingsOpen(true)}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" />
-              <circle cx="12" cy="12" r="6.5" />
-            </svg>
-          </button>
-        }
       />
-      {settingsOpen && (
-        <ProfileSettings profile={model.profile} actions={profileActions} message={lib.message} onClearData={lib.clearAllData} onClose={closeSettings} />
-      )}
       <ErrorBanner error={open.failure === 'epub' ? open.error : null} />
       {open.failure === 'epub' && (
         <button type="button" className="library__button btn-quiet" onClick={onBack}>

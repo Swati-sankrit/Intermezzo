@@ -65,6 +65,13 @@ describe('README asset table', () => {
     expect(new Set(names).size).toBe(names.length)
   })
 
+  it('cites the Brysbaert (2019) reading-rate source', () => {
+    const text = readFileSync(join(ROOT, 'README.md'), 'utf8')
+    expect(text).toContain(
+      'Brysbaert, M. (2019). How many words do we read per minute? A review and meta-analysis of reading rate. Journal of Memory and Language, 109, 104047.',
+    )
+  })
+
   it('ignores dotfiles such as .DS_Store', () => {
     expect(presentFiles().some((f) => f.split('/').pop()!.startsWith('.'))).toBe(false)
   })

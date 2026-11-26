@@ -144,8 +144,8 @@ Testing follows the design: property tests only for the Ledger calculations (Pro
     - Empty-state text and condition, progressbar attributes, Measured_Pace and fallback branches, below/near/above boundaries, 20-mark cap, book and paragraph counts, `clampDailyGoalMinutes` boundaries, and `rod_daily_goal` write then read
     - _Requirements: 12.4, 8.19_
 
-- [ ] 8. Build The Séance tab and remove the gear dialog
-  - [-] 8.1 Create `src/ui/shell/SeanceTab.tsx` and `volumeCap.ts`
+- [x] 8. Build The Séance tab and remove the gear dialog
+  - [x] 8.1 Create `src/ui/shell/SeanceTab.tsx` and `volumeCap.ts`
     - Move the `ProfileSettings.tsx` content into the tab (name with 40-char limit, six-colour radio group, pace-guide checkbox, delete profile, clear data with `ClearDataConfirm`), using `useProfileActions` and `lib.clearAllData`; keep focus-to-first-control and Escape-to-cancel on confirmations; disable Profile controls while loading; keep the `role="alert"` save-failure message
     - Haunt_Mode radio group through `useHauntSettings()` (descriptions of at most 120 characters)
     - Camera choice through `loadChoice`/`saveChoice` only, with the on-device privacy note and the "browser asks when the next book opens" wording; neither option selected when unanswered; import no camera, detector or video code
@@ -155,17 +155,17 @@ Testing follows the design: property tests only for the Ledger calculations (Pro
     - Wire `SeanceTab` into `ShellFrame`
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 2.13, 2.14, 2.15, 2.16, 2.17, 2.18, 2.19, 2.20, 2.21, 2.22, 2.23_
 
-  - [ ] 8.2 Write example tests for the Séance tab
+  - [x] 8.2 Write example tests for the Séance tab
     - Haunt_Mode write through the store, camera choice write through `saveChoice`, Volume_Cap writes 0-1 and falls back to 40%, privacy note text, delete and clear confirmations, clear also removes the three shell keys, gear button and dialog gone from `LibraryScreen`
     - _Requirements: 12.4_
 
-- [ ] 9. Add the pace citation to the README
-  - [ ] 9.1 Add a "Sources" section to `README.md` with the Pace_Source citation
+- [x] 9. Add the pace citation to the README
+  - [x] 9.1 Add a "Sources" section to `README.md` with the Pace_Source citation
     - Add the citation verbatim: Brysbaert, M. (2019). How many words do we read per minute? A review and meta-analysis of reading rate. Journal of Memory and Language, 109, 104047.
     - Add one example assertion to `src/__tests__/readmeAssets.unit.test.ts` that the README contains it
     - _Requirements: 11.14_
 
-- [ ] 10. Final checkpoint - Ensure all tests pass
+- [x] 10. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 11. Visual revision (run before tasks 5–7)

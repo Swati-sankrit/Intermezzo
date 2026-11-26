@@ -75,7 +75,8 @@ export function LibraryShell() {
     if (stored) open(stored);
   };
 
-  const { onboardingEnded, finishOnboarding } = useProfileActions(lib.updateModel);
+  const profileActions = useProfileActions(lib.updateModel);
+  const { onboardingEnded, finishOnboarding } = profileActions;
   const showOnboarding = lib.status === 'ready' && !lib.model.profile.onboardingCompleted;
   const unsavedNotice = onboardingEnded && lib.message === MSG.profileSaveFailed ? MSG.onboardingNotSaved : null;
 
@@ -117,6 +118,13 @@ export function LibraryShell() {
         <ShellFrame
           candleColour={lib.model.profile.candleColour}
           model={lib.status === 'ready' ? lib.model : undefined}
+          seance={{
+            profile: lib.model.profile,
+            actions: profileActions,
+            message: lib.message,
+            loading: lib.status !== 'ready',
+            onClearData: lib.clearAllData,
+          }}
           initialTab={lastTab.current}
           onTabChange={(tab) => {
             lastTab.current = tab;

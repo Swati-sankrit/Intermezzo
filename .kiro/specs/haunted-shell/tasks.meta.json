@@ -463,6 +463,61 @@
         "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
         "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
         "timestamp": 1795673633388
+      },
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795674224217
+      }
+    ],
+    "8.2 Write example tests for the Séance tab": [
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795674224284
+      },
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795674521876
+      }
+    ],
+    "8. Build The Séance tab and remove the gear dialog": [
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795674521920
+      }
+    ],
+    "9.1 Add a \"Sources\" section to `README.md` with the Pace_Source citation": [
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795674521976
+      },
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795674586996
+      }
+    ],
+    "9. Add the pace citation to the README": [
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795674587019
+      }
+    ],
+    "10. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795674587573
+      },
+      {
+        "executionId": "ba0340e3-44a9-421b-a4b4-f4e99a07571f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795674774398
       }
     ]
   }
