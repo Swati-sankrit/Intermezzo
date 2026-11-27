@@ -348,6 +348,7 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 14. THE Library_App SHALL include example tests that the Ledger dashboard keeps the same values and text as before (existing Ledger_Tab tests change only where they depend on the DOM structure), that the Look-aways card has 7 columns with today marked, and that the moon row marks today and keeps a text alternative per day.
 15. THE Library_App SHALL include example tests that `ghostFigure` and `jumpscare` show a Ghost_Image through the Image_Layer (`ghost-standing.png` for the figure, `ghost-face.png` for the Nightmare close-up), that no drawn SVG ghost markup is produced, and that a failed image load shows no cartoon ghost.
 16. THE Library_App SHALL NOT include tests for the pure look of the responsive layout, the card styling, the Pace_Bar or the Progress_Ring drawing.
+17. THE Library_App SHALL include one example test for the Focus card line "N look-aways today" covering a count of 0, 1 and N (Requirement 23 criteria 5 to 8), and no other test for Requirement 23, whose accent colour, centring and gauge size are checked by tooling or by hand.
 
 ### Requirement 13: Effect options file
 
@@ -511,3 +512,18 @@ Visual rules follow the steering files `design.md` and `haunt-safety.md`: colour
 8. THE Library_App SHALL keep every haunt-safety rule: Gentle draws no ghost and no Image_Layer, jump effects happen only in the Return_Moment, the Ghost_Image is removed when the Return_Moment ends so the text is fully readable, the Ghost has a text label for screen readers and takes no keyboard focus, no full-screen saturated red flash occurs, and the Red_Coverage of `ghost-face.png` at its largest scale stays at or below 15 percent of the viewport (ghost-dread Requirement 15 criterion 6), checked once by measurement and recorded in `docs/BUILD_LOG.md`.
 9. THE Lurking_Ghost SHALL be drawn at about 22 percent of the viewport height, set by `ghostHeightVh` in `src/ui/shellEffects.ts`, with every other rule of Requirements 7 and 18 unchanged.
 10. THE Library_App SHALL remove the drawn-ghost code and its tests that are no longer used, and SHALL keep the pure region-fitting code that still serves the Image_Layer.
+
+### Requirement 23: Browser-check polish
+
+**User Story:** As a reader, I want the form controls, the page centring and the Focus card to look right in the browser, so that the shell feels finished at every window width.
+
+#### Acceptance Criteria
+
+1. THE Library_App SHALL set `accent-color: var(--accent)` in one global rule of the shared stylesheet for radio buttons, checkboxes and range sliders, using theme colours only, so that each control keeps a contrast ratio of at least 3:1 against its background and a visible focus ring.
+2. WHILE the window is 1440 px or 2000 px wide, THE Library_App SHALL place the Tab_Bar and the content block of the Library_Tab, the Ledger_Tab and the Seance_Tab on the same horizontal centre, with no horizontal scroll in the document.
+3. WHILE the window is 1440 px or 2000 px wide, THE Seance_Tab SHALL start its heading at the left edge of its content block.
+4. THE Focus card SHALL draw its two Candle_Gauges large enough to fill the height of the card, and SHALL keep the text score, the text alternative, the 4.5:1 text contrast and the 360 px layout.
+5. THE Focus card SHALL show under the Candle_Gauges the line "N look-aways today", where N is the existing look-away count for Today.
+6. WHEN the look-away count for Today is 1, THE Focus card SHALL show the text "1 look-away today".
+7. WHEN the look-away count for Today is 0, THE Focus card SHALL show the text "0 look-aways today".
+8. WHEN the look-away count for Today is 2 or more, THE Focus card SHALL show the count followed by " look-aways today".

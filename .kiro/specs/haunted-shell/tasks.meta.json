@@ -737,6 +737,86 @@
         "executionId": "40dcbce6-f513-4d0c-adf5-a9eaad269519",
         "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
         "timestamp": 1795688561490
+      },
+      {
+        "executionId": "b9d3a0f1-6578-4f72-a2c0-e044d2a437af",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795758928680
+      },
+      {
+        "executionId": "b9d3a0f1-6578-4f72-a2c0-e044d2a437af",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795759364443
+      },
+      {
+        "executionId": "b9d3a0f1-6578-4f72-a2c0-e044d2a437af",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795767330633
+      }
+    ],
+    "18. Coverage-floor sweep": [
+      {
+        "executionId": "b9d3a0f1-6578-4f72-a2c0-e044d2a437af",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795767330696
+      }
+    ],
+    "19.1 Form controls use the accent colour": [
+      {
+        "executionId": "b9d3a0f1-6578-4f72-a2c0-e044d2a437af",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795767330874
+      },
+      {
+        "executionId": "b9d3a0f1-6578-4f72-a2c0-e044d2a437af",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795767574925
+      }
+    ],
+    "19.3 Larger Focus card gauges and the look-aways line": [
+      {
+        "executionId": "b9d3a0f1-6578-4f72-a2c0-e044d2a437af",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795767575362
+      },
+      {
+        "executionId": "b9d3a0f1-6578-4f72-a2c0-e044d2a437af",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795768118923
+      }
+    ],
+    "19.2 Centre the content and the tab bar on one axis": [
+      {
+        "executionId": "b9d3a0f1-6578-4f72-a2c0-e044d2a437af",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795768119394
+      },
+      {
+        "executionId": "68bfa8bf-efab-4124-aedb-e84c66cfe460",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795774854988
+      },
+      {
+        "executionId": "282e745f-58e3-4d9c-acc7-7dc61c102984",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795777251883
+      },
+      {
+        "executionId": "282e745f-58e3-4d9c-acc7-7dc61c102984",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795777257692
+      },
+      {
+        "executionId": "282e745f-58e3-4d9c-acc7-7dc61c102984",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795779642957
+      }
+    ],
+    "19. Browser-check polish": [
+      {
+        "executionId": "282e745f-58e3-4d9c-acc7-7dc61c102984",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795779643015
       }
     ]
   }

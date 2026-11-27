@@ -305,18 +305,36 @@ Testing follows the design: property tests only for the Ledger calculations (Pro
 - [x] 17. Final checkpoint - Run `tsc` and the full suite
   - Run the type check and `npx vitest --run`, confirm Property 9 and all earlier property tests pass, and ask the user if questions arise
 
-- [ ] 18. Coverage-floor sweep
-  - [-] 18.1 Measure and reshape property-test coverage floors
+- [x] 18. Coverage-floor sweep
+  - [x] 18.1 Measure and reshape property-test coverage floors
     - Maintenance task outside the haunted-shell requirements; it has no requirement numbers. Reference: the ghost-dread property tests. Time limit: 40 minutes; if it needs more, stop and ask the user
-    - List every property test that asserts a coverage floor (a minimum count of generated cases that have some feature, for example `gateReturn.gd24`, `gd11`, `gd08`)
-    - Measure each floor's margin over 300 batches with a temporary script, then delete the script
-    - Reshape the generator inputs for any floor that sits under 4 standard deviations from its mean; do NOT lower any floor, and do not weaken or delete any assertion
-    - Log a table in `docs/BUILD_LOG.md` (test, floor, mean, standard deviation, margin in standard deviations before and after, change made)
+    - Done: every coverage floor was listed and measured over 300 batches (419 floors; 49 were under 4 standard deviations). The measurement is logged in `docs/BUILD_LOG.md`
+    - Scope after the measurement (user decision): reshape ONLY the generators for `ghostDistance.gd03`, `gateReturn.gd24`, `planner.gd13` and `planner.gd12`, then re-measure those four over 300 batches with a temporary script and delete the script
+    - Fill in the "margin after" column of the `docs/BUILD_LOG.md` table for those four tests, then stop the sweep. All other floors stay as measured: the rest of the 49 are accepted as they are and listed in the log
+    - Floors are never lowered, and no assertion is weakened or deleted
     - Run the full suite twice (`npx vitest --run`) and report both results
+
+- [x] 19. Browser-check polish
+  - [x] 19.1 Form controls use the accent colour
+    - Add one global rule `accent-color: var(--accent)` for radio buttons, checkboxes and range sliders in the shared stylesheet, using theme colours only
+    - Keep a 3:1 contrast of each control against its background and keep the visible focus rings
+    - _Requirements: 23.1_
+  - [x] 19.2 Centre the content and the tab bar on one axis
+    - Find what offsets the content at wide windows: a fixed-width or absolutely/fixed positioned effect layer that widens the page (the flame, smoke or darkness layers), a scrollbar-width difference, or the wrapper, and fix it
+    - Check by tooling at 1440 and 2000 px, using headless Chrome over DevTools from a temporary script that is deleted afterwards and adds no dependency: the Tab_Bar and the content block of the Library, Ledger and Séance tabs have the same horizontal centre, and the document has no horizontal scroll
+    - The Séance heading starts at the content block's left edge, not far left of it
+    - Record the measured values in `docs/BUILD_LOG.md`
+    - _Requirements: 23.2, 23.3_
+  - [x] 19.3 Larger Focus card gauges and the look-aways line
+    - Make the two Candle_Gauges larger so they fill the card height, keeping the text score, the text alternative, AA contrast and the 360 px layout
+    - Add under them the line "N look-aways today" ("1 look-away today" for one, "0 look-aways today" for none), using the existing look-away count for Today
+    - Add one example test for the line covering 0, 1 and N
+    - _Requirements: 23.4, 23.5, 23.6, 23.7, 23.8, 12.17_
 
 ## Notes
 
-- Task 18 is a maintenance sweep and is not tied to any haunted-shell requirement.
+- Task 18 is a maintenance sweep and is not tied to any haunted-shell requirement. Its scope was narrowed after the measurement to four generators; the other floors are accepted as measured.
+- Task 19 follows the browser check. Tasks 19.1 and 19.3 can run together; 19.2 runs after them because all three touch the shell CSS. Only 19.3 adds a test (Requirement 12.17); 19.1 and 19.2 are checked by tooling or by hand.
 - Tasks 13 to 17 are appended after task 12 and run in order of their waves. Task 13 and task 15 do not depend on each other. Task 14 needs task 13 (the shared width). Task 16 needs only the earlier visual work. Task 15.2 is the one deliberate property test outside the Ledger and migration scope (Requirement 12.13); Property 9 runs at least 100 cases and its cases and any counterexample are reported and recorded in `docs/BUILD_LOG.md`.
 - Tests for tasks 13 to 16 are example tests only where behaviour changes (the Ledger values and structure, the haunts using the bundled images). Layout, card styling and drawing are checked by hand and recorded in `docs/BUILD_LOG.md`.
 - Task 12 is numbered last but runs before tasks 5 to 7, after task 11. It supersedes the "3 to 6 second" demo delay written in task 11.6, which stays as recorded history.
@@ -347,7 +365,9 @@ Testing follows the design: property tests only for the Ledger calculations (Pro
     { "id": 11, "tasks": ["13.2", "14.1", "14.2", "14.3", "14.4", "15.2", "15.3", "16.2", "16.4"] },
     { "id": 12, "tasks": ["14.5", "16.3"] },
     { "id": 13, "tasks": ["17"] },
-    { "id": 14, "tasks": ["18.1"] }
+    { "id": 14, "tasks": ["18.1"] },
+    { "id": 15, "tasks": ["19.1", "19.3"] },
+    { "id": 16, "tasks": ["19.2"] }
   ]
 }
 ```

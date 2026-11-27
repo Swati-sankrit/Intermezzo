@@ -36,6 +36,11 @@ function LedgerSkeleton() {
   );
 }
 
+/** "0 look-aways today", "1 look-away today", "N look-aways today". */
+function lookAwaysToday(count: number): string {
+  return `${count} ${count === 1 ? 'look-away' : 'look-aways'} today`;
+}
+
 /** The Ledger: focus, look-aways, moons, totals, pace and the daily goal. */
 export function LedgerTab({ model, today }: LedgerTabProps) {
   const [goal, setGoal] = useState(loadDailyGoal);
@@ -63,7 +68,7 @@ export function LedgerTab({ model, today }: LedgerTabProps) {
   return (
     <div className="ledger">
       <div className="ledger__top">
-        <section className="ledger-card" aria-labelledby="ledger-focus-h">
+        <section className="ledger-card ledger-card--focus" aria-labelledby="ledger-focus-h">
           <h3 id="ledger-focus-h">Focus</h3>
           <div className="ledger-gauges">
             <CandleGauge
@@ -73,6 +78,7 @@ export function LedgerTab({ model, today }: LedgerTabProps) {
             />
             <CandleGauge size="large" label="Last 7 days" score={sevenDayFocusScore(week)} />
           </div>
+          <p className="ledger-lookaways">{lookAwaysToday(todayStats.lookAwayCount)}</p>
         </section>
         <PaceSection pace={pace} />
         <GoalSection goal={goal} onGoalChange={setGoal} todaySeconds={todayStats.activeReadingSeconds} />

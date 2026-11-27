@@ -1325,18 +1325,18 @@ Method: a temporary vitest alias recorded every coverage assertion (actual count
 
 | Test | Feature | Floor | Mean | SD | Margin before (SD) | Change | Margin after |
 |---|---|---|---|---|---|---|---|
-| ghostDistance.gd03 | nan | 0.0100 | 0.0217 | 0.0046 | 2.56 | none | not measured |
-| gateReturn.gd24 | scripts with: staleLayerOp | 120.00 | 145.04 | 9.15 | 2.74 | none | not measured |
-| planner.gd13 | roll:low | 50.00 | 71.88 | 7.91 | 2.77 | none | not measured |
-| planner.gd12 | long | 63.00 | 86.30 | 7.90 | 2.95 | none | not measured |
-| gateReturn.gd24 | scripts with: secondBegin | 112.00 | 141.41 | 9.75 | 3.02 | none | not measured |
+| ghostDistance.gd03 | nan | 0.0100 | 0.0217 | 0.0046 | 2.56 | gd03 `countArb`: second constantFrom branch weight 1 to 6, NaN listed twice, 2.5 added | 8.12 |
+| gateReturn.gd24 | scripts with: staleLayerOp | 120.00 | 145.04 | 9.15 | 2.74 | gd24 scripts: touch bool(9), moment block weight 10, normal 4, free 2 | 4.80 |
+| planner.gd13 | roll:low | 50.00 | 71.88 | 7.91 | 2.77 | gd13 `anyAwayArb`: qualifying weight 8 to 19 | 4.29 |
+| planner.gd12 | long | 63.00 | 86.30 | 7.90 | 2.95 | gd12 steady and switching arrays: `size: 'large'` | 14.44 |
+| gateReturn.gd24 | scripts with: secondBegin | 112.00 | 141.41 | 9.75 | 3.02 | same, and second begin bool(3) | 10.71 |
 | registry.gd22 | duplicate id | 90.00 | 116.72 | 8.74 | 3.06 | none | not measured |
-| planner.gd13 | roll:mid | 69.00 | 95.76 | 8.48 | 3.16 | none | not measured |
-| planner.gd13 | roll:high | 49.00 | 72.80 | 7.54 | 3.16 | none | not measured |
+| planner.gd13 | roll:mid | 69.00 | 95.76 | 8.48 | 3.16 | same | 5.28 |
+| planner.gd13 | roll:high | 49.00 | 72.80 | 7.54 | 3.16 | same | 4.38 |
 | registry.gd22 | valid effect | 120.00 | 146.02 | 7.84 | 3.32 | none | not measured |
-| ghostDistance.gd03 | infinite | 0.0200 | 0.0434 | 0.0070 | 3.36 | none | not measured |
+| ghostDistance.gd03 | infinite | 0.0200 | 0.0434 | 0.0070 | 3.36 | same | 7.13 |
 | gateCap.p14 | combo footsteps+knock | 2.00 | 19.66 | 5.17 | 3.41 | none | not measured |
-| planner.gd13 | mid-only-nightmare | 16.00 | 35.57 | 5.73 | 3.41 | none | not measured |
+| planner.gd13 | mid-only-nightmare | 16.00 | 35.57 | 5.73 | 3.41 | same | 4.29 |
 | settings.gd01 | migrate | 9.00 | 24.92 | 4.60 | 3.46 | none | not measured |
 | dialogOrder.p19 | choice 'unanswered' | 109.00 | 148.38 | 11.39 | 3.46 | none | not measured |
 | gateCap.p14 | combo whispers+breathing | 2.00 | 19.58 | 5.05 | 3.48 | none | not measured |
@@ -1344,7 +1344,7 @@ Method: a temporary vitest alias recorded every coverage assertion (actual count
 | gateCap.p14 | combo candle | 2.00 | 17.41 | 4.21 | 3.66 | none | not measured |
 | dialogOrder.p19 | other string choice | 109.00 | 150.27 | 11.27 | 3.66 | none | not measured |
 | plan.p11 | infinite | 15.00 | 36.47 | 5.85 | 3.67 | none | not measured |
-| planner.gd12 | bind:classic | 114.00 | 148.74 | 9.38 | 3.70 | none | not measured |
+| planner.gd12 | bind:classic | 114.00 | 148.74 | 9.38 | 3.70 | same | 6.81 |
 | gateCap.p14 | combo whispers+knock | 2.00 | 19.14 | 4.59 | 3.73 | none | not measured |
 | gateCap.p14 | ensemble: jumpReducedRan | 17.00 | 42.37 | 6.78 | 3.74 | none | not measured |
 | gateCap.p14 | combo knock+whispers | 2.00 | 19.78 | 4.75 | 3.74 | none | not measured |
@@ -1364,8 +1364,8 @@ Method: a temporary vitest alias recorded every coverage assertion (actual count
 | gateCap.p14 | combo footsteps | 2.00 | 17.46 | 4.01 | 3.86 | none | not measured |
 | ghostBox.gd05 | nonFinite | 0.0500 | 0.0865 | 0.0094 | 3.88 | none | not measured |
 | gateCap.p14 | combo knock | 2.00 | 17.31 | 3.94 | 3.89 | none | not measured |
-| planner.gd12 | bind:nightmare | 67.00 | 99.28 | 8.28 | 3.90 | none | not measured |
-| ghostDistance.gd03 | each[2] | 0.0200 | 0.0464 | 0.0068 | 3.90 | none | not measured |
+| planner.gd12 | bind:nightmare | 67.00 | 99.28 | 8.28 | 3.90 | same | 7.81 |
+| ghostDistance.gd03 | each[2] | 0.0200 | 0.0464 | 0.0068 | 3.90 | same | 9.83 |
 | planner.gd10 | mode:classic | 118.00 | 150.43 | 8.26 | 3.93 | none | not measured |
 | levelLogic.p05 | zero | 0.1000 | 0.1897 | 0.0228 | 3.94 | none | not measured |
 | gateCap.p14 | combo ghostFigure+whispers | 2.00 | 20.25 | 4.63 | 3.94 | none | not measured |
@@ -1374,6 +1374,19 @@ Method: a temporary vitest alias recorded every coverage assertion (actual count
 | planner.gd09 | rolls:would-scare-in-nightmare | 88.00 | 122.49 | 8.66 | 3.98 | none | not measured |
 | gateCap.p14 | combo breathing | 2.00 | 16.94 | 3.74 | 3.99 | none | not measured |
 | registry.gd22 | valid haunt | 120.00 | 155.11 | 8.78 | 4.00 | none | not measured |
+
+### Reshaping result for the four files (task 18.1, closing)
+Method: the real generators were measured with a temporary vitest file (the arbitraries were exported temporarily, then un-exported; every temporary file is deleted). Batches: gd03 300, gd12 300, gd13 300, gd24 300 (400 scripts each). Only input generators changed; no floor was lowered, no numRuns changed, no assertion touched. The lowest margin per file after the change:
+
+| Test | Floors | Batches | Lowest margin after (SD) | Floor with lowest margin |
+|---|---|---|---|---|
+| ghostDistance.gd03 | 10 | 300 | 6.29 | each[3] |
+| gateReturn.gd24 | 22 | 300 | 4.80 | staleLayerOp |
+| planner.gd13 | 6 | 300 | 4.29 | roll:low, mid-only-nightmare |
+| planner.gd12 | 6 | 300 | 4.96 | mode-change |
+
+Affected floors that were not in the table above (margin before measured with the unchanged generators in this session, then after): gd12 `mode-change` 4.28 to 4.96, `zero-run` 5.95 to 5.80, `interleaved` 5.17 to 10.78 (before values are from the pre-change run in this session); gd13 `history:blocks-classic-only` 4.43 to 5.75 and `history:blocks-both` 5.34 to 5.64; gd24 `disposeMid` 4.91 and `outGhost` 5.37 after (no before value recorded for them; `disposeMid` fell to 0.38 in one trial that lowered the dispose ending weight, which was reverted).
+The sweep is closed. The other 37 floors under 4 SD (gateCap.p14, dialogOrder.p19, reducedMotion.p15, registry.gd22, settings.gd01, levelLogic.p05, plan.p10, plan.p11, planner.gd09, planner.gd10, planner.gd11, ghostBox.gd05 and the rest of the table) are accepted as measured.
 
 ### Every test file with coverage floors
 
@@ -1413,3 +1426,7 @@ Method: a temporary vitest alias recorded every coverage assertion (actual count
 | returnRules.gd26 | 49 | 300 | 9.91 | 0 |
 | settings.gd01 | 11 | 300 | 3.46 | 1 |
 | spatial.gd06 | 12 | 300 | 6.18 | 0 |
+
+## haunted-shell, task 19.2: centre axis, closed (not measured)
+
+The user saw content left of centre at about 2000 px in a real browser. The investigation run was cancelled before taking any measurements, so the offset was not measured. The only measurements on record are from tasks 13.2 and 14.5, where document scrollWidth equalled the viewport at 1440, 1024, 768, 390 and 360 px on all three tabs. 2000 px and the horizontal centres were never measured. Closed by the user's decision with one change: `scrollbar-gutter: stable both-edges` on the root. Re-check at 2000 px in a real browser.

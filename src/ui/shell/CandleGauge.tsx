@@ -18,7 +18,7 @@ export function CandleGauge({ label, score, size = 'normal' }: CandleGaugeProps)
   const text = lit ? `${score}% focus` : 'No reading yet';
   const alt = lit ? `${label}: candle showing ${score}% focus` : `${label}: candle unlit, no reading yet`;
   return (
-    <figure className="ledger-gauge">
+    <figure className={size === 'large' ? 'ledger-gauge ledger-gauge--large' : 'ledger-gauge'}>
       <svg viewBox="0 0 40 64" width={svgWidth} height={svgHeight} role="img" aria-label={alt} focusable="false">
         <rect x="11" y={TOP} width="18" height={BOTTOM - TOP} rx="2" fill="none" stroke="currentColor" strokeOpacity="0.4" />
         {lit && (

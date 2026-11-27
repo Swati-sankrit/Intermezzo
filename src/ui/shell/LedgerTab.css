@@ -114,6 +114,36 @@
   color: var(--text);
 }
 
+/* Focus card: a column, so the gauges take the height the taller sibling cards set. */
+.ledger-card--focus {
+  display: flex;
+  flex-direction: column;
+}
+
+.ledger-card--focus .ledger-gauges {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.ledger-gauge--large {
+  min-width: 0;
+}
+
+/* The candle fills the figure height (never below its 96 px base) and keeps its proportions. */
+.ledger-gauge--large svg {
+  flex: none;
+  width: auto;
+  height: 100%;
+  min-height: 96px;
+  aspect-ratio: 40 / 64;
+}
+
+.ledger-lookaways {
+  margin: 0.75rem 0 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
 .ledger-gauge__label,
 .ledger-gauge__score {
   display: block;

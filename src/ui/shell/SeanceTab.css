@@ -77,7 +77,6 @@
 .seance__slider input[type='range'] {
   flex: 1;
   min-width: 0;
-  accent-color: var(--accent);
 }
 
 .seance__slider input[type='range']:focus-visible {

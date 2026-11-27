@@ -71,13 +71,13 @@ const STALE_SWEEP: Action[] = Array.from({ length: 5 }, (_, i): Action => ({ k: 
 /** One whole Return_Moment: begin, ports and overlays, some time, then one of several ways to end. */
 const momentArb: fc.Arbitrary<Action[]> = fc.record({
   jump: bool(8),
-  second: bool(1),
+  second: bool(3),
   kinds: fc.array(kindArb, { minLength: 1, maxLength: 4 }),
   glitch: bool(3),
   reduced: bool(2),
   pre: fc.constantFrom(0, 0, 10, 500, 2000, 2900, 2999),
   toggle: bool(5),
-  touch: bool(8),
+  touch: bool(9),
   again: bool(4),
   ending: fc.oneof(
     { weight: 6, arbitrary: fc.record({ t: fc.constant('end' as const), ms: fadeArb, wait: stepArb }) },
@@ -143,10 +143,10 @@ const normalArb: fc.Arbitrary<Action[]> = fc.record({
 });
 
 const blockArb: fc.Arbitrary<Action[]> = fc.oneof(
-  { weight: 9, arbitrary: momentArb },
+  { weight: 10, arbitrary: momentArb },
   { weight: 3, arbitrary: staleArb },
-  { weight: 3, arbitrary: normalArb },
-  { weight: 4, arbitrary: fc.array(freeArb, { minLength: 1, maxLength: 5 }) },
+  { weight: 4, arbitrary: normalArb },
+  { weight: 2, arbitrary: fc.array(freeArb, { minLength: 1, maxLength: 5 }) },
 );
 
 export const scriptArb: fc.Arbitrary<Script> = fc

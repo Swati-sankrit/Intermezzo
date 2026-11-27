@@ -53,13 +53,13 @@ function buildStep(p: StepParts, mode: HauntMode, away: number): Step {
 
 /** Mixed qualifying and non-qualifying returns, one mode throughout, 1 to 40 returns. */
 const steadyArb: fc.Arbitrary<Step[]> = fc
-  .tuple(scaryModeArb, fc.array(fc.tuple(stepPartsArb, qualifyingAwayArb, lowAwayArb), { minLength: 1, maxLength: 40 }))
+  .tuple(scaryModeArb, fc.array(fc.tuple(stepPartsArb, qualifyingAwayArb, lowAwayArb), { minLength: 1, maxLength: 40, size: 'large' }))
   .map(([mode, parts]) => parts.map(([p, q, l]) => buildStep(p, mode, p.qualifying ? q : l)));
 
 /** Sequences where the mode changes at least once, including to and from Gentle. */
 const switchingArb: fc.Arbitrary<Step[]> = fc
   .array(fc.tuple(stepPartsArb, qualifyingAwayArb, lowAwayArb, fc.constantFrom<HauntMode>('gentle', 'classic', 'classic', 'nightmare', 'nightmare')), {
-    minLength: 4, maxLength: 40,
+    minLength: 4, maxLength: 40, size: 'large',
   })
   .map((parts) => parts.map(([p, q, l, m]) => buildStep(p, m, p.qualifying ? q : l)))
   .filter((steps) => steps.some((s, i) => i > 0 && s.input.mode !== steps[i - 1].input.mode));

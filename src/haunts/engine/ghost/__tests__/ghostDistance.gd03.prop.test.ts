@@ -14,7 +14,7 @@ function reference(count: number): number {
 /** Counts of every awkward kind: NaN, infinities, negative zero, negatives, fractions, above 4. */
 const countArb: fc.Arbitrary<number> = fc.oneof(
   { weight: 2, arbitrary: fc.constantFrom(NaN, Infinity, -Infinity, -0, 0, 0.5, 0.999, 1, 3.5, 3.999999, 4, 4.0001, 5) },
-  { weight: 1, arbitrary: fc.constantFrom(NaN, Infinity, -Infinity, 1, 1.5, 2, 2.9, 3) },
+  { weight: 6, arbitrary: fc.constantFrom(NaN, NaN, Infinity, -Infinity, 1, 1.5, 2, 2.5, 2.9, 3) },
   { weight: 3, arbitrary: fc.integer({ min: -10, max: 12 }) },
   { weight: 1, arbitrary: fc.integer({ min: 0, max: 5 }) },
   { weight: 3, arbitrary: fc.double({ min: -10, max: 12, noNaN: true }) },

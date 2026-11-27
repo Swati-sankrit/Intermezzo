@@ -37,7 +37,7 @@ const qualifyingAwayArb = fc.oneof(
   { weight: 4, arbitrary: fc.integer({ min: 10_000, max: 200_000 }) },
 );
 const anyAwayArb = fc.oneof(
-  { weight: 8, arbitrary: qualifyingAwayArb },
+  { weight: 19, arbitrary: qualifyingAwayArb },
   { weight: 2, arbitrary: fc.oneof(fc.constantFrom(0, 9999, NaN, -1), fc.integer({ min: 0, max: 9999 })) },
 );
 
