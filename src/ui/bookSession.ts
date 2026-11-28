@@ -6,7 +6,7 @@ import type { BookEntry, DataModel } from '../library/model';
 import { POSITION_SAVE_DELAY_MS } from '../library/modelSaver';
 import { moveToShelf, savePosition } from '../library/shelfOps';
 import { restoreBook } from '../reader/bookCodec';
-import { absoluteIndex, calculateProgress, countTotalParagraphs } from '../reader/progress';
+import { absoluteIndex, calculateProgress, countTotalParagraphs, storyRangeOf } from '../reader/progress';
 import { splitIntoParagraphs } from '../reader/splitter';
 import type { Book } from '../reader/types';
 import { loadFromLibrary } from './loadSource';
@@ -64,9 +64,12 @@ export interface Restored {
 
 const isIndex = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 0;
 
-/** No Position: start. Malformed: start, flagged. Past the end: the last paragraph. */
+/**
+ * No Position: the Story_Start. Malformed: the Story_Start, flagged. Past the end: the last paragraph.
+ * A valid saved Position is restored as is; the Story_Start is not applied to it.
+ */
 export function restorePosition(book: Book, saved: unknown): Restored {
-  const start = { chapterIndex: 0, paragraphIndex: 0 };
+  const start = { chapterIndex: storyRangeOf(book).start, paragraphIndex: 0 };
   if (saved === undefined) return { ...start, malformed: false };
   const p = saved as { chapterIndex?: unknown; paragraphIndex?: unknown } | null;
   if (typeof p !== 'object' || p === null || !isIndex(p.chapterIndex) || !isIndex(p.paragraphIndex)) {

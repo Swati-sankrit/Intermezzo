@@ -2,6 +2,12 @@ export interface Book {
   fileName: string;
   title: string;      // never empty; metadata or library title, else file name without extension
   chapters: Chapter[];
+  /**
+   * Inclusive chapter indices of the story, set only for EPUBs where front or
+   * back matter was found. Absent means the whole book is the story.
+   * Chapter indices always count from the first chapter of the EPUB.
+   */
+  story?: { start: number; end: number };
 }
 
 export interface Chapter {

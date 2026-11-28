@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { countWords, suggestedSeconds, updateAveragePace } from '../reader/paceCalc';
-import { absoluteIndex, calculateProgress, countTotalParagraphs } from '../reader/progress';
+import { absoluteIndex, calculateProgress, countTotalParagraphs, lastStoryChapter } from '../reader/progress';
 import { splitIntoParagraphs } from '../reader/splitter';
 import { setPaceGuide } from '../library/profileOps';
 import type { Paragraph } from '../reader/types';
@@ -84,13 +84,13 @@ export function useReader(session?: ReaderSession) {
     setS(next);
     const sess = sessionRef.current;
     if (sess) {
-      const lastChapter = s.chapterIndex + 1 >= s.book.chapters.length;
+      const lastChapter = s.chapterIndex >= lastStoryChapter(s.book);
       savePositionUpdate(sess, s.book, next, next.chapterComplete, next.chapterComplete && lastChapter);
     }
   }, [s, paragraphs]);
 
   const nextChapter = useCallback(() => {
-    if (!s.book || s.chapterIndex + 1 >= s.book.chapters.length) return;
+    if (!s.book || s.chapterIndex >= lastStoryChapter(s.book)) return;
     shownAt.current = Date.now();
     const next: ReaderState = {
       ...s,
@@ -133,7 +133,7 @@ export function useReader(session?: ReaderSession) {
     };
   }, [s, paragraphs]);
 
-  const lastChapter = !s.book || s.chapterIndex + 1 >= s.book.chapters.length;
+  const lastChapter = !s.book || s.chapterIndex >= lastStoryChapter(s.book);
   const chapterComplete = s.chapterComplete || (!!s.book && paragraphs.length === 0);
 
   return {

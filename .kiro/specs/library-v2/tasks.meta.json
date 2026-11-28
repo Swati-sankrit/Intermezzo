@@ -852,6 +852,49 @@
         "chatSessionId": "sess_5917b5da-b2ce-4cd2-9be2-3d357ac0c5a3",
         "timestamp": 1795608154924
       }
+    ],
+    "13.1 Create `src/library/frontMatter.ts` (pure)": [
+      {
+        "executionId": "acf8a160-d5f0-4675-b88c-3b2e93012d1f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795833950982
+      },
+      {
+        "executionId": "acf8a160-d5f0-4675-b88c-3b2e93012d1f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795834151517
+      }
+    ],
+    "13.2 Write property test for the Front_Matter_Detector": [
+      {
+        "executionId": "acf8a160-d5f0-4675-b88c-3b2e93012d1f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795834152206
+      },
+      {
+        "executionId": "acf8a160-d5f0-4675-b88c-3b2e93012d1f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795836399685
+      }
+    ],
+    "13.3 Extract landmark data and wire the Story_Start": [
+      {
+        "executionId": "acf8a160-d5f0-4675-b88c-3b2e93012d1f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795836400193
+      },
+      {
+        "executionId": "acf8a160-d5f0-4675-b88c-3b2e93012d1f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795847209840
+      }
+    ],
+    "13. Front-matter skipping": [
+      {
+        "executionId": "acf8a160-d5f0-4675-b88c-3b2e93012d1f",
+        "chatSessionId": "sess_f788ac2c-7008-4feb-b520-bd91a2a09fb8",
+        "timestamp": 1795847209887
+      }
     ]
   }
 }

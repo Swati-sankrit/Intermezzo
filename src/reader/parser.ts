@@ -10,6 +10,8 @@
 
 import { readAsArrayBuffer, readAsText } from './fileIO';
 import { stripGutenbergBoilerplate } from './gutenberg';
+import { countWords } from './paceCalc';
+import { detectStory, readEpubTypes, readFirstHeading, type ChapterFacts, type NavLandmark } from './epubStory';
 import { resolveTitle } from './title';
 import type { Book, LoadResult } from './types';
 
@@ -175,10 +177,14 @@ export async function buildEpubBook(
       if (Array.isArray(item.subitems)) addToc(item.subitems);
     }
   };
+  let navLandmarks: NavLandmark[] = [];
   try {
     // book.navigation is undefined until loaded.navigation resolves.
     const nav = await book.loaded.navigation;
     if (nav && Array.isArray(nav.toc)) addToc(nav.toc as TocItem[]);
+    // Landmarks list (EPUB 3 nav only): [{ href, label, type }]. landmarksByType maps a type to an index into it.
+    const lms = (nav as unknown as { landmarks?: NavLandmark[] } | undefined)?.landmarks;
+    if (Array.isArray(lms)) navLandmarks = lms;
   } catch {
     // Navigation is optional; continue without titles.
   }
@@ -192,6 +198,7 @@ export async function buildEpubBook(
   }
 
   const chapters: Array<{ title: string; text: string }> = [];
+  const facts: ChapterFacts[] = [];
 
   for (const rawItem of spineItems) {
     // Each entry in spineItems is a Section.
@@ -214,9 +221,13 @@ export async function buildEpubBook(
     }
 
     let text = '';
+    let types: string[] = [];
+    let heading: string | undefined;
     try {
       const body = doc.body ?? doc.documentElement;
       text = stripHtml(body?.innerHTML ?? '').trim();
+      types = readEpubTypes(body);
+      heading = readFirstHeading(body);
     } catch {
       // If stripping fails for this item, treat it as empty (skip below).
     }
@@ -231,9 +242,11 @@ export async function buildEpubBook(
     // Look up a TOC label for this section's href (sans fragment).
     const hrefKey = section.href ? section.href.split('#')[0] : '';
     // Fallback: "Chapter N", N = 1-based position among kept chapters.
-    const title = tocLabelByHref.get(hrefKey) || `Chapter ${chapters.length + 1}`;
+    const tocLabel = tocLabelByHref.get(hrefKey);
+    const title = tocLabel || `Chapter ${chapters.length + 1}`;
 
     chapters.push({ title, text });
+    facts.push({ href: hrefKey, types, title: tocLabel, heading, wordCount: countWords(text) });
   }
 
   book.destroy();
@@ -242,8 +255,15 @@ export async function buildEpubBook(
     return { ok: false, error: CORRUPT_MSG };
   }
 
+  // Front and back matter stay in `chapters`; `story` marks where the story runs.
+  // It is left off when the whole book is the story, so such books are unchanged.
+  const range = detectStory(navLandmarks, facts);
+  const whole = range.start === 0 && range.end === chapters.length - 1;
   // Metadata title (dc:title); blank or missing falls back to the file name.
-  return { ok: true, book: { fileName, title: resolveTitle(metadataTitle, fileName), chapters } };
+  return {
+    ok: true,
+    book: { fileName, title: resolveTitle(metadataTitle, fileName), chapters, ...(whole ? {} : { story: range }) },
+  };
 }
 
 /**

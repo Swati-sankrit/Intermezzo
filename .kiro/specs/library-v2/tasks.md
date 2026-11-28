@@ -287,18 +287,18 @@ Pure logic goes in `src/library/` and `src/reader/` with no DOM access. Only `sr
 - [ ] 12. Checkpoint - Storage, migration, and privacy complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 13. Front-matter skipping
-  - [ ] 13.1 Create `src/library/frontMatter.ts` (pure)
+- [x] 13. Front-matter skipping
+  - [x] 13.1 Create `src/library/frontMatter.ts` (pure)
     - `findStoryStart(landmarks, chapters)`: use the `bodymatter` landmark if it matches a chapter. Otherwise treat chapters typed `titlepage`, `halftitle`, `frontmatter`, `toc`, `epigraph`, `dedication`, `copyright-page`, or `imprint` as front matter and start at the first chapter that is not. Otherwise return chapter 0.
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.9_
 
-  - [ ]* 13.2 Write property test for the Front_Matter_Detector
+  - [x]* 13.2 Write property test for the Front_Matter_Detector
     - **Property 5: Front-matter detection never skips the story and is conservative without markers**
     - Check that Story_Start is never after the designated story chapter, every chapter before it is marked front matter, and inputs with no landmark or markers return chapter 0.
     - **Validates: Requirements 9.3, 9.4, 9.9, 23.2**
     - Report properties added, cases run, and any counterexample.
 
-  - [ ] 13.3 Extract landmark data and wire the Story_Start
+  - [x] 13.3 Extract landmark data and wire the Story_Start
     - Read `landmarksByType.bodymatter` from epub.js `book.navigation` and spine `epub:type` properties into plain `LandmarkData`. Before relying on the epub.js API, fetch its current documentation.
     - Keep front matter in the loaded book as earlier chapters, with chapter indices counted from the first chapter. A book with no saved Position opens at the Story_Start. A saved Position is restored without it. Plain text books skip detection.
     - Progress counts story paragraphs from the Story_Start, and finishing uses the same start.

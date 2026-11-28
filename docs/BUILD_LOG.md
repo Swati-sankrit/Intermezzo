@@ -1430,3 +1430,36 @@ The sweep is closed. The other 37 floors under 4 SD (gateCap.p14, dialogOrder.p1
 ## haunted-shell, task 19.2: centre axis, closed (not measured)
 
 The user saw content left of centre at about 2000 px in a real browser. The investigation run was cancelled before taking any measurements, so the offset was not measured. The only measurements on record are from tasks 13.2 and 14.5, where document scrollWidth equalled the viewport at 1440, 1024, 768, 390 and 360 px on all three tabs. 2000 px and the horizontal centres were never measured. Closed by the user's decision with one change: `scrollbar-gutter: stable both-edges` on the root. Re-check at 2000 px in a real browser.
+
+## library-v2, task 13.3: extract landmark data and wire the Story_Start
+**epub.js docs confirmed** (Context7 `/futurepress/epub.js` API docs, plus the installed 0.3.93 source in `node_modules/epubjs/src`):
+- `book.loaded.navigation` resolves to a `Navigation` with `landmarks` (array of `{ href, label, type }`, EPUB 3 nav only) and `landmark(type)`. In the source, `landmarksByType[type]` is an **index into `landmarks`**, not an item, so the loader reads the `landmarks` array directly.
+- Spine items are `Section`s with `href`, `linear` and `properties`. `properties` holds the manifest properties (`nav`, `cover-image`, and so on), **not** `epub:type`. The docs do not describe an `epub:type` accessor for sections. So `epub:type` tokens are read from the parsed chapter document the loader already has: the `<body>` and its direct child elements (`getAttribute('epub:type')`, with the OPS namespace as a fallback).
+- Landmark hrefs are relative to the nav file and spine hrefs to the OPF, so leading `./` and `../` are stripped and the detector's suffix match compares them.
+
+**Code:** `src/reader/epubStory.ts` (landmark/type/heading extraction, `detectStory`), `buildEpubBook` sets `Book.story` (`{ start, end }`, inclusive) only when front or back matter was found. Front and back matter stay in `chapters`; indices count the chapters the loader keeps (items with no text, such as an image-only title page, were already dropped before this task). `progress.ts` counts story paragraphs from `story.start` to `story.end`; `lastStoryChapter` ends "Next chapter" and finishes the book at Story_End; `restorePosition` opens at Story_Start only when there is no valid saved Position. `bookCodec` stores `{ chapters, story }` for EPUBs with a range and still reads the old array form (old uploaded books have no range and behave as before). Plain text skips detection. Haunt and shell code untouched.
+
+**Detection result per bundled catalogue EPUB** (real files, real epub.js under jsdom; start = first story chapter, end = last story chapter; every book ends with Colophon and Uncopyright excluded):
+
+| Book | Chapters kept | Story start | Story end |
+|---|---|---|---|
+| Dracula | 34 | 4: I | 31: Note |
+| Frankenstein | 37 | 6: Letter I | 34: Endnotes |
+| The Strange Case of Dr Jekyll and Mr Hyde | 13 | 1: Story of the Door | 10: Henry Jekyll’s Full Statement of the Case |
+| The Picture of Dorian Gray | 25 | 3: I | 22: XX |
+| The Vampire | 8 | 4: The Vampire | 5: Endnotes |
+| The Turn of the Screw | 28 | 1: Prologue | 25: XXIV |
+| The Hound of the Baskervilles | 20 | 3: I: Mr. Sherlock Holmes | 17: XV: A Retrospection |
+| Short Fiction | 74 | 5: Metzengerstein | 71: Endnotes |
+| Pride and Prejudice | 64 | 1: I | 61: LXI |
+| Jane Eyre | 45 | 4: I | 42: Endnotes |
+| Wuthering Heights | 37 | 1: I | 34: XXXIV |
+| A Christmas Carol | 10 | 3: Stave I: Marley’s Ghost | 7: Stave V: The End of It |
+| Treasure Island | 47 | 4: Part I: The Old Buccaneer | 44: Endnotes |
+| The Time Machine | 17 | 1: I | 14: Endnotes |
+| The Invisible Man | 32 | 1: I: The Strange Man’s Arrival | 29: Epilogue |
+| The Adventures of Sherlock Holmes | 15 | 1: A Scandal in Bohemia | 12: The Adventure of the Copper Beeches |
+
+Notes: "Endnotes" and Dracula's "Note" remain inside the story range because only colophon, uncopyright and copyright-page were asked to be excluded. Jekyll and Hyde opens at "Story of the Door" (Imprint is chapter 0) and ends before the Colophon.
+
+**Spec status:** `requirements.md` (Requirement 9) and `design.md` still describe front matter only. The back-matter exclusion (Story_End) was added at the user's request; the spec has not been updated yet.
